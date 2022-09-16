@@ -1,0 +1,5 @@
+#!ipxe
+
+echo iPXE 64bit EFI menu
+sleep 5
+reboot
