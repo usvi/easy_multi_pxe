@@ -4,6 +4,7 @@
 menu iPXE 64bit BIOS boot menu
 
 item reboot         Reboot computer
+item systemrescue-8.05-amd64 SystemRescueCD 8.05 x64 BIOS HTTP
 item Win10_21H2_English_x64-2022-02-02 Windows 10 21H2 x64 English BIOS HTTP
 
 
@@ -14,6 +15,15 @@ goto ${selected}
 :reboot
 reboot
 goto end
+
+:systemrescue-8.05-amd64
+kernel http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked/sysresccd/boot/x86_64/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 nofirewall archisobasedir=netbootassets/x64/linux/${selected}/unpacked/sysresccd dhcp archiso_http_srv=http://172.16.8.254/ checksum
+initrd http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked/sysresccd/boot/intel_ucode.img
+initrd http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked/sysresccd/boot/amd_ucode.img
+initrd http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked/sysresccd/boot/x86_64/sysresccd.img
+boot
+goto end
+
 
 :Win10_21H2_English_x64-2022-02-02
 kernel wimboot
