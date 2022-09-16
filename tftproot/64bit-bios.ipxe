@@ -5,6 +5,7 @@ menu iPXE 64bit BIOS boot menu
 
 item reboot         Reboot computer
 item systemrescue-8.05-amd64 SystemRescueCD 8.05 x64 BIOS HTTP
+item ubuntu-20.04.3-desktop-amd64 Ubuntu 20.04.03 Desktop x86 BIOS HTTP
 item Win10_21H2_English_x64-2022-02-02 Windows 10 21H2 x64 English BIOS HTTP
 
 
@@ -22,6 +23,14 @@ kernel ${http_base}/sysresccd/boot/x86_64/vmlinuz nvidia.modeset=0 i915.modeset=
 initrd ${http_base}/sysresccd/boot/intel_ucode.img
 initrd ${http_base}/sysresccd/boot/amd_ucode.img
 initrd ${http_base}/sysresccd/boot/x86_64/sysresccd.img
+boot
+goto end
+
+:ubuntu-20.04.3-desktop-amd64
+set http_base http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked
+set http_iso http://172.16.8.254/netbootassets/x64/linux/${selected}/iso.iso
+kernel ${http_base}/casper/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 ip=dhcp url=${http_iso}
+initrd ${http_base}/casper/initrd
 boot
 goto end
 
