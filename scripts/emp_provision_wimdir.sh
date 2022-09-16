@@ -1,16 +1,51 @@
 #!/bin/sh
 
+ROOT_WIM_DIR="$1"
+
 THISDIR="`dirname $0`"
 
 . "$THISDIR/../conf/easy_multi_pxe.conf"
 
-# Load password file if exists
-if [ -f "$THISDIR/../conf/passwords.conf" ]
+# Check that share credentials file exists
+if [ ! -f "$THISDIR/../conf/emp_cifs_share.conf" ]
 then
-    . "$THISDIR/../conf/passwords.conf"
+    echo "ERROR: CIFS config file $THISDIR/../conf/emp_cifs_share.conf does not exist"
+    exit 1
+fi
+# Now, get it
+. "$THISDIR/../conf/emp_cifs_share.conf"
+
+if [ -z "$CIFS_SERVER_IP" ]
+then
+    echo "ERROR: No CIFS_SERVER_IP defined in $THISDIR/../conf/emp_cifs_share.conf"
+    exit 1
+fi
+# CIFS path, user and password are optional
+
+# We need to see our arch. If we are run with argument
+# /opt/easy_multi_pxe/netbootassets/x64/windows/10
+# we need to get the x64.
+
+TEMP_DIR="`dirname $ROOT_WIM_DIR`"
+TEMP_DIR="`dirname $TEMP_DIR`"
+ARCH_ID="`basename $TEMP_DIR`"
+
+# We need to mangle our path to correct part split off
+# and for the rest slashes converted.
+# $ROOT_WIM_DIR has :
+# /opt/easy_multi_pxe/netbootassets/x64/windows/10
+# We need to have it first x64/windows/10 and then
+# we need to fiddle the amount of backslashes correct.
+
+TEMP_DIR=$(echo "$ROOT_WIM_DIR" | sed "s/.*$WEB_SERVER_PREFIX\///")
+CIFS_PATH=$(echo "$TEMP_DIR" | sed 's.\/.\\\\.g')
+
+# Might have prefix
+if [ -n "$CIFS_PATH_PREFIX" ]
+then
+    CIFS_PATH="$CIFS_PATH_PREFIX\\\\$CIFS_PATH"
 fi
 
-ROOT_WIM_DIR="$1"
 
 # Given directory must exist
 if [ ! -d "$ROOT_WIM_DIR" ]
@@ -38,13 +73,6 @@ then
     exit 1
 fi
 
-# We need to see our arch. If we are run with argument
-# /opt/easy_multi_pxe/netbootassets/x64/windows/10
-# we need to get the x64.
-
-TEMP_ENTRY="`dirname $ROOT_WIM_DIR`"
-TEMP_ENTRY="`dirname $TEMP_ENTRY`"
-ARCH_ID="`basename $TEMP_ENTRY`"
 
 for WIM_ENTRY in `ls -1 $ROOT_WIM_DIR`
 do
@@ -89,6 +117,16 @@ do
 	    # Need to do rest with printf because ehco just does not work with redirects
 	    printf "for /R extradrivers %%%%i in (*.inf) do drvload %%%%i\r\n" >> "$STARTNET"
 	    printf "wpeinit\r\n" >> "$STARTNET"
+	    # Could be with or without a password
+
+	    if [ -n "$CIFS_USER" -a -n "$CIFS_PASSWD" ]
+	    then
+		printf "net use j: \\\\\\\\$CIFS_SERVER_IP\\\\$CIFS_PATH\\\\$WIM_ENTRY\\\\unpacked /user:$CIFS_USER $CIFS_PASSWD\r\n" >> "$STARTNET"
+	    else
+		printf "net use j: \\\\\\\\$CIFS_SERVER_IP\\\\$CIFS_PATH\\\\$WIM_ENTRY\\\\unpacked\r\n" >> "$STARTNET"
+	    fi
+	    printf "j:\setup.exe\r\n" >> "$STARTNET"
+		
 	    cat "$STARTNET"
 
 	    # Need strange sleep here on mounted cifs for some reason
