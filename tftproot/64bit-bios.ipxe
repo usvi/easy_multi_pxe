@@ -17,19 +17,21 @@ reboot
 goto end
 
 :systemrescue-8.05-amd64
-kernel http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked/sysresccd/boot/x86_64/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 nofirewall archisobasedir=netbootassets/x64/linux/${selected}/unpacked/sysresccd dhcp archiso_http_srv=http://172.16.8.254/ checksum
-initrd http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked/sysresccd/boot/intel_ucode.img
-initrd http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked/sysresccd/boot/amd_ucode.img
-initrd http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked/sysresccd/boot/x86_64/sysresccd.img
+set http_base http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked
+kernel ${http_base}/sysresccd/boot/x86_64/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 nofirewall archisobasedir=sysresccd ip=dhcp checksum archiso_http_srv=${http_base}/
+initrd ${http_base}/sysresccd/boot/intel_ucode.img
+initrd ${http_base}/sysresccd/boot/amd_ucode.img
+initrd ${http_base}/sysresccd/boot/x86_64/sysresccd.img
 boot
 goto end
 
 
 :Win10_21H2_English_x64-2022-02-02
 kernel wimboot
-initrd http://172.16.8.254/netbootassets/x64/windows/10/${selected}/BCD BCD
-initrd http://172.16.8.254/netbootassets/x64/windows/10/${selected}/boot.sdi boot.sdi
-initrd http://172.16.8.254/netbootassets/x64/windows/10/${selected}/boot.wim boot.wim
+set http_base http://172.16.8.254/netbootassets/x64/windows/10/${selected}
+initrd ${http_base}/BCD BCD
+initrd ${http_base}/boot.sdi boot.sdi
+initrd ${http_base}/boot.wim boot.wim
 boot
 sleep 5
 goto end
