@@ -1,5 +1,47 @@
 #!ipxe
 
-echo iPXE 64bit EFI menu
-sleep 5
+:start
+menu iPXE 64bit EFI boot menu
+
+item reboot         Reboot computer
+item systemrescue-8.05-amd64 SystemRescueCD 8.05 x64 EFI HTTP
+item ubuntu-20.04.3-desktop-amd64 Ubuntu 20.04.03 Desktop x86 EFI HTTP
+item Win10_21H2_English_x64-2022-02-02 Windows 10 21H2 x64 English EFI HTTP
+
+
+choose selected
+set menu-timeout 0
+goto ${selected}
+
+:reboot
 reboot
+goto end
+
+:systemrescue-8.05-amd64
+set http_base http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked
+kernel ${http_base}/sysresccd/boot/x86_64/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 nofirewall archisobasedir=sysresccd initrd=sysresccd.img ip=dhcp checksum archiso_http_srv=${http_base}/
+initrd ${http_base}/sysresccd/boot/intel_ucode.img
+initrd ${http_base}/sysresccd/boot/amd_ucode.img
+initrd ${http_base}/sysresccd/boot/x86_64/sysresccd.img
+boot
+goto end
+
+:ubuntu-20.04.3-desktop-amd64
+set http_base http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked
+set http_iso http://172.16.8.254/netbootassets/x64/linux/${selected}/iso.iso
+kernel ${http_base}/casper/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd ip=dhcp url=${http_iso}
+initrd ${http_base}/casper/initrd
+boot
+goto end
+
+:Win10_21H2_English_x64-2022-02-02
+kernel wimboot
+set http_base http://172.16.8.254/netbootassets/x64/windows/10/${selected}
+initrd ${http_base}/BCD BCD
+initrd ${http_base}/boot.sdi boot.sdi
+initrd ${http_base}/boot.wim boot.wim
+boot
+sleep 5
+goto end
+
+:end
