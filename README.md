@@ -21,12 +21,17 @@ Easy Multi PXE is an iPXE-powered simple pxe server. Currently it is able to boo
 
 ```
 Externals
-/opt/windrivers/x64/board1/foo_lan.inf
-/opt/windrivers/x64/board2/bar_lan.inf
-/opt/windrivers/x86/board3/baz_lan.inf
+/opt/drivers/x64/windows/10/board1/foo_lan.inf
+/opt/drivers/x64/windows/10/board2/bar_lan.inf
+/opt/drivers/x64/windows/10/board3/baz_lan.inf
 
-External but required:
-/opt/easy_multi_pxe/conf/emp_cifs_share.conf - Contains CIFS server credentials (CIFS_SERVER_IP, CIFS_PATH_PREFIX, CIFS_USER, CIFS_PASSWD)
+
+External but REQUIRED:
+/opt/easy_multi_pxe/conf/emp_cifs_share.conf - Contains CIFS server credentials:
+CIFS_SERVER_IP
+CIFS_PATH_PREFIX
+CIFS_USER
+CIFS_PASSWD
 
 Plugin configuration files:
 /opt/easy_multi_pxe/conf/apache2_emp_inc.conf
@@ -56,7 +61,7 @@ Boot kernels:
 
 
 Example: Windows 10 x64 bios:
-1. Go to actual WIndows x64
+1. Go to actual Windows x64
 2. Install "Deployment and imaging Tools Environment" or similar
 3. Start ELEVATED "Deployment and imaging Tools Environment" (or similar)
 4. copype amd64 C:\winpe_amd64
