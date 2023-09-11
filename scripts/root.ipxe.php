@@ -75,7 +75,7 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
 
             $id_lookups[$os_family_menu_label_id] = ucfirst($os_family);
             $id_lookups[$os_family_with_major_menu_label_id] = ucfirst($os_family) . " " . $os_major_version;
-            $id_lookups[$os_target_full_label_id] = str_replace("_", " ", $os_target_base_label_id);
+            $id_lookups[$os_target_full_label_id] = ucfirst(str_replace(["_","-"], " ", $os_target_base_label_id));
 
             if (!array_key_exists($os_ipxe_native_platform, $submenus))
             {
