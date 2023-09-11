@@ -136,16 +136,6 @@ C:\winpe_10_amd64\media\Boot\boot.sdi => /opt/easy_multi_pxe/netbootassets/windo
 C:\winpe_10_amd64\media\sources\boot.wim => /opt/easy_multi_pxe/netbootassets/windows/10/x64/boot.wim  
 8. Done!
 
-Example: Windows 10 x64 bios:
-1. Go to actual Windows x64
-2. Install "Deployment and imaging Tools Environment" or similar
-3. Start ELEVATED "Deployment and imaging Tools Environment" (or similar)
-4. copype amd64 C:\winpe_amd64
-5. Copy BCD (from c:\amd64_template\media\boot\BCD or c:\amd64_template\boot\BCD), boot.sdi, boot.wim as follows:
-/opt/easy_multi_pxe/netbootassets/x64/windows/10/template/BCD
-/opt/easy_multi_pxe/netbootassets/x64/windows/10/template/boot.sdi
-/opt/easy_multi_pxe/netbootassets/x64/windows/10/template/boot.wim
-MAKE SURE CASES MATCH!
 
 ## Provisioning examples
 
