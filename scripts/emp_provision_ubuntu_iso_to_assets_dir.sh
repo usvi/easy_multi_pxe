@@ -101,16 +101,16 @@ then
 
 else
     # Remove the non-iso files anyways
-    for REMOVE_FILE in "$FS_BOOT_OS_UNIX_PATH/vmlinuz" "$FS_BOOT_OS_UNIX_PATH/initrd"
+    for REMOVE_FILE in "vmlinuz" "initrd" "kernel" "initrd.gz"
     do
-	if [ -f "$REMOVE_FILE" ]
+	if [ -f "$FS_BOOT_OS_UNIX_PATH/$REMOVE_FILE" ]
 	then
-	    chmod u+rw "$REMOVE_FILE"
-	    rm "$REMOVE_FILE"
+	    chmod u+rw "$FS_BOOT_OS_UNIX_PATH/$REMOVE_FILE"
+	    rm "$FS_BOOT_OS_UNIX_PATH/$REMOVE_FILE"
 
 	    if [ "$?" -ne 0 ]
 	    then
-		echo "ERROR: Unable to remove old kernel or initrd file $REMOVE_FILE"
+		echo "ERROR: Unable to remove old kernel or initrd file $FS_BOOT_OS_UNIX_PATH/$REMOVE_FILE"
 		exit 1
 	    fi
 	fi
@@ -173,18 +173,37 @@ then
 fi
 
 # Need to copy a couple of extra files
+OS_BOOT_ASSETS_TYPE="unknown"
 
-cp "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/vmlinuz" "$FS_BOOT_OS_UNIX_PATH/vmlinuz" &&
-    pv -w 80 -N "Copying initrd" "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/initrd" > "$FS_BOOT_OS_UNIX_PATH/initrd"
-    
-if [ "$?" -ne 0 ]
+if [ -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/vmlinuz" -a -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/initrd" ]
 then
-    echo "ERROR: Unable to copy vmlinuz and initrd from $EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/ to $FS_BOOT_OS_UNIX_PATH/"
-    exit 1
-    umount -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
-    exit 1
-fi
+    cp "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/vmlinuz" "$FS_BOOT_OS_UNIX_PATH/vmlinuz" &&
+	pv -w 80 -N "Copying initrd" "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/initrd" > "$FS_BOOT_OS_UNIX_PATH/initrd"
+    
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to copy vmlinuz and initrd from $EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/ to $FS_BOOT_OS_UNIX_PATH/"
+	exit 1
+	umount -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
+	exit 1
+    fi
+    OS_BOOT_ASSETS_TYPE="casper"
 
+elif [ "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/linux" -a -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/initrd.gz" ]
+then
+
+    cp "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/linux" "$FS_BOOT_OS_UNIX_PATH/linux" &&
+	pv -w 80 -N "Copying initrd.gz" "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/initrd.gz" > "$FS_BOOT_OS_UNIX_PATH/initrd.gz"
+    
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to copy linux and initrd.gz from $EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/ to $FS_BOOT_OS_UNIX_PATH/"
+	exit 1
+	umount -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
+	exit 1
+    fi
+    OS_BOOT_ASSETS_TYPE="plain"
+fi
 
 
 # Copying done, so unmount the iso already
@@ -228,7 +247,9 @@ fi
 
 for IPXE_FRAGMENT in "$FIRST_FRAGMENT" "$SECOND_FRAGMENT"
 do
-    cat <<EOF > "$IPXE_FRAGMENT"
+    if [ "$OS_BOOT_ASSETS_TYPE" = "casper" ]
+    then
+	cat <<EOF > "$IPXE_FRAGMENT"
 set http_base $WEBSERVER_HTTP_BASE/$BOOT_OS_ENTRY_ID
 set http_iso \${http_base}/$BOOT_OS_ISO_FILE
 kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 root=/dev/ram0 initrd=initrd ip=dhcp url=\${http_iso} cloud-config-url=/dev/null
@@ -237,6 +258,22 @@ boot
 sleep 5
 goto end
 EOF
+	
+    elif [ "$OS_BOOT_ASSETS_TYPE" = "plain" ]
+    then
+	cat <<EOF > "$IPXE_FRAGMENT"
+set http_base $WEBSERVER_HTTP_BASE/$BOOT_OS_ENTRY_ID
+kernel \${http_base}/linux nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp
+initrd \${http_base}/initrd.gz
+boot
+sleep 5
+goto end
+EOF
+	
+    else
+	echo "ERROR: Unknown boot assets type $OS_BOOT_ASSETS_TYPE"
+	exit 1
+    fi
     
     if [ "$?" -ne 0 ]
     then
