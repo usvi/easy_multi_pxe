@@ -236,9 +236,9 @@ then
     fi
     
     DRIVERS=1
+    echo "done"
 fi
 
-echo "done"
 
 
 
