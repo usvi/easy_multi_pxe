@@ -1,6 +1,7 @@
 #!/bin/sh
 
-CONFIGS_DIR="`dirname $0`/../conf"
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+CONFIGS_DIR="`dirname $SCRIPTPATH`/conf"
 MAIN_CONFIG="$CONFIGS_DIR/easy_multi_pxe.conf"
 
 WEBSERVER_PREFIX_DEFAULT="netbootassets"
