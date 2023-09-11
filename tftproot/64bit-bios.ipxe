@@ -19,7 +19,7 @@ goto end
 
 :systemrescue-8.05-amd64
 set http_base http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked
-kernel ${http_base}/sysresccd/boot/x86_64/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 nofirewall archisobasedir=sysresccd ip=dhcp checksum archiso_http_srv=${http_base}/
+kernel ${http_base}/sysresccd/boot/x86_64/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 nofirewall archisobasedir=sysresccd initrd=sysresccd.img ip=dhcp checksum archiso_http_srv=${http_base}/
 initrd ${http_base}/sysresccd/boot/intel_ucode.img
 initrd ${http_base}/sysresccd/boot/amd_ucode.img
 initrd ${http_base}/sysresccd/boot/x86_64/sysresccd.img
@@ -29,11 +29,10 @@ goto end
 :ubuntu-20.04.3-desktop-amd64
 set http_base http://172.16.8.254/netbootassets/x64/linux/${selected}/unpacked
 set http_iso http://172.16.8.254/netbootassets/x64/linux/${selected}/iso.iso
-kernel ${http_base}/casper/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 ip=dhcp url=${http_iso}
+kernel ${http_base}/casper/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd ip=dhcp url=${http_iso}
 initrd ${http_base}/casper/initrd
 boot
 goto end
-
 
 :Win10_21H2_English_x64-2022-02-02
 kernel wimboot
