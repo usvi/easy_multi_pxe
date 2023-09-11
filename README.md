@@ -162,3 +162,14 @@ Syncinc...done
 ALL DONE
 ```
 Note: As you can see above, the script picked up drivers from a directory and slipped those in.
+
+
+### Ubuntu 20.04 64bit:
+```
+root@gw:/opt/easy_multi_pxe# ./scripts/emp_provision_ubuntu_iso_to_assets_dir.sh /opt/isos_ro/ubuntu/ubuntu-20.04.3-desktop-amd64.iso /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+Processing ubuntu-20.04.3-desktop-amd64 as ubuntu/20.04/x64
+Copying iso: 2.86GiB 0:01:09 [41.9MiB/s] [===================>] 100%
+Copying initrd: 94.5MiB 0:00:12 [7.83MiB/s] [================>] 100%
+Syncinc...done
+ALL DONE
+```
