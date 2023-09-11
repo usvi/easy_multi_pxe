@@ -1,0 +1,5 @@
+#!ipxe
+
+echo iPXE 32bit BIOS menu
+sleep 5
+reboot

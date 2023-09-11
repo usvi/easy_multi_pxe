@@ -1,0 +1,5 @@
+#!ipxe
+
+echo iPXE 64bit BIOS menu
+sleep 5
+reboot

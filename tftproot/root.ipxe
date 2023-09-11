@@ -14,17 +14,21 @@ goto conf_${arch}_${platform}
 
 
 :conf_i386_pcbios
-echo "Loading 32 bit BIOS mode iPXE config file"
-sleep 5
+chain 32bit-bios.ipxe
+goto end
 
 :conf_x86_64_pcbios
-echo "Loading 64 bit BIOS mode iPXE config file"
-sleep 5
+chain 64bit-bios.ipxe
+goto end
 
 :conf_i386_efi
-echo "Loading 32 bit EFI mode iPXE config file"
-sleep 5
+chain 32bit-efi.ipxe
+goto end
 
 :conf_x86_64_efi
-echo "Loading 64 bit EFI mode iPXE config file"
-sleep 5
+chain 64bit-efi.ipxe
+goto end
+
+
+
+:end
