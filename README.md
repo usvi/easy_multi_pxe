@@ -77,8 +77,29 @@ The .iso file will be KB3AIK_EN.iso (for english), sha1sum:
 Option 1: Run StartCD.exe from the DVD, then install the .NET 2.0 by selecting ".NET Framework Setup"  
 Option 2: Hit Start, write "Turn Windows features on or off", run it and install ".NET Framework 3.5 (includes .NET 2.0 and 3.0)", then select "Let Windows Update download the files for you".
 4. Install the WAIK by selecting from menu "Windows AIK Setup".
-5. Profit
-
+5. Hit Start, type **EXACTLY THE FOLLOWING**: Deployment Tools Command Prompt  
+Right-click on it an run as Administrator
+6. Run the following commands:  
+copype.cmd x86 c:\winpe_xp_7_x86  
+copype.cmd amd64 c:\winpe_xp_7_amd64
+7. Copy files as follows from Windows to Easy Multi Pxe installation mounted assets directory (**MAKE SURE THE CASES MATCH!**):  
+Windows XP 32bit:  
+C:\winpe_xp_7_x86\ISO\boot\bcd => /opt/easy_multi_pxe/netbootassets/windows/xp/x86/BCD  
+C:\winpe_xp_7_x86\ISO\boot\boot.sdi => /opt/easy_multi_pxe/netbootassets/windows/xp/x86/boot.sdi  
+C:\winpe_xp_7_x86\winpe.wim => /opt/easy_multi_pxe/netbootassets/windows/xp/x86/boot.wim  
+Windows XP 64bit:  
+C:\winpe_xp_7_amd64\ISO\boot\bcd => /opt/easy_multi_pxe/netbootassets/windows/xp/x64/BCD  
+C:\winpe_xp_7_amd64\ISO\boot\boot.sdi => /opt/easy_multi_pxe/netbootassets/windows/xp/x64/boot.sdi  
+C:\winpe_xp_7_amd64\winpe.wim => /opt/easy_multi_pxe/netbootassets/windows/xp/x64/boot.wim  
+Windows 7 32bit:  
+C:\winpe_xp_7_x86\ISO\boot\bcd => /opt/easy_multi_pxe/netbootassets/windows/7/x86/BCD  
+C:\winpe_xp_7_x86\ISO\boot\boot.sdi => /opt/easy_multi_pxe/netbootassets/windows/7/x86/boot.sdi  
+C:\winpe_xp_7_x86\winpe.wim => /opt/easy_multi_pxe/netbootassets/windows/7/x86/boot.wim  
+Windows 7 64bit:  
+C:\winpe_xp_7_amd64\ISO\boot\bcd => /opt/easy_multi_pxe/netbootassets/windows/7/x64/BCD  
+C:\winpe_xp_7_amd64\ISO\boot\boot.sdi => /opt/easy_multi_pxe/netbootassets/windows/7/x64/boot.sdi  
+C:\winpe_xp_7_amd64\winpe.wim => /opt/easy_multi_pxe/netbootassets/windows/7/x64/boot.wim  
+8. Done!
 
 ### For Windows 10
 1. Download Windows Assessment and Deployment Kit for Windows 10, version 2004: https://software-static.download.prss.microsoft.com/pr/download/20348.1.210507-1500.fe_release_amd64fre_ADK.iso , sha1sum:  
