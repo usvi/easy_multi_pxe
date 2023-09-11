@@ -39,7 +39,7 @@ Provisioning scripts:
 
 Main roots:
 /opt/easy_multi_pxe/tftproot - Main TFTP root
-/opt/easy_multi_pxe/netbootassets - CIFS Netboot assets storage mount root, also configured in webservers
+/opt/easy_multi_pxe/netbootassets - CIFS Netboot assets storage mount root, also configured in webservers, THIS NEEDS TO BE MOUNTED TO CIFS!
 
 OS placeholder directories:
 (Examples, create manually what is needed and ALWAYS follow
@@ -144,14 +144,13 @@ Example: Windows 10 x64 bios:
 /opt/easy_multi_pxe/netbootassets/x64/windows/10/template/boot.wim
 MAKE SURE CASES MATCH!
 
+## Provisioning examples
 
-Then just run run:
-./scripts/emp_provision_windows_iso_to_assets_dir.sh /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso /opt/easy_multi_pxe/netbootassets/windows/10/x64
-
-And the script provisions stuff automatically:
-Processing Win10_22H2_English_x64-2023-04-08 as windows/10/x64
-Copying Win10_22H2_English_x64-2023-04-08.iso : 100%
+### Windows 7 32bit:
+Acquire the template files described above, then run (currently full path to netbootassets directory is needed):
+```root@gw:/opt/easy_multi_pxe# ./scripts/emp_provision_windows_iso_to_assets_dir.sh /opt/isos_ro/win7/Win7_Ult_SP1_English_x32.iso /opt/easy_multi_pxe/netbootassets/windows/7/x86
+Processing Win7_Ult_SP1_English_x32 as windows/7/x86
+Copying Win7_Ult_SP1_English_x32.iso : 100%
 Copying template files...done
-Drivers found at /opt/drivers/windows/10/x64 , copying...done
 Syncinc...done
-ALL DONE
+ALL DONE```
