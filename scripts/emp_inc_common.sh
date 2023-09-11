@@ -31,6 +31,7 @@ then
     EMP_SCRIPTS_DIR="$EMP_TOPDIR/scripts"
     EMP_TFTPROOT_DIR="$EMP_TOPDIR/tftproot"
 
+    EMP_CONFIG_CHMOD_PERMS="ug=r"
     EMP_WEBSERVER_USERNAME="www-data"
 
     EMP_APACHE_CONF_TEMPLATE="$EMP_CONFIG_DIR/apache2_emp_inc.conf.template"
