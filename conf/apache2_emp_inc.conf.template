@@ -1,9 +1,9 @@
-# Use this in /etc/apache2/sites-available/000-default.conf :
-# Include /opt/easy_multi_pxe/conf/apache2_emp_inc.conf
+# Use something like this in /etc/apache2/sites-available/000-default.conf :
+# Include {EMP_CONFIG_DIR}/apache2_emp_inc.conf
 
 
 # Make our root.ipxe to be sideloaded from scripts directory:
-Alias "/netbootassets/root.ipxe" "/opt/easy_multi_pxe/scripts/root.ipxe.php"
+Alias "/{EMP_WEBSERVER_PREFIX}/root.ipxe" "{EMP_SCRIPTS_DIR}/root.ipxe.php"
 
 <Files "root.ipxe.php">
   AllowOverride All
@@ -14,10 +14,9 @@ Alias "/netbootassets/root.ipxe" "/opt/easy_multi_pxe/scripts/root.ipxe.php"
 
 
 # Make everything else available from our assets directory
-Alias "/netbootassets" "/opt/easy_multi_pxe/netbootassets"
+Alias "/{EMP_WEBSERVER_PREFIX}" "{EMP_ASSETS_DIR}"
 
-<Directory "/opt/easy_multi_pxe/netbootassets">
-
+<Directory "{EMP_ASSETS_DIR}">
   EnableMMAP Off
   Options Indexes FollowSymLinks MultiViews
   AllowOverride All

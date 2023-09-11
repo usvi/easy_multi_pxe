@@ -1,11 +1,23 @@
 #!/bin/sh
 
-SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-CONFIGS_DIR="`dirname $SCRIPTPATH`/conf"
-MAIN_CONFIG="$CONFIGS_DIR/easy_multi_pxe.conf"
-
 WEBSERVER_PREFIX_DEFAULT="netbootassets"
 CIFS_SHARE_NAME_DEFAULT="Netboot"
+
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+MAIN_EMP_DIR="`dirname $SCRIPTPATH`"
+CONFIGS_DIR="$MAIN_EMP_DIR/conf"
+SCRIPTS_DIR="$MAIN_EMP_DIR/scripts"
+ASSETS_DIR="$MAIN_EMP_DIR/netbootassets"
+MAIN_CONFIG="$CONFIGS_DIR/easy_multi_pxe.conf"
+
+APACHE_EMP_CONF_TEMPLATE="$CONFIGS_DIR/apache2_emp_inc.conf.template"
+APACHE_EMP_CONF_FINAL="$CONFIGS_DIR/apache2_emp_inc.conf"
+DNSMASQ_EMP_CONF_TEMPLATE="$CONFIGS_DIR/dnsmasq_emp_inc.conf.template"
+DNSMASQ_EMP_CONF_FINAL="$CONFIGS_DIR/dnsmasq_emp_inc.conf"
+NGINX_EMP_CONF_TEMPLATE="$CONFIGS_DIR/nginx_emp_inc.conf.template"
+NGINX_EMP_CONF_FINAL="$CONFIGS_DIR/nginx_emp_inc.conf"
+
+
 
 # Take old config as base if existing
 if [ -f "$MAIN_CONFIG" ]
@@ -279,3 +291,11 @@ if [ -n "$CIFS_PASSWD" ]
 then
     echo "CIFS_PASSWD=\"$CIFS_PASSWD\"" >> "$MAIN_CONFIG"
 fi
+
+
+
+# Include the new config file, just in case
+. "$MAIN_CONFIG"
+
+sed "s|{EMP_CONFIG_DIR}|$CONFIGS_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$ASSETS_DIR|g;" "$APACHE_EMP_CONF_TEMPLATE" > "$APACHE_EMP_CONF_FINAL"
+
