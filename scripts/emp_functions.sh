@@ -63,6 +63,9 @@ emp_posix_shell_string_replace()
 emp_process_config_line()
 {
     case "$1" in
+	"WEBSERVER_PROTOCOL="*)
+	    EMP_WEBSERVER_PROTOCOL=${1#"WEBSERVER_PROTOCOL="}
+	    ;;
         "WEBSERVER_IP="*)
             EMP_WEBSERVER_IP=${1#"WEBSERVER_IP="}
 	    ;;
@@ -90,9 +93,10 @@ emp_process_config_line()
  
 emp_read_config()
 {
-    # Zero existing
+    # Set to defaults
+    EMP_WEBSERVER_PROTOCOL="http"
     EMP_WEBSERVER_IP=""
-    EMP_WEBSERVER_PREFIX=""
+    EMP_WEBSERVER_PREFIX="netbootassets"
     EMP_DRIVERS_BASE_DIR=""
     EMP_CIFS_SERVER_IP=""
     EMP_CIFS_SHARE_NAME=""

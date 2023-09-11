@@ -15,6 +15,42 @@ echo ""
 
 # Webserver-related stuff.
 
+# Webserver protocol.
+# Mandatory.
+echo -n "Give webserver protocol (http/https) [$EMP_WEBSERVER_PROTOCOL]: "
+read TEMP_INPUT
+
+if [ -z "$TEMP_INPUT" ]
+then
+    if [ -z "$EMP_WEBSERVER_PROTOCOL" ]
+    then
+	echo "ERROR: No webserver protocol given, exiting."
+	exit 1
+    fi
+else
+    EMP_WEBSERVER_PROTOCOL="$TEMP_INPUT"
+fi
+
+case "$EMP_WEBSERVER_PROTOCOL" in
+    "https"*)
+	EMP_WEBSERVER_PROTOCOL="https"
+	;;
+    "HTTPS"*)
+	EMP_WEBSERVER_PROTOCOL="https"
+	;;
+    "http"*)
+	EMP_WEBSERVER_PROTOCOL="http"
+	;;
+    "HTTP"*)
+	EMP_WEBSERVER_PROTOCOL="http"
+	;;
+    *)
+	echo "ERROR: Unrecognized wbserver protocol $EMP_WEBSERVER_PROTOCOL, exiting."
+	exit 1
+	;;
+esac
+
+
 # Webserver IP.
 # Mandatory.
 echo -n "Give webserver IP [$EMP_WEBSERVER_IP]: "
@@ -281,6 +317,7 @@ chmod "$EMP_CONFIG_CHMOD_PERMS" "$EMP_MAIN_CONFIG"
 chown ":$EMP_WEBSERVER_USERNAME" "$EMP_MAIN_CONFIG"
 echo "# Easy Multi Pxe config file" >> "$EMP_MAIN_CONFIG"
 echo "" >> "$EMP_MAIN_CONFIG"
+echo "WEBSERVER_PROTOCOL=$EMP_WEBSERVER_PROTOCOL" >> "$EMP_MAIN_CONFIG"
 echo "WEBSERVER_IP=$EMP_WEBSERVER_IP" >> "$EMP_MAIN_CONFIG"
 echo "WEBSERVER_PREFIX=$EMP_WEBSERVER_PREFIX" >> "$EMP_MAIN_CONFIG"
 
