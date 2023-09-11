@@ -11,6 +11,10 @@ fi
 # Now, get it
 . "$EMP_TOP_DIR/conf/easy_multi_pxe.conf"
 
+# Get also functions definitions
+. "$EMP_TOP_DIR/scripts/emp_functions.sh"
+
+
 if [ ! -f "$1" ]
 then
     echo "ERROR: Given iso file $1 does not exist"
@@ -23,17 +27,17 @@ then
     exit 1
 fi
 
+if [ "$3" = "nocopyiso" ]
+then
+    COPY_ISO="no"
+fi
+
 BOOT_OS_ISO_FILE="$1"
 BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR="$(dirname "$2/path_normalizer")"
 BOOT_OS_ENTRY_ID="$(basename "${BOOT_OS_ISO_FILE%.*}")"
 EMP_ASSETS_ROOT_DIR="$EMP_TOP_DIR/netbootassets"
 EMP_BOOT_OS_ENTRY_MOUNT_POINT="$EMP_TOP_DIR/mount"
-COPY_ISO="yes"
 
-if [ "$3" = "nocopyiso" ]
-then
-    COPY_ISO="no"
-fi
 
 case "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" in
     "$EMP_ASSETS_ROOT_DIR"*)
@@ -73,40 +77,8 @@ then
     exit 1
 fi
 
-# Copy the iso mount dir as new path
-#cp -rv "$FS_BOOT_TEMPLATE_UNIX_PATH/mount" "$FS_BOOT_OS_UNIX_PATH"
-
-copy_dir_progress()
-{
-    SRC_DIR="$1"
-    DEST_DIR="$2"
-
-    SIZE_SRC=$(du --apparent-size -s "$SRC_DIR" | sed "s|\s.*||;" )
-
-    cp -r "$SRC_DIR" "$DEST_DIR" &
-    COPY_PID="$!"
-
-    echo -n "Copying $BOOT_OS_ENTRY_ID.iso : 0%"
-
-    while ps -p "$COPY_PID" > /dev/null 2>&1
-    do
-	sleep 5
-	SIZE_DEST=$(du --apparent-size -s "$DEST_DIR" | sed "s|\s.*||;" )
-	SIZE_PERCENTAGE=$(( ( 100 * SIZE_DEST ) / SIZE_SRC ))
-	echo -n "\rCopying $BOOT_OS_ENTRY_ID.iso : ${SIZE_PERCENTAGE}%"
-    done
-
-    SIZE_PERCENTAGE=$(( ( 100 * SIZE_DEST ) / SIZE_SRC ))
-    echo "\rCopying $BOOT_OS_ENTRY_ID.iso : ${SIZE_PERCENTAGE}%"
-    
-    wait "$COPY_PID"
-
-    return "$?"
-}
-
-#copy_dir_progress "$EMP_BOOT_OS_ENTRY_MOUNT_POINT" "$FS_BOOT_OS_UNIX_PATH"
-
-if [ "$COPY_ISO" = "yes" ]
+# Copy the iso mount dir as new path if not forbidden
+if [ -z "$COPY_ISO" -o "$COPY_ISO" != "no" ]
 then
     copy_dir_progress "$EMP_BOOT_OS_ENTRY_MOUNT_POINT" "$FS_BOOT_OS_UNIX_PATH"
 
