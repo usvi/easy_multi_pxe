@@ -36,4 +36,9 @@ then
 elif [ "$EMP_OP" = "do_provisioning" ]
 then
     echo "BAR"
+
+    # Finally include the provisioning functions file
+    
 fi
+
+
