@@ -51,11 +51,19 @@ then
     then
 	echo "ERROR: Provisioning parameters failed, exiting."
 	emp_print_call_help
+	
 	exit 1
     fi
 
-    echo "provisioning debug exit"
-    exit 1
+    # Now we can create all the rest of the variables
+    EMP_BOOT_OS_ISO_FILE="$(basename "$EMP_BOOT_OS_ISO_PATH")"
+    EMP_BOOT_OS_ISO_NAME="${EMP_BOOT_OS_ISO_FILE%.*}"
+    # EMP_BOOT_OS_ASSETS_SUBDIR is like ubuntu/20.04/x64/ubuntu-20.04-mini-amd64
+    EMP_BOOT_OS_ASSETS_SUBDIR="${EMP_BOOT_OS_ASSETS_PARENT#$EMP_ASSETS_ROOT_DIR/}/$EMP_BOOT_OS_ISO_NAME"
+
+    EMP_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
+    #EMP_BOOT_OS_ASSETS_SUBDIR="$EMP_BOOT_OS_ASSETS_PARENT/$EMP_BOOT_OS_ISO_NAME"
+
     
 fi
 

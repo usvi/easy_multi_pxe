@@ -5,24 +5,61 @@ EMP_INC_COMMON="$(dirname "$(realpath "${0}")")/emp_inc_common.sh"
 if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC_COMMON"; exit 1; fi
 . "$EMP_INC_COMMON"
 
+
+
+#BOOT_OS_ISO_PATH="$1"
+#BOOT_OS_ISO_FILE="$(basename "$BOOT_OS_ISO_PATH")"
+
+# following is now $EMP_BOOT_OS_ASSETS_DIR
+#BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR="$(dirname "$2/path_normalizer")"
+
+# follwing is now EMP_BOOT_OS_ISO_NAME
+#BOOT_OS_ENTRY_ID="$(basename "${BOOT_OS_ISO_PATH%.*}")"
+
+# fowllowing is now EMP_MOUNT_POINT
+#EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
+
+# Not needed, emp_verify_provisioning_parameters checks
+#case "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" in
+#    "$EMP_ASSETS_ROOT_DIR"*)
+#	# Do nothing, prefix was fine
+#	;;
+#    *)
+#	echo "ERROR: Given assets directory $BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR not under top directory $EMP_TOP_DIR"
+#	exit 1
+#	;;
+#esac
+
+
+# Just to get bearings, earlier run before overhaul
+#
+# root@gw:/opt/easy_multi_pxe# ./scripts/emp_provision_ubuntu_iso_to_assets_dir.sh /opt/isos_ro/ubuntu/ubuntu-20.04.3-desktop-amd64.iso /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+# Processing ubuntu-20.04.3-desktop-amd64 as ubuntu/20.04/x64
+# Copying iso: 2.86GiB 0:01:09 [41.9MiB/s] [===================>] 100%
+# Copying initrd: 94.5MiB 0:00:12 [7.83MiB/s] [================>] 100%
+# Syncinc...done
+# ALL DONE
+#
+# This creates the following resources
+# Assets directory:
+# /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64/
+# Core fragments
+# /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64/ubuntu-20.04.3-desktop-amd64.64bit-efi.ipxe
+# /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64/ubuntu-20.04.3-desktop-amd64.64bit-bios.ipxe
+#
+# Example of one such core fragment, which in at least this case were the same
+# set http_base http://172.16.8.254/netbootassets/ubuntu/20.04/x64/ubuntu-20.04.3-desktop-amd64
+# set http_iso ${http_base}/ubuntu-20.04.3-desktop-amd64.iso
+# kernel ${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 root=/dev/ram0 initrd=initrd ip=dhcp url=${http_iso} cloud-config-url=/dev/null
+# initrd ${http_base}/initrd
+# boot
+# sleep 5
+# goto end
+
+
+
 echo "Debug exit"
 exit 1
-
-BOOT_OS_ISO_PATH="$1"
-BOOT_OS_ISO_FILE="$(basename "$BOOT_OS_ISO_PATH")"
-BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR="$(dirname "$2/path_normalizer")"
-BOOT_OS_ENTRY_ID="$(basename "${BOOT_OS_ISO_PATH%.*}")"
-EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
-
-case "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" in
-    "$EMP_ASSETS_ROOT_DIR"*)
-	# Do nothing, prefix was fine
-	;;
-    *)
-	echo "ERROR: Given assets directory $BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR not under top directory $EMP_TOP_DIR"
-	exit 1
-	;;
-esac
 
 BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID="$(echo "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" | sed "s|^$EMP_ASSETS_ROOT_DIR\/||")"
 BOOT_OS_ARCH="$(basename "$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID")"

@@ -6,16 +6,53 @@ emp_print_call_help()
     echo "Example run:"
     echo "./emp_provision_ubuntu_iso_to_assets_dir.sh "
     echo "--isofile=/opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
-    echo "--assetsdir=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
-    echo "--copyiso=no "
+    echo "--assetsparent=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
+    echo "[--copyiso=no] "
     echo ""
     echo "Or with short forms:"
     echo "./emp_provision_ubuntu_iso_to_assets_dir.sh "
     echo "-i /opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
     echo "-a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
-    echo "-c no "
+    echo "[-c no] "
     echo ""
 }
+
+
+
+emp_posix_shell_string_replace()
+{
+    TAIL="$1"
+    SEARCH="$2"
+    REPLACEMENT="$3"
+
+    RESULT=""
+
+    if [ -z "$TAIL" ]
+    then
+        echo ""
+
+        return
+    fi
+
+    while [ -n "$TAIL" ]
+    do
+        HEAD="${TAIL%%$SEARCH*}"
+
+        if [ "$HEAD" = "$TAIL" ]
+        then
+            RESULT="$RESULT$TAIL"
+            echo "$RESULT"
+
+            return
+        fi
+
+        RESULT="$RESULT$HEAD$REPLACEMENT"
+        TAIL="${TAIL#*$SEARCH}"
+
+    done
+}
+
+
 
 # We need config functions to read the variables we want
 # and assign them with program prefix. We dont want to put
@@ -124,14 +161,14 @@ emp_validate_php_fpm_location()
 emp_collect_provisioning_parameters()
 {
     EMP_BOOT_OS_ISO_PATH=""
-    EMP_BOOT_OS_ASSETS_DIR=""
+    EMP_BOOT_OS_ASSETS_PARENT=""
     EMP_COPY_ISO="Y" # Default value
     
     TEMP_OPEN=""
     # Example run (wrapped):
     # ./emp_provision_ubuntu_iso_to_assets_dir.sh
     # --isofile=/opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso
-    # --assetsdir=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    # --assetsparent=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
     # --copyiso=no
 
     # Or the same:
@@ -144,7 +181,6 @@ emp_collect_provisioning_parameters()
 
     for TEMP_PARAM in "$@"
     do
-	
 	if [ -z "$TEMP_OPEN" ]
 	then
 	    # Nothing open
@@ -154,8 +190,8 @@ emp_collect_provisioning_parameters()
 		--isofile=*)
 		    TEMP_ISO_PATH="${TEMP_PARAM##--isofile=}"
 		    ;;
-		--assetsdir=*)
-		    TEMP_ASSETS_DIR="${TEMP_PARAM##--assetsdir=}"
+		--assetsparent=*)
+		    TEMP_ASSETS_PARENT="${TEMP_PARAM##--assetsparent=}"
 		    ;;
 		--copyiso=*)
 		    TEMP_COPY_ISO="${TEMP_PARAM##--copyiso=}"
@@ -168,7 +204,7 @@ emp_collect_provisioning_parameters()
 
 		    elif [ "$TEMP_PARAM" = "-a" ]
 		    then
-			TEMP_OPEN="EMP_BOOT_OS_ASSETS_DIR"
+			TEMP_OPEN="EMP_BOOT_OS_ASSETS_PARENT"
 
 		    elif [ "$TEMP_PARAM" = "-c" ]
 		    then
@@ -183,9 +219,9 @@ emp_collect_provisioning_parameters()
 		TEMP_ISO_PATH="$TEMP_PARAM"
 		TEMP_OPEN=""
 		
-	    elif [ "$TEMP_OPEN" = "EMP_BOOT_OS_ASSETS_DIR" ]
+	    elif [ "$TEMP_OPEN" = "EMP_BOOT_OS_ASSETS_PARENT" ]
 	    then
-		TEMP_ASSETS_DIR="$TEMP_PARAM"
+		TEMP_ASSETS_PARENT="$TEMP_PARAM"
 		TEMP_OPEN=""
 		
 	    elif [ "$TEMP_OPEN" = "EMP_COPY_ISO" ]
@@ -206,11 +242,11 @@ emp_collect_provisioning_parameters()
 	EMP_BOOT_OS_ISO_PATH="${TEMP_ISO_PATH}"
     fi
     
-    EMP_BOOT_OS_ASSETS_DIR="$(realpath "${TEMP_ASSETS_DIR}" 2>/dev/null)"
+    EMP_BOOT_OS_ASSETS_PARENT="$(realpath "${TEMP_ASSETS_PARENT}" 2>/dev/null)"
     # Ditto
-    if [ -z "$EMP_BOOT_OS_ASSETS_DIR" ]
+    if [ -z "$EMP_BOOT_OS_ASSETS_PARENT" ]
     then
-	EMP_BOOT_OS_ASSETS_DIR="${TEMP_ASSETS_DIR}"
+	EMP_BOOT_OS_ASSETS_PARENT="${TEMP_ASSETS_PARENT}"
     fi
     
     # Default is Y, so scan only for no in some forms
@@ -235,14 +271,13 @@ emp_verify_provisioning_parameters()
 	TEMP_RETVAL="1"
     fi
 
-    if [ -z "$EMP_BOOT_OS_ASSETS_DIR" ]
+    if [ -z "$EMP_BOOT_OS_ASSETS_PARENT" ]
     then
 	echo "ERROR: No assets dir given at all"
 	TEMP_RETVAL="1"
     fi
 
     # Bailing out already on errors because would create too many messages
-
     if [ "$TEMP_RETVAL" -ne 0 ]
     then
 	return "$TEMP_RETVAL"
@@ -258,69 +293,75 @@ emp_verify_provisioning_parameters()
     # Can be:
     #
     # $EMP_SCRIPT_OS_FAMILY=ubuntu
-    # $EMP_BOOT_OS_ASSETS_DIR=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    # $EMP_BOOT_OS_ASSETS_PARENT=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
     # $EMP_ASSETS_ROOT_DIR=/opt/easy_multi_pxe/netbootassets
     #
     # Conclusion:
     # $EMP_ASSETS_ROOT_DIR/$EMP_SCRIPT_OS_FAMILY must be the beginning
-    # of $EMP_BOOT_OS_ASSETS_DIR
+    # of $EMP_BOOT_OS_ASSETS_PARENT
 
-    case "$EMP_BOOT_OS_ASSETS_DIR" in
+    case "$EMP_BOOT_OS_ASSETS_PARENT" in
 	"$EMP_ASSETS_ROOT_DIR/$EMP_SCRIPT_OS_FAMILY"*)
 	    EMP_BOOT_OS_FAMILY="$EMP_SCRIPT_OS_FAMILY"	    
 	    ;;
 	*)
-	    echo "ERROR: Wrong family given in assets directory $EMP_BOOT_OS_ASSETS_DIR , expected $EMP_SCRIPT_OS_FAMILY"
+	    echo "ERROR: Wrong family given in assets directory $EMP_BOOT_OS_ASSETS_PARENT , expected $EMP_SCRIPT_OS_FAMILY"
 	    TEMP_RETVAL="1"
 	    ;;
     esac
 
     # Can be:
     #
-    # $EMP_BOOT_OS_ASSETS_DIR=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    # $EMP_BOOT_OS_ASSETS_PARENT=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
     #
     # Conclusion:
     # Must validate the last fragment to have correct arch.
     
-    EMP_BOOT_OS_MAIN_ARCH="${EMP_BOOT_OS_ASSETS_DIR##*/}"
-    echo "EMP_BOOT_OS_MAIN_ARCH $EMP_BOOT_OS_MAIN_ARCH"
+    EMP_BOOT_OS_MAIN_ARCH="${EMP_BOOT_OS_ASSETS_PARENT##*/}"
 
     if [ "$EMP_BOOT_OS_MAIN_ARCH" != "x32" -a "$EMP_BOOT_OS_MAIN_ARCH" != "x64" ]
     then
-	echo "ERROR: Wrong main architecture given in assets directory $EMP_BOOT_OS_ASSETS_DIR , x32 or x64"
+	echo "ERROR: Wrong main architecture given in assets directory $EMP_BOOT_OS_ASSETS_PARENT , x32 or x64"
 	TEMP_RETVAL="1"
     fi
 
     # Can be:
     #
     # $EMP_BOOT_OS_FAMILY=ubuntu
-    # $EMP_BOOT_OS_ASSETS_DIR=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    # $EMP_BOOT_OS_ASSETS_PARENT=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
     # $EMP_ASSETS_ROOT_DIR=/opt/easy_multi_pxe/netbootassets
     # $EMP_BOOT_OS_MAIN_ARCH=x64
     #
     # Conclusion:
     # Must check that only 20.04 remains, so strip from
-    # $EMP_BOOT_OS_ASSETS_DIR beginning $EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_FAMILY/
+    # $EMP_BOOT_OS_ASSETS_PARENT beginning $EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_FAMILY/
     # and from end /$EMP_BOOT_OS_MAIN_ARCH
     # Then check that it is nonzero and does not contains slashes
-    EMP_BOOT_OS_MAIN_VERSION="${EMP_BOOT_OS_ASSETS_DIR##$EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_FAMILY/}"
+    EMP_BOOT_OS_MAIN_VERSION="${EMP_BOOT_OS_ASSETS_PARENT##$EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_FAMILY/}"
     EMP_BOOT_OS_MAIN_VERSION="${EMP_BOOT_OS_MAIN_VERSION%%/$EMP_BOOT_OS_MAIN_ARCH}"
-
-    echo "EMP_BOOT_OS_MAIN_VERSION $EMP_BOOT_OS_MAIN_VERSION"
 
     case "$EMP_BOOT_OS_MAIN_VERSION" in
 	*/*)
-	    echo "ERROR: Wrong main version given in assets directory $EMP_BOOT_OS_ASSETS_DIR ; contains extra directory"
+	    echo "ERROR: Wrong main version given in assets directory $EMP_BOOT_OS_ASSETS_PARENT ; contains extra directory"
 	    TEMP_RETVAL="1"
 	    ;;
 	*)
 	    if [ -z "$EMP_BOOT_OS_MAIN_VERSION" ]
 	    then
-		echo "ERROR: Empty main version given in assets directory $EMP_BOOT_OS_ASSETS_DIR"
+		echo "ERROR: Empty main version given in assets directory $EMP_BOOT_OS_ASSETS_PARENT"
 		TEMP_RETVAL="1"
 	    fi
 	    ;;
     esac
+
+    # Try to make the assets dir
+    mkdir -p "$EMP_BOOT_OS_ASSETS_PARENT"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to create assets directory $EMP_BOOT_OS_ASSETS_PARENT"
+	TEMP_RETVAL=1
+    fi
     
     return "$TEMP_RETVAL"
 }
