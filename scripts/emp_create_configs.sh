@@ -297,8 +297,9 @@ then
 fi
 
 
-
+echo ""
 # Write main config file
+echo -n "Writing main config file $EMP_MAIN_CONFIG ... "
 
 echo "# $EMP_MAIN_CONFIG" > "$EMP_MAIN_CONFIG"
 chmod "$EMP_CONFIG_CHMOD_PERMS" "$EMP_MAIN_CONFIG"
@@ -327,6 +328,7 @@ then
     echo "CIFS_PASSWD=$EMP_CIFS_PASSWD" >> "$EMP_MAIN_CONFIG"
 fi
 
+echo "done."
 
 
 # Creating individual config files from templates
@@ -334,7 +336,6 @@ fi
 # Read the new config file again, just in case
 emp_read_config "$EMP_MAIN_CONFIG"
 
-echo ""
 echo "Preparing to write include config files."
 
 
