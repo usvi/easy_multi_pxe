@@ -98,9 +98,24 @@ then
 	echo "ERROR: Unable to remove old files from $FS_BOOT_OS_UNIX_PATH"
 	exit 1
     fi
+
+else
+    # Remove the non-iso files anyways
+    for REMOVE_FILE in "$FS_BOOT_OS_UNIX_PATH/vmlinuz" "$FS_BOOT_OS_UNIX_PATH/initrd"
+    do
+	if [ -f "$REMOVE_FILE" ]
+	then
+	    chmod u+rw "$REMOVE_FILE"
+	    rm "$REMOVE_FILE"
+
+	    if [ "$?" -ne 0 ]
+	    then
+		echo "ERROR: Unable to remove old kernel or initrd file $REMOVE_FILE"
+		exit 1
+	    fi
+	fi
+    done
 fi
-
-
 
 
 if [ ! -d "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" ]
@@ -216,7 +231,7 @@ do
     cat <<EOF > "$IPXE_FRAGMENT"
 set http_base $WEBSERVER_HTTP_BASE/$BOOT_OS_ENTRY_ID
 set http_iso \${http_base}/$BOOT_OS_ISO_FILE
-kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd ip=dhcp url=\${http_iso}
+kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 root=/dev/ram0 initrd=initrd ip=dhcp url=\${http_iso} cloud-config-url=/dev/null
 initrd \${http_base}/initrd
 boot
 sleep 5
