@@ -5,52 +5,43 @@ Easy Multi PXE is an iPXE-powered simple pxe server. Currently it is able to boo
 ## Hilights
 
 * Easy to setup, basically just clone the repo to /opt/easy_multi_pxe and plug configuration files
+* Configurable SMB/CIFS paths and credentials
+* Configuration creation script (emp_create_configs.sh) asks necessary stuff in a user-friendly manner
 * Pluggable configuration files: just include a file for dnsmasq and apache or nginx and you are ready to go
 * Provisioning script for Windows: It even splitstreams drivers in without the help of Windows!
-* Configurable SMB/CIFS paths and credentials
+* Dynamic creation of master root.ipxe file based on fragments created by provisioning scripts
 
 ## Requirements
 
 * Some knowledge of basic PXE, EFI and Linux concepts
 * Dnsmasq
-* Samba/CIFS (so Windows installer can map it and start setup.exe)
+* Samba/CIFS (so that Windows installer can map it and start setup.exe)
 * Webserver (Apache2 or Nginx is fine)
-* Windows ADK or similiar to create initial WinPE template
+* Windows ADK / WAIK or similiar to create initial template
 
 ## Suggested/expected files and directories layout
 
 ```
-Externals
-/opt/drivers/x64/windows/10/board1/foo_lan.inf
-/opt/drivers/x64/windows/10/board2/bar_lan.inf
-/opt/drivers/x64/windows/10/board3/baz_lan.inf
+External driver dirs, not necessary but handy:
+/opt/drivers/windows/10/x64//board1/foo_lan.inf
+/opt/drivers/windows/10/x64/board2/bar_lan.inf
+/opt/drivers/windows/10/x64/board3/baz_lan.inf
 
-
-External but REQUIRED:
-/opt/easy_multi_pxe/conf/emp_cifs_share.conf - Contains CIFS server credentials:
-CIFS_SERVER_IP
-CIFS_PATH_PREFIX
-CIFS_USER
-CIFS_PASSWD
-
-Plugin configuration files:
+Required, our configuration scrip creates:
+/opt/easy_multi_pxe/conf/easy_multi_pxe.conf
 /opt/easy_multi_pxe/conf/apache2_emp_inc.conf
 /opt/easy_multi_pxe/conf/dnsmasq_emp_inc.conf
 /opt/easy_multi_pxe/conf/nginx_emp_inc.conf
 
-Provisioning script:
-/opt/easy_multi_pxe/scripts/emp_provision_wimdir.sh
+Provisioning scripts:
+/opt/easy_multi_pxe/scripts/emp_provision_windows_iso_to_assets_dir.sh
 
 Roots:
 /opt/easy_multi_pxe/tftproot - Main TFTP root
-/opt/easy_multi_pxe/netbootassets - CIFS Netboot storage mount root, also configured in webservers
+/opt/easy_multi_pxe/netbootassets - CIFS Netboot assets storage mount root, also configured in webservers
 
-Boot config files:
-/opt/easy_multi_pxe/tftproot/root.ipxe
-/opt/easy_multi_pxe/tftproot/32bit-bios.ipxe
-/opt/easy_multi_pxe/tftproot/32bit-efi.ipxe
-/opt/easy_multi_pxe/tftproot/64bit-bios.ipxe
-/opt/easy_multi_pxe/tftproot/64bit-efi.ipxe
+Boot config file:
+/opt/easy_multi_pxe/scripts/root.ipxe.php - Dynamically generated ipxe root menu
 
 Boot kernels:
 /opt/easy_multi_pxe/tftproot/ipxe.386.efi (self compiled)
@@ -70,10 +61,17 @@ Example: Windows 10 x64 bios:
 /opt/easy_multi_pxe/netbootassets/x64/windows/10/template/boot.sdi
 /opt/easy_multi_pxe/netbootassets/x64/windows/10/template/boot.wim
 
-Mount the iso Win10_21H2_English_x64 and put the contents here:
-/opt/easy_multi_pxe/netbootassets/x64/windows/Win10_21H2_English_x64-2022-02-02/unpacked
 
-Then run /opt/easy_multi_pxe/scripts/emp_provision_wimdir.sh /opt/easy_multi_pxe/netbootassets/x64/windows/10
-Script outomatically provisions all entries under /opt/easy_multi_pxe/netbootassets/x64/windows/10 
-(except template, of course)
+Then just run run:
+./scripts/emp_provision_windows_iso_to_assets_dir.sh /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso /opt/easy_multi_pxe/netbootassets/windows/10/x64
+
+And the script provisions stuff automatically:
+Processing Win10_22H2_English_x64-2023-04-08 as windows/10/x64
+Copying Win10_22H2_English_x64-2023-04-08.iso : 100%
+Copying template files...done
+Drivers found at /opt/drivers/windows/10/x64 , copying...done
+Syncinc...done
+ALL DONE
+
+
 ```
