@@ -7,6 +7,17 @@ copy_dir_progress()
 
     SIZE_SRC=$(du --apparent-size -s "$SRC_DIR" | sed "s|\s.*||;" )
 
+    if [ ! -d "$DEST_DIR" ]
+    then
+	mkdir "$DEST_DIR"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to create destination dir $DEST_DIR for copy"
+	    return 1
+	fi
+    fi
+
     cp -r "$SRC_DIR"/* "$DEST_DIR" &
     COPY_PID="$!"
 
