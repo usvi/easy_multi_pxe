@@ -153,4 +153,5 @@ Processing Win7_Ult_SP1_English_x32 as windows/7/x86
 Copying Win7_Ult_SP1_English_x32.iso : 100%
 Copying template files...done
 Syncinc...done
-ALL DONE```
+ALL DONE
+```
