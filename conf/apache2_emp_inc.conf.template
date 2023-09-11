@@ -2,7 +2,7 @@
 # Include {EMP_CONFIG_DIR}/apache2_emp_inc.conf
 
 
-# Make our root.ipxe to be sideloaded from scripts directory:
+# Sideload root.ipxe:
 Alias "/{EMP_WEBSERVER_PREFIX}/root.ipxe" "{EMP_SCRIPTS_DIR}/root.ipxe.php"
 
 <Files "root.ipxe.php">
@@ -12,6 +12,25 @@ Alias "/{EMP_WEBSERVER_PREFIX}/root.ipxe" "{EMP_SCRIPTS_DIR}/root.ipxe.php"
   Require all granted
 </Files>
 
+# Sideload also wimboot:
+Alias "/{EMP_WEBSERVER_PREFIX}/wimboot" "{EMP_TFTPROOT_DIR}/wimboot"
+
+<Files "wimboot">
+  AllowOverride All
+  Order allow,deny
+  Allow from all
+  Require all granted
+</Files>
+
+# And 386 variant:
+Alias "/{EMP_WEBSERVER_PREFIX}/wimboot.386" "{EMP_TFTPROOT_DIR}/wimboot.386"
+
+<Files "wimboot.386">
+  AllowOverride All
+  Order allow,deny
+  Allow from all
+  Require all granted
+</Files>
 
 # Make everything else available from our assets directory
 Alias "/{EMP_WEBSERVER_PREFIX}" "{EMP_ASSETS_DIR}"
