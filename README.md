@@ -71,14 +71,14 @@ To provision and boot Windows XP/7/10 isos, you need to get the Windows Preinsta
 ### Windows 7 (and probably XP also)
 1. Download Windows Automated Installation Kit for Windows 7: https://www.microsoft.com/en-US/download/details.aspx?id=5753
 The .iso file will be KB3AIK_EN.iso (for english), sha1sum:  
-793f4cc4741ebad223938be0eeee708eda968daa  KB3AIK_EN.iso
+**793f4cc4741ebad223938be0eeee708eda968daa**  KB3AIK_EN.iso
 2. Profit
 
 ### Windows 10
 1. Download Windows Assessment and Deployment Kit for Windows 10, version 2004: https://software-static.download.prss.microsoft.com/pr/download/20348.1.210507-1500.fe_release_amd64fre_ADK.iso , sha1sum:
-ae34d78d1c09e68a677c84dacabfb191a76dea9d  20348.1.210507-1500.fe_release_amd64fre_ADK.iso
+**ae34d78d1c09e68a677c84dacabfb191a76dea9d**  20348.1.210507-1500.fe_release_amd64fre_ADK.iso
 2. Download Windows PE add-on for the ADK, version 2004: https://software-static.download.prss.microsoft.com/sg/download/20348.1.210507-1500.fe_release_amd64fre_ADKWINPEADDONS.iso , sha1sum:  
-35cee1e3d8afde3e40f346a694b82b03169b6a79  20348.1.210507-1500.fe_release_amd64fre_ADKWINPEADDONS.iso
+**35cee1e3d8afde3e40f346a694b82b03169b6a79**  20348.1.210507-1500.fe_release_amd64fre_ADKWINPEADDONS.iso
 3. Profit
 
 Example: Windows 10 x64 bios:
