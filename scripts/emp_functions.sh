@@ -112,32 +112,33 @@ emp_collect_provisioning_parameters()
     
     TEMP_OPEN=""
     # Example run (wrapped):
-    # root@gw:/opt/easy_multi_pxe# ./scripts/emp_provision_ubuntu_iso_to_assets_dir.sh
-    # --isofile /opt/isos_ro/ubuntu/ubuntu-20.04.3-desktop-amd64.iso (mandatory)
-    # --assetsdir /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 (mandatory)
-    # --nocopyiso (optional)
+    # ./emp_provision_ubuntu_iso_to_assets_dir.sh
+    # --isofile=/opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso
+    # --assetsdir=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    # --copyiso=no
 
-    # Interchangeable params
-    # --isofile -i
-    # --assetsdir -a
-    # --nocopyiso -n
+    # Or the same:
+    # -i /opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso
+    # -a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    # -c no
 
     for TEMP_PARAM in "$@"
     do
+	
 	if [ -z "$TEMP_OPEN" ]
 	then
 	    # Nothing open
-	    if [ "$TEMP_PARAM" = "--isofile" -o "$TEMP_PARAM" = "-i" ]
+	    if [ "$TEMP_PARAM" = "-i" ]
 	    then
 		TEMP_OPEN="EMP_BOOT_OS_ISO_PATH"
 
-	    elif [ "$TEMP_PARAM" = "--assetsdir" -o "$TEMP_PARAM" = "-a" ]
+	    elif [ "$TEMP_PARAM" = "-a" ]
 	    then
 		TEMP_OPEN="EMP_BOOT_OS_ASSETS_DIR"
 
-	    elif [ "$TEMP_PARAM" = "--nocopyiso" -o "$TEMP_PARAM" = "-n" ]
+	    elif [ "$TEMP_PARAM" = "-c" ]
 	    then
-		EMP_COPY_ISO="N"
+		TEMP_OPEN="EMP_COPY_ISO"
 	    fi
 	else
 	    if [ "$TEMP_OPEN" = "EMP_BOOT_OS_ISO_PATH" ]
@@ -159,6 +160,15 @@ emp_collect_provisioning_parameters()
 		if [ -z "$EMP_BOOT_OS_ASSETS_DIR" ]
 		then
 		    EMP_BOOT_OS_ASSETS_DIR="${TEMP_PARAM}"
+		fi
+		TEMP_OPEN=""
+		
+	    elif [ "$TEMP_OPEN" = "EMP_COPY_ISO" ]
+	    then
+		# Default is Y, so scan only for no in some forms
+		if [ "$TEMP_PARAM" = "no" -o "$TEMP_PARAM" = "NO" -o "$TEMP_PARAM" = "n" -o "$TEMP_PARAM" = "N" ]
+		then
+		    EMP_COPY_ISO="N"
 		fi
 		TEMP_OPEN=""
 	    fi
