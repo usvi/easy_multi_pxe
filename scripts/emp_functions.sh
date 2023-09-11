@@ -142,22 +142,49 @@ emp_collect_provisioning_parameters()
 	else
 	    if [ "$TEMP_OPEN" = "EMP_ISO_PATH" ]
 	    then
-		EMP_ISO_PATH="$(realpath $TEMP_PARAM)"
+		EMP_ISO_PATH="$(realpath "${TEMP_PARAM}" 2>/dev/null)"
 		TEMP_OPEN=""
 		
 	    elif [ "$TEMP_OPEN" = "EMP_ASSETS_DIR" ]
 	    then
-		EMP_ASSETS_DIR="$(realpath "${TEMP_PARAM}")"
+		EMP_ASSETS_DIR="$(realpath "${TEMP_PARAM}" 2>/dev/null)"
 		TEMP_OPEN=""
 	    fi
 	fi
     done
 
-    echo "EMP_ISO_PATH: $EMP_ISO_PATH"
-    echo "EMP_ASSETS_DIR: $EMP_ASSETS_DIR"
+    # Separate function checks that params are fine
 }
 
+emp_verify_provisioning_parameters()
+{
+    TEMP_OS_FAMILY="$(basename ${0})"
+    TEMP_OS_FAMILY="${TEMP_OS_FAMILY##"emp_provision_"}"
+    TEMP_OS_FAMILY="${TEMP_OS_FAMILY%%_*}"
+    EMP_SCRIPT_OS_FAMILY="$TEMP_OS_FAMILY"
 
+    # Can be:
+    #
+    # $EMP_SCRIPT_OS_FAMILY=ubuntu
+    # $EMP_ASSETS_DIR=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    # $EMP_ASSETS_ROOT_DIR=/opt/easy_multi_pxe/netbootassets
+    #
+    # Conclusion:
+    # $EMP_ASSETS_ROOT_DIR/$EMP_SCRIPT_OS_FAMILY must be the beginning
+    # of $EMP_ASSETS_DIR
+    echo "SCRIPT OS FAMILY $EMP_SCRIPT_OS_FAMILY"
+    echo "ASSETS DIR $EMP_ASSETS_DIR"
+    echo "EMP_ASSETS_ROOT_DIR $EMP_ASSETS_ROOT_DIR"
+
+    case "$EMP_ASSETS_DIR" in
+	"$EMP_ASSETS_ROOT_DIR/$EMP_SCRIPT_OS_FAMILY"*)
+	    echo "VALID"
+	    ;;
+	*)
+	    echo "INVALID"
+	    ;;
+    esac
+}
 
 
 

@@ -45,16 +45,10 @@ elif [ "$EMP_OP" = "do_provisioning" ]
 then
     # Main config and functions have been already included in the common section
     emp_collect_provisioning_parameters "$@"
+    emp_verify_provisioning_parameters
 
     echo "provisioning debug exit"
     exit 1
-    COPY_ISO="yes"
-    # Need to do a couple of prechecks
-    check_iso_file "$1"
-    check_assets_prefix_dir "$2"
-    check_copy_iso "$3"
-
-    # Can continue with parameters and stuff
     
 fi
 
