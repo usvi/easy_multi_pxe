@@ -1,5 +1,22 @@
 #!/bin/sh
 
+emp_print_call_help()
+{
+    echo ""
+    echo "Example run:"
+    echo "./emp_provision_ubuntu_iso_to_assets_dir.sh "
+    echo "--isofile=/opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
+    echo "--assetsdir=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
+    echo "--copyiso=no "
+    echo ""
+    echo "Or with short forms:"
+    echo "./emp_provision_ubuntu_iso_to_assets_dir.sh "
+    echo "-i /opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
+    echo "-a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
+    echo "-c no "
+    echo ""
+}
+
 # We need config functions to read the variables we want
 # and assign them with program prefix. We dont want to put
 # strange prefixes to config files to confuse the user. Yes,

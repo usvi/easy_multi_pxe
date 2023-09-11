@@ -50,7 +50,7 @@ then
     if [ "$?" -ne 0 ]
     then
 	echo "ERROR: Provisioning parameters failed, exiting."
-
+	emp_print_call_help
 	exit 1
     fi
 
