@@ -68,18 +68,26 @@ Boot kernels:
 ## On acquiring Windows Preinstallation Environment (PE) boot templates
 To provision and boot Windows XP/7/10 isos, you need to get the Windows Preinstallation Environment (PE) files. This is a bit tricky. I would happily include the files here on Github but Microsoft would probably bust my ass for it, so this needs to be done manually.
 
-### Windows 7 (and probably XP also)
+### For Windows 7 (and probably XP also)
 1. Download Windows Automated Installation Kit for Windows 7: https://www.microsoft.com/en-US/download/details.aspx?id=5753
 The .iso file will be KB3AIK_EN.iso (for english), sha1sum:  
 **793f4cc4741ebad223938be0eeee708eda968daa**  KB3AIK_EN.iso
-2. Profit
+2. Mount the .iso (this works even in Windows 10), then run StartCD.exe from the DVD.
+3. If you don't have .NET 2.0 there are 2 options:  
+Option 1: Run StartCD.exe from the DVD, then install the .NET 2.0 by selecting ".NET Framework Setup"  
+Option 2: Hit Start, write "Turn Windows features on or off", run it and install ".NET Framework 3.5 (includes .NET 2.0 and 3.0)", then select "Let Windows Update download the files for you".
+4. Install the WAIK by selecting from menu "Windows AIK Setup".
+5. Profit
 
-### Windows 10
+
+### For Windows 10
 1. Download Windows Assessment and Deployment Kit for Windows 10, version 2004: https://software-static.download.prss.microsoft.com/pr/download/20348.1.210507-1500.fe_release_amd64fre_ADK.iso , sha1sum:  
 **ae34d78d1c09e68a677c84dacabfb191a76dea9d**  20348.1.210507-1500.fe_release_amd64fre_ADK.iso
 2. Download Windows PE add-on for the ADK, version 2004: https://software-static.download.prss.microsoft.com/sg/download/20348.1.210507-1500.fe_release_amd64fre_ADKWINPEADDONS.iso , sha1sum:  
 **35cee1e3d8afde3e40f346a694b82b03169b6a79**  20348.1.210507-1500.fe_release_amd64fre_ADKWINPEADDONS.iso
-3. Profit
+3. First mount the ADK.iso, then run adksetup.exe to install the ADK, pick only the "Deployment Tool".
+4. Then mount the ADKWINPEADDONS.iso, then run adkwinpesetup.exe to install the PE Addons
+5. Profit
 
 Example: Windows 10 x64 bios:
 1. Go to actual Windows x64
