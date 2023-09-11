@@ -30,11 +30,16 @@ fi
 
 # We need to see our arch. If we are run with argument
 # /opt/easy_multi_pxe/netbootassets/x64/windows/10
-# we need to get the x64.
+# we need to get the x64/windows/10
 
-TEMP_DIR="`dirname $ROOT_WIM_DIR`"
+TEMP_DIR="$ROOT_WIM_DIR"
+OS_VER_ID="`basename $TEMP_DIR`"
 TEMP_DIR="`dirname $TEMP_DIR`"
-ARCH_ID="`basename $TEMP_DIR`"
+OS_FAMILY_ID="`basename $TEMP_DIR`"
+TEMP_DIR="`dirname $TEMP_DIR`"
+OS_ARCH_ID="`basename $TEMP_DIR`"
+
+DRIVER_DIR_ID="$OS_ARCH_ID/$OS_FAMILY_ID/$OS_VER_ID"
 
 # We need to mangle our path to correct part split off
 # and for the rest slashes converted.
@@ -109,11 +114,11 @@ do
 	then
 	    # Mount ok
 
-	    if [ -d "$DRIVERS_BASE_DIR/$ARCH_ID" ]
+	    if [ -d "$DRIVERS_BASE_DIR/$DRIVER_DIR_ID" ]
 	    then
-		echo "Drivers found at $DRIVERS_BASE_DIR/$ARCH_ID , copying..."
+		echo "Drivers found at $DRIVERS_BASE_DIR/$DRIVER_DIR_ID , copying..."
 		# Drivers dir exists for this architecture, copy them
-		cp -r "$DRIVERS_BASE_DIR/$ARCH_ID" "$ROOT_WIM_DIR/$WIM_ENTRY/mount/Windows/System32/extradrivers" &>/dev/null
+		cp -r "$DRIVERS_BASE_DIR/$DRIVER_DIR_ID" "$ROOT_WIM_DIR/$WIM_ENTRY/mount/Windows/System32/extradrivers" &>/dev/null
 		DRIVERS=1
 	    fi
 
