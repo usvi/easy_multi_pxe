@@ -287,23 +287,24 @@ echo "Preparing to write config files."
 
 
 # Try to figure out php fpm socket location
-TEMP_PHP_FPM_RUN_SOCK="/dev/null"
+EMP_PHP_FPM_RUN_SOCK="/dev/null"
 ls -1 /run/php/*.sock &> /dev/null
+echo "starting"
 
 if [ "$?" -eq 0 ]
 then
     # Just pick the first one for now
     echo -n "Locating php-fpm ... "
-    TEMP_PHP_FPM_RUN_SOCK="`ls -1 /run/php/*.sock | head -n 1`"
+    EMP_PHP_FPM_RUN_SOCK="`ls -1 /run/php/*.sock | head -n 1`"
 fi
-
-
+echo "ready"
+exit 1
 
 # Read the new config file again, just in case
 emp_read_config "$EMP_MAIN_CONFIG"
 
 echo -n "Writing $EMP_APACHE_CONF_FINAL ... " 
-sed "s|{EMP_CONFIG_DIR}|$EMP_CONFIG_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$EMP_WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$EMP_SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$EMP_ASSETS_ROOT_DIR|g;s|{EMP_TFTPROOT_DIR}|$EMP_TFTPROOT_DIR|g;" "$EMP_APACHE_CONF_TEMPLATE" > "$EMP_APACHE_CONF_FINAL"
+sed "s|{EMP_CONFIG_DIR}|$EMP_CONFIG_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$EMP_WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$EMP_SCRIPTS_DIR|g;s|{EMP_ASSETS_ROOT_DIR}|$EMP_ASSETS_ROOT_DIR|g;s|{EMP_TFTPROOT_DIR}|$EMP_TFTPROOT_DIR|g;" "$EMP_APACHE_CONF_TEMPLATE" > "$EMP_APACHE_CONF_FINAL"
 echo "done."
 
 
@@ -313,5 +314,5 @@ echo "done."
 
 
 echo -n "Writing $EMP_NGINX_CONF_FINAL ... " 
-sed "s|{EMP_CONFIG_DIR}|$EMP_CONFIG_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$EMP_WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$EMP_SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$EMP_ASSETS_ROOT_DIR|g;s|{EMP_TFTPROOT_DIR}|$EMP_TFTPROOT_DIR|g;s|{TEMP_PHP_FPM_RUN_SOCK}|$TEMP_PHP_FPM_RUN_SOCK|g;" "$EMP_NGINX_CONF_TEMPLATE" > "$EMP_NGINX_CONF_FINAL"
+sed "s|{EMP_CONFIG_DIR}|$EMP_CONFIG_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$EMP_WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$EMP_SCRIPTS_DIR|g;s|{EMP_ASSETS_ROOT_DIR}|$EMP_ASSETS_ROOT_DIR|g;s|{EMP_TFTPROOT_DIR}|$EMP_TFTPROOT_DIR|g;s|{EMP_PHP_FPM_RUN_SOCK}|$EMP_PHP_FPM_RUN_SOCK|g;" "$EMP_NGINX_CONF_TEMPLATE" > "$EMP_NGINX_CONF_FINAL"
 echo "done."

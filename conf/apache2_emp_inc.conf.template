@@ -33,9 +33,9 @@ Alias "/{EMP_WEBSERVER_PREFIX}/wimboot.386" "{EMP_TFTPROOT_DIR}/wimboot.386"
 </Files>
 
 # Make everything else available from our assets directory
-Alias "/{EMP_WEBSERVER_PREFIX}" "{EMP_ASSETS_DIR}"
+Alias "/{EMP_WEBSERVER_PREFIX}" "{EMP_ASSETS_ROOT_DIR}"
 
-<Directory "{EMP_ASSETS_DIR}">
+<Directory "{EMP_ASSETS_ROOT_DIR}">
   EnableMMAP Off
   Options Indexes FollowSymLinks MultiViews
   AllowOverride All
