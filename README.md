@@ -49,10 +49,19 @@ this convention: netbootassets/os_family/major_version/arch)
 /opt/easy_multi_pxe/netbootassets/windows/7/x64
 /opt/easy_multi_pxe/netbootassets/windows/7/x86
 /opt/easy_multi_pxe/netbootassets/windows/xp/x86
+/opt/easy_multi_pxe/netbootassets/windows/xp/x64
 /opt/easy_multi_pxe/netbootassets/systemrescuecd/8/x64
 /opt/easy_multi_pxe/netbootassets/systemrescuecd/8/x86
 /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x86
 /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+
+Windows template files (whatever is needed, explained below how to get them)
+/opt/easy_multi_pxe/netbootassets/windows/10/x64/template
+/opt/easy_multi_pxe/netbootassets/windows/10/x86/template
+/opt/easy_multi_pxe/netbootassets/windows/7/x64/template
+/opt/easy_multi_pxe/netbootassets/windows/7/x86/template
+/opt/easy_multi_pxe/netbootassets/windows/xp/x86/template
+/opt/easy_multi_pxe/netbootassets/windows/xp/x64/template
 
 Boot config file:
 /opt/easy_multi_pxe/scripts/root.ipxe.php - Dynamically generated ipxe root menu
