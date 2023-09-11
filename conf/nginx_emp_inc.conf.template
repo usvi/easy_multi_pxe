@@ -1,9 +1,9 @@
 # Use this in /etc/ngingx/sites-available/default :
-# include /opt/easy_multi_pxe/conf/nginx_emp_inc.conf;
+# include {EMP_CONFIG_DIR}/nginx_emp_inc.conf;
 
 # Sideload root.ipxe :
-location /netbootassets/root.ipxe {
-  alias /opt/easy_multi_pxe/scripts/root.ipxe.php;
+location /{EMP_WEBSERVER_PREFIX}/root.ipxe {
+  alias {EMP_SCRIPTS_DIR}/root.ipxe.php;
   include snippets/fastcgi-php.conf;
   fastcgi_param SCRIPT_FILENAME $request_filename;
   # Horrible, we need to change this to dynamic in templates:
@@ -11,8 +11,8 @@ location /netbootassets/root.ipxe {
 }
 
 # Rest of assets come from mounted directory:
-location /netbootassets/ {
-  alias /opt/easy_multi_pxe/netbootassets/;
+location /{EMP_WEBSERVER_PREFIX} {
+  alias {EMP_ASSETS_DIR};
   autoindex on;
   sendfile_max_chunk 2147483647;
 }
