@@ -31,16 +31,14 @@ cpuid --ext 29 && set arch x86_64 || set arch i386
 # arch = i386 or x86_64
 # platform = pcbios or efi
 
-goto conf_${arch}_${platform}
+goto menu_${arch}_${platform}
 
 
 
-:conf_i386_pcbios
+:menu_i386_pcbios
 menu iPXE 32bit BIOS boot menu
-
 item reboot         Reboot computer
 <?php
-
 ?>
 choose selected
 set menu-timeout 0
@@ -48,35 +46,62 @@ goto ${selected}
 
 :reboot
 reboot
-goto end
 <?php
-
 ?>
 goto end
 
 
 
-:conf_x86_64_pcbios
-<?php
 
+
+
+
+:menu_x86_64_pcbios
+menu iPXE 64bit BIOS boot menu
+item reboot         Reboot computer
+<?php
+?>
+choose selected
+set menu-timeout 0
+goto ${selected}
+
+:reboot
+reboot
+<?php
 ?>
 goto end
 
 
-:conf_i386_efi
-<?php
 
+
+
+
+
+:menu_i386_efi
+menu iPXE 32bit EFI boot menu
+item reboot         Reboot computer
+<?php
+?>
+choose selected
+set menu-timeout 0
+goto ${selected}
+
+:reboot
+reboot
+<?php
 ?>
 goto end
 
 
 
-:conf_x86_64_efi
+
+
+
+
+:menu_x86_64_efi
 menu iPXE 64bit EFI boot menu
-
 item reboot         Reboot computer
 <?php
-
 ?>
 choose selected
 set menu-timeout 0
@@ -84,9 +109,7 @@ goto ${selected}
 
 :reboot
 reboot
-goto end
 <?php
-
 ?>
 goto end
 
