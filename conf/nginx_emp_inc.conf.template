@@ -6,8 +6,7 @@ location /{EMP_WEBSERVER_PREFIX}/root.ipxe {
   alias {EMP_SCRIPTS_DIR}/root.ipxe.php;
   include snippets/fastcgi-php.conf;
   fastcgi_param SCRIPT_FILENAME $request_filename;
-  # Horrible, we need to change this to dynamic in templates:
-  fastcgi_pass unix:/run/php/php7.3-fpm.sock;
+  fastcgi_pass unix:{EMP_PHP_FPM_RUN_SOCK};
 }
 
 # Rest of assets come from mounted directory:

@@ -295,11 +295,36 @@ fi
 
 
 
+echo ""
+echo "Preparing to Write config files."
+
+
+# Try to figure out php fpm socket location
+PHP_FPM_RUN_SOCK="/dev/null"
+ls -1 /run/php/*.sock &> /dev/null
+
+if [ "$?" -eq 0 ]
+then
+    # Just pick the first one for now
+    echo -n "Locating php-fpm ... "
+    PHP_FPM_RUN_SOCK="`ls -1 /run/php/*.sock | head -n 1`"
+fi
+
+
+
 # Include the new config file, just in case
 . "$MAIN_CONFIG"
 
+echo -n "Writing $APACHE_EMP_CONF_FINAL ... " 
 sed "s|{EMP_CONFIG_DIR}|$CONFIGS_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$ASSETS_DIR|g;" "$APACHE_EMP_CONF_TEMPLATE" > "$APACHE_EMP_CONF_FINAL"
+echo "done."
 
+
+echo -n "Writing $DNSMASQ_EMP_CONF_FINAL ... " 
 sed "s|{EMP_DNSMASQ_CONF_FILE}|$DNSMASQ_EMP_CONF_FINAL|g;s|{EMP_TFTPROOT_DIR}|$TFTPROOT_DIR|g;s|{EMP_WEBSERVER_IP}|$WEBSERVER_IP|g;s|{EMP_WEBSERVER_PREFIX}|$WEBSERVER_PREFIX|g;" "$DNSMASQ_EMP_CONF_TEMPLATE" > "$DNSMASQ_EMP_CONF_FINAL"
+echo "done."
 
-sed "s|{EMP_CONFIG_DIR}|$CONFIGS_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$ASSETS_DIR|g;" "$NGINX_EMP_CONF_TEMPLATE" > "$NGINX_EMP_CONF_FINAL"
+
+echo -n "Writing $NGINX_EMP_CONF_FINAL ... " 
+sed "s|{EMP_CONFIG_DIR}|$CONFIGS_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$ASSETS_DIR|g;s|{EMP_PHP_FPM_RUN_SOCK}|$PHP_FPM_RUN_SOCK|g;" "$NGINX_EMP_CONF_TEMPLATE" > "$NGINX_EMP_CONF_FINAL"
+echo "done."
