@@ -2,6 +2,9 @@
 
 Easy Multi PXE is an iPXE-powered simple pxe server. Currently it is able to boot in 64bit BIOS mode, but in the future it will support all crisscrossses from 32/64bit and BIOS/EFI. Possibly even signed efi stuff.
 
+<img src="./doc/01_fw_booting.png" style="width: 35vw;"><img src="./doc/02_ipxe_booting.png" style="width: 35vw;"><img src="./doc/03_ipxe_main_menu.png" style="width: 35vw;"><img src="./doc/04_ipxe_windows_menu.png" style="width: 35vw;"><img src="./doc/05_ipxe_windows_7_menu.png" style="width: 35vw;"><img src="./doc/06_ipxe_windows_10_menu.png" style="width: 35vw;"><img src="./doc/07_wimboot_preload.png" style="width: 35vw;"><img src="./doc/08_wimboot_load.png" style="width: 35vw;"><img src="./doc/09_windows_10_native_installer_loading.png" style="width: 35vw;"><img src="./doc/10_windows_10_native_installer_running.png" style="width: 35vw;">
+
+
 ## Hilights
 
 * Easy to setup, basically just clone the repo to /opt/easy_multi_pxe and plug configuration files
