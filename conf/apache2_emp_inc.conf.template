@@ -3,7 +3,7 @@
 
 
 # Sideload root.ipxe:
-Alias "/{EMP_WEBSERVER_PREFIX}/root.ipxe" "{EMP_SCRIPTS_DIR}/root.ipxe.php"
+Alias "/{EMP_WEBSERVER_PATH_PREFIX}/root.ipxe" "{EMP_SCRIPTS_DIR}/root.ipxe.php"
 
 <Files "root.ipxe.php">
   AllowOverride All
@@ -13,7 +13,7 @@ Alias "/{EMP_WEBSERVER_PREFIX}/root.ipxe" "{EMP_SCRIPTS_DIR}/root.ipxe.php"
 </Files>
 
 # Sideload also wimboot:
-Alias "/{EMP_WEBSERVER_PREFIX}/wimboot" "{EMP_TFTPROOT_DIR}/wimboot"
+Alias "/{EMP_WEBSERVER_PATH_PREFIX}/wimboot" "{EMP_TFTPROOT_DIR}/wimboot"
 
 <Files "wimboot">
   AllowOverride All
@@ -23,7 +23,7 @@ Alias "/{EMP_WEBSERVER_PREFIX}/wimboot" "{EMP_TFTPROOT_DIR}/wimboot"
 </Files>
 
 # And 386 variant:
-Alias "/{EMP_WEBSERVER_PREFIX}/wimboot.386" "{EMP_TFTPROOT_DIR}/wimboot.386"
+Alias "/{EMP_WEBSERVER_PATH_PREFIX}/wimboot.386" "{EMP_TFTPROOT_DIR}/wimboot.386"
 
 <Files "wimboot.386">
   AllowOverride All
@@ -33,7 +33,7 @@ Alias "/{EMP_WEBSERVER_PREFIX}/wimboot.386" "{EMP_TFTPROOT_DIR}/wimboot.386"
 </Files>
 
 # Make everything else available from our assets directory
-Alias "/{EMP_WEBSERVER_PREFIX}" "{EMP_ASSETS_ROOT_DIR}"
+Alias "/{EMP_WEBSERVER_PATH_PREFIX}" "{EMP_ASSETS_ROOT_DIR}"
 
 <Directory "{EMP_ASSETS_ROOT_DIR}">
   EnableMMAP Off

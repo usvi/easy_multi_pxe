@@ -69,8 +69,8 @@ emp_process_config_line()
         "WEBSERVER_IP="*)
             EMP_WEBSERVER_IP=${1#"WEBSERVER_IP="}
 	    ;;
-        "WEBSERVER_PREFIX="*)
-            EMP_WEBSERVER_PREFIX=${1#"WEBSERVER_PREFIX="}
+        "WEBSERVER_PATH_PREFIX="*)
+            EMP_WEBSERVER_PATH_PREFIX=${1#"WEBSERVER_PATH_PREFIX="}
 	    ;;
         "DRIVERS_BASE_DIR="*)
             EMP_DRIVERS_BASE_DIR=${1#"DRIVERS_BASE_DIR="}
@@ -96,10 +96,10 @@ emp_read_config()
     # Set to defaults
     EMP_WEBSERVER_PROTOCOL="http"
     EMP_WEBSERVER_IP=""
-    EMP_WEBSERVER_PREFIX="netbootassets"
+    EMP_WEBSERVER_PATH_PREFIX="netbootassets"
     EMP_DRIVERS_BASE_DIR=""
     EMP_CIFS_SERVER_IP=""
-    EMP_CIFS_SHARE_NAME=""
+    EMP_CIFS_SHARE_NAME="Netboot"
     EMP_CIFS_USER=""
     EMP_CIFS_PASSWD=""
 

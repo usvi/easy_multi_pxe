@@ -36,4 +36,4 @@ dhcp-boot=tag:efi64,ipxe.efi
 
 # Config file
 dhcp-match=set:ipxe-menu,175,39
-dhcp-boot=tag:ipxe-menu,http://{EMP_WEBSERVER_IP}/{EMP_WEBSERVER_PREFIX}/root.ipxe
+dhcp-boot=tag:ipxe-menu,{EMP_WEBSERVER_PROTOCOL}://{EMP_WEBSERVER_IP}/{EMP_WEBSERVER_PATH_PREFIX}/root.ipxe
