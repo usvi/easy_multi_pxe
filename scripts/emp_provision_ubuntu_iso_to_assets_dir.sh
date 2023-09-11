@@ -1,42 +1,15 @@
 #!/bin/sh
 
-EMP_TOP_DIR="$(dirname "$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )")"
+EMP_OP="do_provisioning"
+EMP_INC_COMMON="$(dirname "$(realpath "${0}")")/emp_inc_common.sh"
+if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC_COMMON"; exit 1; fi
+. "$EMP_INC_COMMON"
 
-# Check that main config file is there
-if [ ! -f "$EMP_TOP_DIR/conf/easy_multi_pxe.conf" ]
-then
-    echo "ERROR: Main configuration file $EMP_TOP_DIR/conf/easy_multi_pxe.conf does not exist"
-    exit 1
-fi
-# Now, get it
-. "$EMP_TOP_DIR/conf/easy_multi_pxe.conf"
-
-# Get also functions definitions
-. "$EMP_TOP_DIR/scripts/emp_functions.sh"
-
-
-if [ ! -f "$1" ]
-then
-    echo "ERROR: Given iso file $1 does not exist"
-    exit 1
-fi
-
-if [ ! -d "$2" ]
-then
-    echo "ERROR: Given boot OS assets prefix directory $2 does not exist"
-    exit 1
-fi
-
-if [ "$3" = "nocopyiso" ]
-then
-    COPY_ISO="no"
-fi
 
 BOOT_OS_ISO_PATH="$1"
 BOOT_OS_ISO_FILE="$(basename "$BOOT_OS_ISO_PATH")"
 BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR="$(dirname "$2/path_normalizer")"
 BOOT_OS_ENTRY_ID="$(basename "${BOOT_OS_ISO_PATH%.*}")"
-EMP_ASSETS_ROOT_DIR="$EMP_TOP_DIR/netbootassets"
 EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
 
 case "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" in

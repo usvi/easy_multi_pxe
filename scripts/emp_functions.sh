@@ -43,3 +43,31 @@ copy_dir_progress()
 
     return "$COPY_RETVAL"
 }
+
+check_iso_file()
+{
+    if [ ! -f "$1" ]
+    then
+	echo "ERROR: Given iso file $1 does not exist"
+
+	exit 1
+    fi
+}
+
+check_assets_prefix_dir()
+{
+    if [ ! -d "$1" ]
+    then
+	echo "ERROR: Given boot OS assets prefix directory $1 does not exist"
+
+	exit 1
+    fi
+}
+
+check_copy_iso()
+{
+    if [ "$1" = "nocopyiso" ]
+    then
+	COPY_ISO="no"
+    fi
+}

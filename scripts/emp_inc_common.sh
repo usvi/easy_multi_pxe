@@ -10,8 +10,8 @@ fi
 # Common definitions
 
 EMP_TOPDIR="$(realpath "$(dirname ${EMP_INC_COMMON})"/..)"
-
-echo "Created topdir $EMP_TOPDIR"
+MAIN_CONFIG="$EMP_TOPDIR/conf/easy_multi_pxe.conf"
+EMP_ASSETS_ROOT_DIR="$EMP_TOPDIR/netbootassets"
 
 if [ "$EMP_OP" = "create_configs" ]
 then
@@ -20,9 +20,7 @@ then
 
     CONFIGS_DIR="$EMP_TOPDIR/conf"
     SCRIPTS_DIR="$EMP_TOPDIR/scripts"
-    ASSETS_DIR="$EMP_TOPDIR/netbootassets"
     TFTPROOT_DIR="$EMP_TOPDIR/tftproot"
-    MAIN_CONFIG="$EMP_TOPDIR/conf/easy_multi_pxe.conf"
 
     WEBSERVER_USERNAME="www-data"
 
@@ -35,9 +33,26 @@ then
 
 elif [ "$EMP_OP" = "do_provisioning" ]
 then
-    echo "BAR"
+    if [ ! -f "$MAIN_CONFIG" ]
+    then
+	echo "Error: Config file $MAIN_CONFIG does not exist."
 
-    # Finally include the provisioning functions file
+	exit 1
+    fi
+    # Main config is guaranteed to exist now, including it
+    . "$MAIN_CONFIG"
+    # Already include the provisioning functions file,
+    # we might need it in figuring out variables.
+    . "$EMP_TOPDIR/emp_functions.sh"
+
+    # Prereq for prechecks
+    COPY_ISO="yes"
+    # Need to do a couple of prechecks
+    check_iso_file "$1"
+    check_assets_prefix_dir "$2"
+    check_copy_iso "$3"
+
+    # Can continue with parameters and stuff
     
 fi
 
