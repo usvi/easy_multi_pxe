@@ -17,7 +17,7 @@ Easy Multi PXE is an iPXE-powered simple pxe server. Currently it is able to boo
 * Dnsmasq
 * Samba/CIFS (so that Windows installer can map it and start setup.exe)
 * Webserver (Apache2 or Nginx is fine)
-* Windows ADK / WAIK or similiar to create initial template
+* Windows ADK / WAIK or similiar to create initial templates
 
 ## Suggested/expected files and directories layout
 
@@ -27,7 +27,7 @@ External driver dirs, not necessary but handy:
 /opt/drivers/windows/10/x64/board2/bar_lan.inf
 /opt/drivers/windows/10/x64/board3/baz_lan.inf
 
-Required, our configuration scrip creates:
+Required, our configuration script creates:
 /opt/easy_multi_pxe/conf/easy_multi_pxe.conf
 /opt/easy_multi_pxe/conf/apache2_emp_inc.conf
 /opt/easy_multi_pxe/conf/dnsmasq_emp_inc.conf
@@ -36,9 +36,22 @@ Required, our configuration scrip creates:
 Provisioning scripts:
 /opt/easy_multi_pxe/scripts/emp_provision_windows_iso_to_assets_dir.sh
 
-Roots:
+Main roots:
 /opt/easy_multi_pxe/tftproot - Main TFTP root
 /opt/easy_multi_pxe/netbootassets - CIFS Netboot assets storage mount root, also configured in webservers
+
+OS placeholder directories:
+(Examples, create manually what is needed and ALWAYS follow
+this convention: netbootassets/os_family/major_version/arch)
+/opt/easy_multi_pxe/netbootassets/windows/10/x64
+/opt/easy_multi_pxe/netbootassets/windows/10/x86
+/opt/easy_multi_pxe/netbootassets/windows/7/x64
+/opt/easy_multi_pxe/netbootassets/windows/7/x86
+/opt/easy_multi_pxe/netbootassets/windows/xp/x86
+/opt/easy_multi_pxe/netbootassets/systemrescuecd/8/x64
+/opt/easy_multi_pxe/netbootassets/systemrescuecd/8/x86
+/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x86
+/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
 
 Boot config file:
 /opt/easy_multi_pxe/scripts/root.ipxe.php - Dynamically generated ipxe root menu
@@ -51,15 +64,21 @@ Boot kernels:
 /opt/easy_multi_pxe/tftproot/wimboot.i386
 
 
+
+
+```
+
+
 Example: Windows 10 x64 bios:
 1. Go to actual Windows x64
 2. Install "Deployment and imaging Tools Environment" or similar
 3. Start ELEVATED "Deployment and imaging Tools Environment" (or similar)
 4. copype amd64 C:\winpe_amd64
-5. Copy BCD, boot.sdi, boot.wim as follows:
+5. Copy BCD (from c:\amd64_template\media\boot\BCD or c:\amd64_template\boot\BCD), boot.sdi, boot.wim as follows:
 /opt/easy_multi_pxe/netbootassets/x64/windows/10/template/BCD
 /opt/easy_multi_pxe/netbootassets/x64/windows/10/template/boot.sdi
 /opt/easy_multi_pxe/netbootassets/x64/windows/10/template/boot.wim
+MAKE SURE CASES MATCH!
 
 
 Then just run run:
@@ -72,6 +91,3 @@ Copying template files...done
 Drivers found at /opt/drivers/windows/10/x64 , copying...done
 Syncinc...done
 ALL DONE
-
-
-```
