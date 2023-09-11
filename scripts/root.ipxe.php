@@ -23,15 +23,13 @@ while(($main_conf_file !== false) && !feof($main_conf_file))
 }
 fclose($main_conf_file);
 
-//print_r($main_conf_db);
-
 # Find all submenus. Lots of esoteric stuff here.
 
 $id_lookups = [];
 $submenus = [];
 $submenu_names = [];
 
-//print("$assets_prefix_dir\n");
+
 $emp_platform_to_ipxe_native_platform = array(
     "32bit-bios" => "i386_pcbios",
     "32bit-efi" => "i386_efi",
@@ -72,7 +70,6 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
             $os_family_with_major_menu_label_id = $os_family_menu_label_id . "-" . $os_major_version;
             $os_target_base_label_id = basename($path_with_os_label_id);
             $os_target_full_label_id = $os_family_with_major_menu_label_id . "-" . $os_target_base_label_id;
-            //print("BBB " . $os_target_full_label_id . " " . $os_family_menu_label_id . "\n");
 
             $id_lookups[$os_family_menu_label_id] = ucfirst($os_family);
             $id_lookups[$os_family_with_major_menu_label_id] = ucfirst($os_family) . " " . $os_major_version;
@@ -94,11 +91,6 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
         }
     }
 }
-//print_r($fragments_x86_64_pcbios);
-//print_r($fragments_x86_64_efi);
-//print($fragments_x86_64_efi["Win10_21H1_English_x64_2021-10-09"]);
-//print_r($submenus);
-//exit(0);
 ?>
 
 cpuid --ext 29 && set arch x86_64 || set arch i386
@@ -117,14 +109,17 @@ foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
     print("# Main arch platform menu\n");
     print(":" . $os_ipxe_native_platform . "\n");
     print("menu " . $native_platform_names[$os_ipxe_native_platform] . "\n");
-
-    foreach($default_entries as $entry_suffix => $entry_contents)
-    {
-        print("item " . "target_" . $os_ipxe_native_platform . "-" . $entry_suffix . " " . $entry_contents[0] . "\n");
-    }
+    print("item --gap -- Operating system families\n");
+    
     foreach($submenus[$os_ipxe_native_platform] as $os_family_menu_label_id => $os_family_ipxe_entries)
     {
         print("item " . $os_family_menu_label_id . " " . $id_lookups[$os_family_menu_label_id] . "\n");
+    }
+    print("item --gap -- Tools and utilities\n");
+    
+    foreach($default_entries as $entry_suffix => $entry_contents)
+    {
+        print("item " . $os_ipxe_native_platform . "-" . $entry_suffix . " " . $entry_contents[0] . "\n");
     }
     print("\n");
     print("choose selected\n");
@@ -132,17 +127,12 @@ foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
     print("goto \${selected}\n");
     print("\n");
 
-    foreach($default_entries as $entry_suffix => $entry_contents)
-    {
-        print(":" . $os_ipxe_native_platform . "-" . $entry_suffix . "\n");
-        print($entry_contents[1] . "\n");
-    }
     print("# Os family submenu\n");
     
     foreach($submenus[$os_ipxe_native_platform] as $os_family_menu_label_id => $os_family_with_major_menu_label_ids_array)
     {
         print(":" . $os_family_menu_label_id . "\n");
-        print("menu " . $id_lookups[$os_family_menu_label_id] . "\n");
+        print("menu " . $id_lookups[$os_family_menu_label_id] . " major versions \n");
 
         foreach ($os_family_with_major_menu_label_ids_array as $os_family_with_major_menu_label_id => $os_target_full_label_ids_array)
         {
@@ -160,8 +150,7 @@ foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
         {
             print("# Os family and major submenu\n");
             print(":" . $os_family_with_major_menu_label_id . "\n");
-            print("menu " . $id_lookups[$os_family_with_major_menu_label_id] . "\n");
-            //print("item " . $os_family_with_major_menu_label_id . " " . $id_lookups[$os_family_with_major_menu_label_id] . "\n");
+            print("menu " . $id_lookups[$os_family_with_major_menu_label_id] . " variants\n");
 
             foreach ($os_target_full_label_ids_array as $os_target_full_label_id => $target_ipxe_script)
             {
@@ -177,18 +166,15 @@ foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
             
             foreach ($os_target_full_label_ids_array as $os_target_full_label_id => $target_ipxe_script)
             {
-                //print("item " . $os_target_full_label_id . " " . $id_lookups[$os_target_full_label_id] . "\n");
                 print(":" . $os_target_full_label_id . "\n");
                 print($target_ipxe_script . "\n");
             }
         }
-        /*
-        foreach ($os_family_ipxe_entries as $target_id => $target_ipxe_script)
-        {
-            print(":" . $target_id . "\n");
-            print($target_ipxe_script . "\n");
-        }
-        */
+    }
+    foreach($default_entries as $entry_suffix => $entry_contents)
+    {
+        print(":" . $os_ipxe_native_platform . "-" . $entry_suffix . "\n");
+        print($entry_contents[1] . "\n");
     }
 
     print("\n\n\n\n\n");
