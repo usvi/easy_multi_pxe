@@ -278,84 +278,47 @@ fi
 echo "done"
 
 
+# Finally, create entries. Entries are pairwise: every arch has bios and efi variant.
+FIRST_FRAGMENT=""
+SECOND_FRAGMENT=""
+WIMBOOT_VARIANT=""
 
-# Finally, create entries
-# If arch is x86, create FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH and FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH
 if [ "$BOOT_OS_ARCH" = "x86" ]
 then
-    cat <<EOF > "$FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH"
-kernel wimboot.i386
-set http_base $WEBSERVER_HTTP_BASE/\${selected}
-initrd \${http_base}/BCD BCD
-initrd \${http_base}/boot.sdi boot.sdi
-initrd \${http_base}/boot.wim boot.wim
-boot
-sleep 5
-goto end
-EOF
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Unable to create ipxe fragment $FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH"
-	exit 1
-    fi
+    FIRST_FRAGMENT="$FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH"
+    SECOND_FRAGMENT="$FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH"
+    WIMBOOT_VARIANT="wimboot.i386"
 
-    cat <<EOF > "$FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH"
-kernel wimboot.i386
-set http_base $WEBSERVER_HTTP_BASE/\${selected}
-initrd \${http_base}/BCD BCD
-initrd \${http_base}/boot.sdi boot.sdi
-initrd \${http_base}/boot.wim boot.wim
-boot
-sleep 5
-goto end
-EOF
-    
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Unable to create ipxe fragment $FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH"
-	exit 1
-    fi
-fi
-
-
-
-# If arch is x64, create FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH and FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH
-if [ "$BOOT_OS_ARCH" = "x64" ]
+elif [ "$BOOT_OS_ARCH" = "x64" ]
 then
-    cat <<EOF > "$FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH"
-kernel wimboot
-set http_base $WEBSERVER_HTTP_BASE/\${selected}
-initrd \${http_base}/BCD BCD
-initrd \${http_base}/boot.sdi boot.sdi
-initrd \${http_base}/boot.wim boot.wim
-boot
-sleep 5
-goto end
-EOF
-
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Unable to create ipxe fragment $FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH"
-	exit 1
-    fi
-    
-    cat <<EOF > "$FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH"
-kernel wimboot
-set http_base $WEBSERVER_HTTP_BASE/\${selected}
-initrd \${http_base}/BCD BCD
-initrd \${http_base}/boot.sdi boot.sdi
-initrd \${http_base}/boot.wim boot.wim
-boot
-sleep 5
-goto end
-EOF
-    
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Unable to create ipxe fragment $FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH"
-	exit 1
-    fi
+    FIRST_FRAGMENT="$FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH"
+    SECOND_FRAGMENT="$FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH"
+    WIMBOOT_VARIANT="wimboot"
+else
+    echo "ERROR: Unrecognized boot OS arch $BOOT_OS_ARCH"
+    exit 1
 fi
+
+
+for IPXE_FRAGMENT in "$FIRST_FRAGMENT" "$SECOND_FRAGMENT"
+do
+    cat <<EOF > "$IPXE_FRAGMENT"
+kernel $WIMBOOT_VARIANT
+set http_base $WEBSERVER_HTTP_BASE/$BOOT_OS_ENTRY_ID
+initrd \${http_base}/BCD BCD
+initrd \${http_base}/boot.sdi boot.sdi
+initrd \${http_base}/boot.wim boot.wim
+boot
+sleep 5
+goto end
+EOF
+    
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to create ipxe fragment $IPXE_FRAGMENT"
+	exit 1
+    fi
+done
 
 
 
