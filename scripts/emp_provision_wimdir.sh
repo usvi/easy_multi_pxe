@@ -1,5 +1,10 @@
 #!/bin/sh
 
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+MAIN_EMP_DIR="`dirname $SCRIPTPATH`"
+MAIN_CONFIG="$MAIN_EMP_DIR/conf/easy_multi_pxe.conf"
+ASSETS_DIR="$MAIN_EMP_DIR/netbootassets"
+
 ROOT_WIM_DIR="$1"
 
 if [ ! -d "$ROOT_WIM_DIR" ]
@@ -8,25 +13,17 @@ then
     exit 1
 fi
 
-THISDIR="`dirname $0`"
 
-. "$THISDIR/../conf/easy_multi_pxe.conf"
-
-# Check that share credentials file exists
-if [ ! -f "$THISDIR/../conf/emp_cifs_share.conf" ]
+# Check that main config file is there
+if [ ! -f "$MAIN_CONFIG" ]
 then
-    echo "ERROR: CIFS config file $THISDIR/../conf/emp_cifs_share.conf does not exist"
+    echo "ERROR: Main configuration file $MAIN_CONFIG does not exist"
     exit 1
 fi
 # Now, get it
-. "$THISDIR/../conf/emp_cifs_share.conf"
+. "$MAIN_CONFIG"
 
-if [ -z "$CIFS_SERVER_IP" ]
-then
-    echo "ERROR: No CIFS_SERVER_IP defined in $THISDIR/../conf/emp_cifs_share.conf"
-    exit 1
-fi
-# CIFS path, user and password are optional
+# If file exists at all, it has what we need
 
 # We need to see our arch. If we are run with argument
 # /opt/easy_multi_pxe/netbootassets/x64/windows/10
@@ -45,18 +42,14 @@ DRIVER_DIR_ID="$OS_ARCH_ID/$OS_FAMILY_ID/$OS_VER_ID"
 # and for the rest slashes converted.
 # $ROOT_WIM_DIR has :
 # /opt/easy_multi_pxe/netbootassets/x64/windows/10
+# $ASSETS_DIR usually has:
+# /opt/easy_multi_pxe/netbootassets
 # We need to have it first x64/windows/10 and then
-# we need to fiddle the amount of backslashes correct.
 
-TEMP_DIR=$(echo "$ROOT_WIM_DIR" | sed "s/.*$WEB_SERVER_PREFIX\///")
-CIFS_PATH=$(echo "$TEMP_DIR" | sed 's.\/.\\\\.g')
 
-# Might have prefix
-if [ -n "$CIFS_PATH_PREFIX" ]
-then
-    CIFS_PATH="$CIFS_PATH_PREFIX\\\\$CIFS_PATH"
-fi
-
+CIFS_ASSETS_UNIX_ID=$(echo "$ROOT_WIM_DIR" | sed "s|.*$ASSETS_DIR\/||")
+CIFS_PREFIX_UNIX_PATH="//$CIFS_SERVER_IP/$CIFS_SHARE_NAME/$CIFS_ASSETS_UNIX_ID"
+CIFS_PREFIX_PATH=$(echo "$CIFS_PREFIX_UNIX_PATH" | sed 's.\/.\\\\.g')
 
 # Given directory must exist
 if [ ! -d "$ROOT_WIM_DIR" ]
@@ -126,23 +119,24 @@ do
 	    STARTNET="$ROOT_WIM_DIR/$WIM_ENTRY/mount/Windows/System32/startnet.cmd"
 	    echo -n "" > "$STARTNET"
 	    # Need to do rest with printf because ehco just does not work with redirects
-	    printf "for /R extradrivers %%%%i in (*.inf) do drvload %%%%i\r\n" >> "$STARTNET"
-	    printf "wpeinit\r\n" >> "$STARTNET"
+
+	    echo -n "wpeinit\r\n" >> "$STARTNET"
+	    echo -n "for /R extradrivers %%i in (*.inf) do drvload %%i\r\n" >> "$STARTNET"
+
 	    # Could be with or without a password
 
 	    if [ -n "$CIFS_USER" -a -n "$CIFS_PASSWD" ]
 	    then
-		printf "net use j: \\\\\\\\$CIFS_SERVER_IP\\\\$CIFS_PATH\\\\$WIM_ENTRY\\\\unpacked /user:$CIFS_USER $CIFS_PASSWD\r\n" >> "$STARTNET"
+		echo -n "net use j: $CIFS_PREFIX_PATH\\\\$WIM_ENTRY\\\\unpacked /user:$CIFS_USER $CIFS_PASSWD\r\n" >> "$STARTNET"
 	    else
-		printf "net use j: \\\\\\\\$CIFS_SERVER_IP\\\\$CIFS_PATH\\\\$WIM_ENTRY\\\\unpacked\r\n" >> "$STARTNET"
+		echo -n "net use j: $CIFS_PREFIX_PATH\\\\$WIM_ENTRY\\\\unpacked\r\n" >> "$STARTNET"
 	    fi
-	    printf "j:\setup.exe\r\n" >> "$STARTNET"
+	    echo -n "j:\\setup.exe\r\n" >> "$STARTNET"
 		
 	    # Need strange sleep here on mounted cifs for some reason
 	    sleep 5
 	    wimunmount --commit "$ROOT_WIM_DIR/$WIM_ENTRY/mount"
 	fi
-
     fi
 done
 
