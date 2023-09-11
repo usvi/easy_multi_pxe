@@ -80,8 +80,8 @@ Option 2: Hit Start, write "Turn Windows features on or off", run it and install
 5. Hit Start, type **EXACTLY THE FOLLOWING**: Deployment Tools Command Prompt  
 Right-click on it an run as Administrator
 6. Run the following commands:  
-copype.cmd x86 c:\winpe_xp_7_x86  
-copype.cmd amd64 c:\winpe_xp_7_amd64
+```copype.cmd x86 c:\winpe_xp_7_x86```  
+```copype.cmd amd64 c:\winpe_xp_7_amd64```
 7. Copy files as follows from Windows to Easy Multi Pxe installation mounted assets directory (**MAKE SURE THE CASES MATCH!**):  
 Windows XP 32bit:  
 C:\winpe_xp_7_x86\ISO\boot\bcd => /opt/easy_multi_pxe/netbootassets/windows/xp/x86/BCD  
@@ -111,8 +111,8 @@ C:\winpe_xp_7_amd64\winpe.wim => /opt/easy_multi_pxe/netbootassets/windows/7/x64
 5. Hit Start, type **EXACTLY THE FOLLOWING**: Deployment and Imaging Tools Environment  
 Right-click on it an run as Administrator
 6. Run the following commands:  
-copype.cmd x86 c:\winpe_10_x86  
-copype.cmd amd64 c:\winpe_10_amd64
+```copype.cmd x86 c:\winpe_10_x86```  
+```copype.cmd amd64 c:\winpe_10_amd64```
 7. Copy files as follows from Windows to Easy Multi Pxe installation mounted assets directory (**MAKE SURE THE CASES MATCH!**):  
 Windows 10 32bit:  
 C:\winpe_10_x86\media\Boot\BCD => /opt/easy_multi_pxe/netbootassets/windows/10/x86/BCD  
