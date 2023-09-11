@@ -18,6 +18,7 @@ Easy Multi PXE is an iPXE-powered simple pxe server. Currently it is able to boo
 * Samba/CIFS (so that Windows installer can map it and start setup.exe)
 * Webserver (Apache2 or Nginx is fine)
 * Windows ADK / WAIK or similiar to create initial templates
+* wimtools (wimmount / wimunmount) for operating Windows files
 
 ## Suggested/expected files and directories layout
 
@@ -62,11 +63,15 @@ Boot kernels:
 /opt/easy_multi_pxe/tftproot/ipxe.pxe
 /opt/easy_multi_pxe/tftproot/wimboot
 /opt/easy_multi_pxe/tftproot/wimboot.i386
-
-
-
-
 ```
+
+## On acquiring Windows Preinstallation Environment (PE) boot templates
+To provision and boot Windows XP/7/10 isos, you need to get the Windows Preinstallation Environment (PE) files. This is a bit tricky. I would happily include the files here on Github but Microsoft would probably bust my ass for it, so this needs to be done manually.
+
+### Windows 7 (and probably XP also)
+Download Windows Automated Installation Kit for Windows 7: https://www.microsoft.com/en-US/download/details.aspx?id=5753
+The .iso file will be KB3AIK_EN.iso (for english), sha1sum: 
+793f4cc4741ebad223938be0eeee708eda968daa  KB3AIK_EN.iso
 
 
 Example: Windows 10 x64 bios:
