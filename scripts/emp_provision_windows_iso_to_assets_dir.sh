@@ -49,16 +49,35 @@ case "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" in
 	;;
 esac
 
-BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID=$(echo "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" | sed "s|^$EMP_ASSETS_ROOT_DIR\/||")
+BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID="$(echo "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" | sed "s|^$EMP_ASSETS_ROOT_DIR\/||")"
+BOOT_OS_ARCH="$(basename "$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID")"
 FS_BOOT_TEMPLATE_UNIX_PATH="$EMP_ASSETS_ROOT_DIR/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID/template"
 FS_BOOT_OS_UNIX_PATH="$EMP_ASSETS_ROOT_DIR/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID/$BOOT_OS_ENTRY_ID"
 CIFS_BOOT_OS_UNIX_PATH="//$CIFS_SERVER_IP/$CIFS_SHARE_NAME/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID/$BOOT_OS_ENTRY_ID"
-CIFS_BOOT_OS_WIN_PATH=$(echo "$CIFS_BOOT_OS_UNIX_PATH" | sed 's|\/|\\\\|g')
+CIFS_BOOT_OS_WIN_PATH="$(echo "$CIFS_BOOT_OS_UNIX_PATH" | sed 's|\/|\\\\|g')"
+FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH="$FS_BOOT_OS_UNIX_PATH.32bit-bios.ipxe"
+FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH="$FS_BOOT_OS_UNIX_PATH.32bit-efi.ipxe"
+FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH="$FS_BOOT_OS_UNIX_PATH.64bit-bios.ipxe"
+FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH="$FS_BOOT_OS_UNIX_PATH.64bit-efi.ipxe"
+WEBSERVER_HTTP_BASE="http://$WEBSERVER_IP/$WEBSERVER_PREFIX/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID/$BOOT_OS_ENTRY_ID"
 
 
 
 # And start
 echo "Processing $BOOT_OS_ENTRY_ID as $BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID"
+
+if [ -f "$FS_BOOT_OS_IPXE_EFI_FRAGMENT_UNIX_PATH" ]
+then
+    rm "$FS_BOOT_OS_IPXE_EFI_FRAGMENT_UNIX_PATH"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to remove old ipxe fragment $FS_BOOT_OS_IPXE_EFI_FRAGMENT_UNIX_PATH"
+	exit 1
+    fi
+fi
+
+
 
 rm -r "$FS_BOOT_OS_UNIX_PATH" > /dev/null 2>&1
 
@@ -105,6 +124,18 @@ fi
 # Copy the iso mount dir as new path if not forbidden
 if [ -z "$COPY_ISO" -o "$COPY_ISO" != "no" ]
 then
+    # Remove old
+    rm -r "$FS_BOOT_OS_UNIX_PATH"/*
+    # Check that it was removed
+    ls "$FS_BOOT_OS_UNIX_PATH"/* > /dev/null 2>&1
+    
+    if [ "$?" -eq 0 ]
+    then
+	echo "ERROR: Unable to remove old files from $FS_BOOT_OS_UNIX_PATH"
+	umount -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
+	exit 1
+    fi
+    
     copy_dir_progress "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" "$FS_BOOT_OS_UNIX_PATH"
 
     if [ "$?" -ne 0 ]
@@ -130,7 +161,7 @@ fi
 
 
 # Necessary files need to be copied from template directory
-echo -n "Copying template files ... "
+echo -n "Copying template files..."
 ERRORS=0
 
 for DIR_ENTRY in "BCD" "boot.sdi" "boot.wim"
@@ -177,7 +208,7 @@ DRIVERS=0
 
 if [ -d "$DRIVERS_BASE_DIR/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID" ]
 then
-    echo -n "Drivers found at $DRIVERS_BASE_DIR/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID , copying ... "
+    echo -n "Drivers found at $DRIVERS_BASE_DIR/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID , copying..."
     # Drivers dir exists for this architecture, copy them
     cp -r "$DRIVERS_BASE_DIR/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID" "$EMP_WIM_GENERIC_MOUNT_POINT/Windows/System32/extradrivers" > /dev/null 2>&1
 
@@ -219,7 +250,7 @@ fi
 echo -n "j:\\setup.exe\r\n" >> "$STARTNET"
 
 
-echo -n "Syncinc ... "
+echo -n "Syncinc..."
 sync
 # Need strange sleep here on mounted cifs for some reason
 sleep 5
@@ -237,4 +268,90 @@ echo "done"
 
 
 
+# Finally, create entries
+# If arch is x86, create FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH and FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH
+if [ "$BOOT_OS_ARCH" = "x86" ]
+then
+    cat <<EOF > "$FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH"
+:$BOOT_OS_ENTRY_ID
+kernel wimboot.i386
+set http_base $WEBSERVER_HTTP_BASE/\${selected}
+initrd \${http_base}/BCD BCD
+initrd \${http_base}/boot.sdi boot.sdi
+initrd \${http_base}/boot.wim boot.wim
+boot
+sleep 5
+goto end
+EOF
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to create ipxe fragment $FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH"
+	exit 1
+    fi
+
+    cat <<EOF > "$FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH"
+:$BOOT_OS_ENTRY_ID
+kernel wimboot.i386
+set http_base $WEBSERVER_HTTP_BASE/\${selected}
+initrd \${http_base}/BCD BCD
+initrd \${http_base}/boot.sdi boot.sdi
+initrd \${http_base}/boot.wim boot.wim
+boot
+sleep 5
+goto end
+EOF
+    
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to create ipxe fragment $FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH"
+	exit 1
+    fi
+fi
+
+
+
+# If arch is x64, create FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH and FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH
+if [ "$BOOT_OS_ARCH" = "x64" ]
+then
+    cat <<EOF > "$FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH"
+:$BOOT_OS_ENTRY_ID
+kernel wimboot
+set http_base $WEBSERVER_HTTP_BASE/\${selected}
+initrd \${http_base}/BCD BCD
+initrd \${http_base}/boot.sdi boot.sdi
+initrd \${http_base}/boot.wim boot.wim
+boot
+sleep 5
+goto end
+EOF
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to create ipxe fragment $FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH"
+	exit 1
+    fi
+    
+    cat <<EOF > "$FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH"
+:$BOOT_OS_ENTRY_ID
+kernel wimboot
+set http_base $WEBSERVER_HTTP_BASE/\${selected}
+initrd \${http_base}/BCD BCD
+initrd \${http_base}/boot.sdi boot.sdi
+initrd \${http_base}/boot.wim boot.wim
+boot
+sleep 5
+goto end
+EOF
+    
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to create ipxe fragment $FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH"
+	exit 1
+    fi
+fi
+
+
+
 echo "ALL DONE"
+exit 0
+
