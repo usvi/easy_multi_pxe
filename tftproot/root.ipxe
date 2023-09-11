@@ -1,0 +1,30 @@
+#!ipxe
+
+#dhcp
+#chain http://boot.ipxe.org/demo/boot.php
+
+cpuid --ext 29 && set arch x86_64 || set arch i386
+
+# arch = i386 or x86_64
+# platform = pcbios or efi
+
+goto conf_${arch}_${platform}
+
+
+
+
+:conf_i386_pcbios
+echo "Loading 32 bit BIOS mode iPXE config file"
+sleep 5
+
+:conf_x86_64_pcbios
+echo "Loading 64 bit BIOS mode iPXE config file"
+sleep 5
+
+:conf_i386_efi
+echo "Loading 32 bit EFI mode iPXE config file"
+sleep 5
+
+:conf_x86_64_efi
+echo "Loading 64 bit EFI mode iPXE config file"
+sleep 5
