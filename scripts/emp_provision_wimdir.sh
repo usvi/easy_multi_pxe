@@ -2,6 +2,12 @@
 
 ROOT_WIM_DIR="$1"
 
+if [ ! -d "$ROOT_WIM_DIR" ]
+then
+    echo "ERROR: Given root wim dir $ROOT_WIM_DIR does not exist"
+    exit 1
+fi
+
 THISDIR="`dirname $0`"
 
 . "$THISDIR/../conf/easy_multi_pxe.conf"
@@ -76,7 +82,7 @@ fi
 
 for WIM_ENTRY in `ls -1 $ROOT_WIM_DIR`
 do
-    if [ -d "$WIM_ENTRY/unpacked" ]
+    if [ -d "$ROOT_WIM_DIR/$WIM_ENTRY/unpacked" ]
     then
 	echo "Processing $WIM_ENTRY"
 
