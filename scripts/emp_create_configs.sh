@@ -1,31 +1,14 @@
 #!/bin/sh
 
 EMP_OP="create_configs"
-EMP_COMMON_INC="$(dirname "$(realpath "$0")")/emp_common_inc.sh"
-if [ ! -f "$EMP_COMMON_INC" ]; then echo "Error: No common include file $EMP_COMMON_INC"; exit 1; fi
-. "$EMP_COMMON_INC"
-
-WEBSERVER_PREFIX_DEFAULT="netbootassets"
-CIFS_SHARE_NAME_DEFAULT="Netboot"
-
-SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-MAIN_EMP_DIR="`dirname $SCRIPTPATH`"
-CONFIGS_DIR="$MAIN_EMP_DIR/conf"
-SCRIPTS_DIR="$MAIN_EMP_DIR/scripts"
-ASSETS_DIR="$MAIN_EMP_DIR/netbootassets"
-TFTPROOT_DIR="$MAIN_EMP_DIR/tftproot"
-MAIN_CONFIG="$CONFIGS_DIR/easy_multi_pxe.conf"
-
-APACHE_EMP_CONF_TEMPLATE="$CONFIGS_DIR/apache2_emp_inc.conf.template"
-APACHE_EMP_CONF_FINAL="$CONFIGS_DIR/apache2_emp_inc.conf"
-DNSMASQ_EMP_CONF_TEMPLATE="$CONFIGS_DIR/dnsmasq_emp_inc.conf.template"
-DNSMASQ_EMP_CONF_FINAL="$CONFIGS_DIR/dnsmasq_emp_inc.conf"
-NGINX_EMP_CONF_TEMPLATE="$CONFIGS_DIR/nginx_emp_inc.conf.template"
-NGINX_EMP_CONF_FINAL="$CONFIGS_DIR/nginx_emp_inc.conf"
-
+EMP_INC_COMMON="$(dirname "$(realpath "${0}")")/emp_inc_common.sh"
+if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC_COMMON"; exit 1; fi
+. "$EMP_INC_COMMON"
 
 
 # Take old config as base if existing
+echo "INCLUDING main config $MAIN_CONFIG"
+
 if [ -f "$MAIN_CONFIG" ]
 then
     . "$MAIN_CONFIG"
@@ -275,7 +258,7 @@ fi
 
 echo "# $MAIN_CONFIG" > "$MAIN_CONFIG"
 chmod ug=r "$MAIN_CONFIG"
-chown :www-data "$MAIN_CONFIG"
+chown ":$WEBSERVER_USERNAME" "$MAIN_CONFIG"
 echo "# Easy Multi Pxe config file" >> "$MAIN_CONFIG"
 echo "" >> "$MAIN_CONFIG"
 echo "WEBSERVER_IP=\"$WEBSERVER_IP\"" >> "$MAIN_CONFIG"
