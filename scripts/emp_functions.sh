@@ -128,54 +128,76 @@ emp_collect_provisioning_parameters()
 	if [ -z "$TEMP_OPEN" ]
 	then
 	    # Nothing open
-	    if [ "$TEMP_PARAM" = "-i" ]
-	    then
-		TEMP_OPEN="EMP_BOOT_OS_ISO_PATH"
 
-	    elif [ "$TEMP_PARAM" = "-a" ]
-	    then
-		TEMP_OPEN="EMP_BOOT_OS_ASSETS_DIR"
+	    # Check first if long forms
+	    case "$TEMP_PARAM" in
+		--isofile=*)
+		    TEMP_ISO_PATH="${TEMP_PARAM##--isofile=}"
+		    ;;
+		--assetsdir=*)
+		    TEMP_ASSETS_DIR="${TEMP_PARAM##--assetsdir=}"
+		    ;;
+		--copyiso=*)
+		    TEMP_COPY_ISO="${TEMP_PARAM##--copyiso=}"
+		    ;;
+		*)
+		    # Here short form opening checks
+		    if [ "$TEMP_PARAM" = "-i" ]
+		    then
+			TEMP_OPEN="EMP_BOOT_OS_ISO_PATH"
 
-	    elif [ "$TEMP_PARAM" = "-c" ]
-	    then
-		TEMP_OPEN="EMP_COPY_ISO"
-	    fi
+		    elif [ "$TEMP_PARAM" = "-a" ]
+		    then
+			TEMP_OPEN="EMP_BOOT_OS_ASSETS_DIR"
+
+		    elif [ "$TEMP_PARAM" = "-c" ]
+		    then
+			TEMP_OPEN="EMP_COPY_ISO"
+		    fi
+		    ;;
+	    esac
+
 	else
 	    if [ "$TEMP_OPEN" = "EMP_BOOT_OS_ISO_PATH" ]
 	    then
-		EMP_BOOT_OS_ISO_PATH="$(realpath "${TEMP_PARAM}" 2>/dev/null)"
-
-		# If path is garbage, variable is empty. In this
-		# case assign the original, even if it was erroneous.
-		if [ -z "$EMP_BOOT_OS_ISO_PATH" ]
-		then
-		    EMP_BOOT_OS_ISO_PATH="${TEMP_PARAM}"
-		fi
+		TEMP_ISO_PATH="$TEMP_PARAM"
 		TEMP_OPEN=""
 		
 	    elif [ "$TEMP_OPEN" = "EMP_BOOT_OS_ASSETS_DIR" ]
 	    then
-		EMP_BOOT_OS_ASSETS_DIR="$(realpath "${TEMP_PARAM}" 2>/dev/null)"
-
-		if [ -z "$EMP_BOOT_OS_ASSETS_DIR" ]
-		then
-		    EMP_BOOT_OS_ASSETS_DIR="${TEMP_PARAM}"
-		fi
+		TEMP_ASSETS_DIR="$TEMP_PARAM"
 		TEMP_OPEN=""
 		
 	    elif [ "$TEMP_OPEN" = "EMP_COPY_ISO" ]
 	    then
-		# Default is Y, so scan only for no in some forms
-		if [ "$TEMP_PARAM" = "no" -o "$TEMP_PARAM" = "NO" -o "$TEMP_PARAM" = "n" -o "$TEMP_PARAM" = "N" ]
-		then
-		    EMP_COPY_ISO="N"
-		fi
+		TEMP_COPYISO="$TEMP_PARAM"
 		TEMP_OPEN=""
 	    fi
 	fi
     done
+    # Rudimentary checks for some values here after dereferencing
+    # Separate function checks that params are fine in all ways
 
-    # Separate function checks that params are fine
+    EMP_BOOT_OS_ISO_PATH="$(realpath "${TEMP_ISO_PATH}" 2>/dev/null)"
+    # If path is garbage, variable is empty. In this
+    # case assign the original, even if it was erroneous.
+    if [ -z "$EMP_BOOT_OS_ISO_PATH" ]
+    then
+	EMP_BOOT_OS_ISO_PATH="${TEMP_ISO_PATH}"
+    fi
+    
+    EMP_BOOT_OS_ASSETS_DIR="$(realpath "${TEMP_ASSETS_DIR}" 2>/dev/null)"
+    # Ditto
+    if [ -z "$EMP_BOOT_OS_ASSETS_DIR" ]
+    then
+	EMP_BOOT_OS_ASSETS_DIR="${TEMP_ASSETS_DIR}"
+    fi
+    
+    # Default is Y, so scan only for no in some forms
+    if [ "$TEMP_COPYISO" = "no" -o "$TEMP_COPYISO" = "NO" -o "$TEMP_COPYISO" = "n" -o "$TEMP_COPYISO" = "N" ]
+    then
+	EMP_COPY_ISO="N"
+    fi
 }
 
 
