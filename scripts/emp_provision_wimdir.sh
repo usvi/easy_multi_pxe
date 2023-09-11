@@ -26,25 +26,31 @@ fi
 # If file exists at all, it has what we need
 
 # We need to see our arch. If we are run with argument
-# /opt/easy_multi_pxe/netbootassets/x64/windows/10
-# we need to get the x64/windows/10
+####### /opt/easy_multi_pxe/netbootassets/x64/windows/10
+# /opt/easy_multi_pxe/netbootassets/windows/10/x64
+# we need to get the windows/10/x64
 
 TEMP_DIR="$ROOT_WIM_DIR"
+#OS_VER_ID="`basename $TEMP_DIR`"
+OS_ARCH_ID="`basename $TEMP_DIR`"
+TEMP_DIR="`dirname $TEMP_DIR`"
+#OS_FAMILY_ID="`basename $TEMP_DIR`"
 OS_VER_ID="`basename $TEMP_DIR`"
 TEMP_DIR="`dirname $TEMP_DIR`"
+#OS_ARCH_ID="`basename $TEMP_DIR`"
 OS_FAMILY_ID="`basename $TEMP_DIR`"
-TEMP_DIR="`dirname $TEMP_DIR`"
-OS_ARCH_ID="`basename $TEMP_DIR`"
 
-DRIVER_DIR_ID="$OS_ARCH_ID/$OS_FAMILY_ID/$OS_VER_ID"
+#DRIVER_DIR_ID="$OS_ARCH_ID/$OS_FAMILY_ID/$OS_VER_ID"
+DRIVER_DIR_ID="$OS_FAMILY_ID/$OS_VER_ID/$OS_ARCH_ID"
 
 # We need to mangle our path to correct part split off
 # and for the rest slashes converted.
 # $ROOT_WIM_DIR has :
-# /opt/easy_multi_pxe/netbootassets/x64/windows/10
+##### /opt/easy_multi_pxe/netbootassets/x64/windows/10
+# /opt/easy_multi_pxe/netbootassets/windows/10/x64
 # $ASSETS_DIR usually has:
 # /opt/easy_multi_pxe/netbootassets
-# We need to have it first x64/windows/10 and then
+# We need to have it first windows/10/x64 and then WHAT?
 
 
 CIFS_ASSETS_UNIX_ID=$(echo "$ROOT_WIM_DIR" | sed "s|.*$ASSETS_DIR\/||")

@@ -269,7 +269,8 @@ fi
 # And write everything out
 
 echo "# $MAIN_CONFIG" > "$MAIN_CONFIG"
-chmod go="-" "$MAIN_CONFIG"
+chmod ug=r "$MAIN_CONFIG"
+chown :www-data "$MAIN_CONFIG"
 echo "# Easy Multi Pxe config file" >> "$MAIN_CONFIG"
 echo "" >> "$MAIN_CONFIG"
 echo "WEBSERVER_IP=\"$WEBSERVER_IP\"" >> "$MAIN_CONFIG"
