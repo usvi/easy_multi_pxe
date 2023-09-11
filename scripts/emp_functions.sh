@@ -106,8 +106,8 @@ emp_validate_php_fpm_location()
 
 emp_collect_provisioning_parameters()
 {
-    EMP_ISO_PATH=""
-    EMP_ASSETS_DIR=""
+    EMP_BOOT_OS_ISO_PATH=""
+    EMP_BOOT_OS_ASSETS_DIR=""
     EMP_COPY_ISO="Y" # Default value
     
     TEMP_OPEN=""
@@ -129,25 +129,37 @@ emp_collect_provisioning_parameters()
 	    # Nothing open
 	    if [ "$TEMP_PARAM" = "--isofile" -o "$TEMP_PARAM" = "-i" ]
 	    then
-		TEMP_OPEN="EMP_ISO_PATH"
+		TEMP_OPEN="EMP_BOOT_OS_ISO_PATH"
 
 	    elif [ "$TEMP_PARAM" = "--assetsdir" -o "$TEMP_PARAM" = "-a" ]
 	    then
-		TEMP_OPEN="EMP_ASSETS_DIR"
+		TEMP_OPEN="EMP_BOOT_OS_ASSETS_DIR"
 
 	    elif [ "$TEMP_PARAM" = "--nocopyiso" -o "$TEMP_PARAM" = "-n" ]
 	    then
 		EMP_COPY_ISO="N"
 	    fi
 	else
-	    if [ "$TEMP_OPEN" = "EMP_ISO_PATH" ]
+	    if [ "$TEMP_OPEN" = "EMP_BOOT_OS_ISO_PATH" ]
 	    then
-		EMP_ISO_PATH="$(realpath "${TEMP_PARAM}" 2>/dev/null)"
+		EMP_BOOT_OS_ISO_PATH="$(realpath "${TEMP_PARAM}" 2>/dev/null)"
+
+		# If path is garbage, variable is empty. In this
+		# case assign the original, even if it was erroneous.
+		if [ -z "$EMP_BOOT_OS_ISO_PATH" ]
+		then
+		    EMP_BOOT_OS_ISO_PATH="${TEMP_PARAM}"
+		fi
 		TEMP_OPEN=""
 		
-	    elif [ "$TEMP_OPEN" = "EMP_ASSETS_DIR" ]
+	    elif [ "$TEMP_OPEN" = "EMP_BOOT_OS_ASSETS_DIR" ]
 	    then
-		EMP_ASSETS_DIR="$(realpath "${TEMP_PARAM}" 2>/dev/null)"
+		EMP_BOOT_OS_ASSETS_DIR="$(realpath "${TEMP_PARAM}" 2>/dev/null)"
+
+		if [ -z "$EMP_BOOT_OS_ASSETS_DIR" ]
+		then
+		    EMP_BOOT_OS_ASSETS_DIR="${TEMP_PARAM}"
+		fi
 		TEMP_OPEN=""
 	    fi
 	fi
@@ -156,34 +168,89 @@ emp_collect_provisioning_parameters()
     # Separate function checks that params are fine
 }
 
+
 emp_verify_provisioning_parameters()
 {
+    TEMP_RETVAL="0"
     TEMP_OS_FAMILY="$(basename ${0})"
-    TEMP_OS_FAMILY="${TEMP_OS_FAMILY##"emp_provision_"}"
+    TEMP_OS_FAMILY="${TEMP_OS_FAMILY##emp_provision_}"
     TEMP_OS_FAMILY="${TEMP_OS_FAMILY%%_*}"
     EMP_SCRIPT_OS_FAMILY="$TEMP_OS_FAMILY"
 
+    if [ ! -f "$EMP_BOOT_OS_ISO_PATH" ]
+    then
+	echo "ERROR: Cannot find iso file $EMP_BOOT_OS_ISO_PATH"
+	TEMP_RETVAL="1"
+    fi
+    
     # Can be:
     #
     # $EMP_SCRIPT_OS_FAMILY=ubuntu
-    # $EMP_ASSETS_DIR=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    # $EMP_BOOT_OS_ASSETS_DIR=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
     # $EMP_ASSETS_ROOT_DIR=/opt/easy_multi_pxe/netbootassets
     #
     # Conclusion:
     # $EMP_ASSETS_ROOT_DIR/$EMP_SCRIPT_OS_FAMILY must be the beginning
-    # of $EMP_ASSETS_DIR
-    echo "SCRIPT OS FAMILY $EMP_SCRIPT_OS_FAMILY"
-    echo "ASSETS DIR $EMP_ASSETS_DIR"
-    echo "EMP_ASSETS_ROOT_DIR $EMP_ASSETS_ROOT_DIR"
+    # of $EMP_BOOT_OS_ASSETS_DIR
 
-    case "$EMP_ASSETS_DIR" in
+    case "$EMP_BOOT_OS_ASSETS_DIR" in
 	"$EMP_ASSETS_ROOT_DIR/$EMP_SCRIPT_OS_FAMILY"*)
-	    echo "VALID"
+	    EMP_BOOT_OS_FAMILY="$EMP_SCRIPT_OS_FAMILY"	    
 	    ;;
 	*)
-	    echo "INVALID"
+	    echo "ERROR: Wrong family given in assets directory $EMP_BOOT_OS_ASSETS_DIR , expected $EMP_SCRIPT_OS_FAMILY"
+	    TEMP_RETVAL="1"
 	    ;;
     esac
+
+    # Can be:
+    #
+    # $EMP_BOOT_OS_ASSETS_DIR=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    #
+    # Conclusion:
+    # Must validate the last fragment to have correct arch.
+    
+    EMP_BOOT_OS_MAIN_ARCH="${EMP_BOOT_OS_ASSETS_DIR##*/}"
+    echo "EMP_BOOT_OS_MAIN_ARCH $EMP_BOOT_OS_MAIN_ARCH"
+
+    if [ "$EMP_BOOT_OS_MAIN_ARCH" != "x32" -a "$EMP_BOOT_OS_MAIN_ARCH" != "x64" ]
+    then
+	echo "ERROR: Wrong main architecture given in assets directory $EMP_BOOT_OS_ASSETS_DIR , x32 or x64"
+	TEMP_RETVAL="1"
+    fi
+
+    # Can be:
+    #
+    # $EMP_BOOT_OS_FAMILY=ubuntu
+    # $EMP_BOOT_OS_ASSETS_DIR=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    # $EMP_ASSETS_ROOT_DIR=/opt/easy_multi_pxe/netbootassets
+    # $EMP_BOOT_OS_MAIN_ARCH=x64
+    #
+    # Conclusion:
+    # Must check that only 20.04 remains, so strip from
+    # $EMP_BOOT_OS_ASSETS_DIR beginning $EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_FAMILY/
+    # and from end /$EMP_BOOT_OS_MAIN_ARCH
+    # Then check that it is nonzero and does not contains slashes
+    EMP_BOOT_OS_MAIN_VERSION="${EMP_BOOT_OS_ASSETS_DIR##$EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_FAMILY/}"
+    EMP_BOOT_OS_MAIN_VERSION="${EMP_BOOT_OS_MAIN_VERSION%%/$EMP_BOOT_OS_MAIN_ARCH}"
+
+    echo "EMP_BOOT_OS_MAIN_VERSION $EMP_BOOT_OS_MAIN_VERSION"
+
+    case "$EMP_BOOT_OS_MAIN_VERSION" in
+	*/*)
+	    echo "ERROR: Wrong main version given in assets directory $EMP_BOOT_OS_ASSETS_DIR ; contains extra directory"
+	    TEMP_RETVAL="1"
+	    ;;
+	*)
+	    if [ -z "$EMP_BOOT_OS_MAIN_VERSION" ]
+	    then
+		echo "ERROR: Empty main version given in assets directory $EMP_BOOT_OS_ASSETS_DIR"
+		TEMP_RETVAL="1"
+	    fi
+	    ;;
+    esac
+    
+    return "$TEMP_RETVAL"
 }
 
 

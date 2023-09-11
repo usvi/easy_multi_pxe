@@ -47,6 +47,13 @@ then
     emp_collect_provisioning_parameters "$@"
     emp_verify_provisioning_parameters
 
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Provisioning parameters failed, exiting."
+
+	exit 1
+    fi
+
     echo "provisioning debug exit"
     exit 1
     
