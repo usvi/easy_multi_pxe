@@ -89,7 +89,7 @@ item reboot         Reboot computer
 <?php
 foreach ($fragments_i386_pcbios as $key => $value)
 {
-    print("item " . $key . "\n");
+    print("item " . $key . " " . str_replace("_", " ", $key) . "\n");
 }
 ?>
 choose selected
@@ -120,7 +120,7 @@ item reboot         Reboot computer
 <?php
 foreach ($fragments_i386_efi as $key => $value)
 {
-    print("item " . $key . "\n");
+    print("item " . $key . " " . str_replace("_", " ", $key) . "\n");
 }
 ?>
 
@@ -152,7 +152,7 @@ item reboot         Reboot computer
 <?php
 foreach ($fragments_x86_64_pcbios as $key => $value)
 {
-    print("item " . $key . "\n");
+    print("item " . $key . " " . str_replace("_", " ", $key) . "\n");
 }
 ?>
 
@@ -184,7 +184,7 @@ item reboot         Reboot computer
 <?php
 foreach ($fragments_x86_64_efi as $key => $value)
 {
-    print("item " . $key . "\n");
+    print("item " . $key . " " . str_replace("_", " ", $key) . "\n");
 }
 ?>
 
