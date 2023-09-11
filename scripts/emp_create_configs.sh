@@ -252,7 +252,29 @@ fi
 
 
 
-# Finally write everything out
+# Try to figure out php fpm socket location
+emp_search_php_fpm_location
+
+# Ask if it is ok
+echo -n "Give PHP socket path [$EMP_PHP_FPM_RUN_SOCK]: "
+read TEMP_INPUT
+
+if [ -n "$TEMP_INPUT" ]
+then
+    EMP_PHP_FPM_RUN_SOCK="$TEMP_INPUT"
+fi
+# Final validation
+emp_validate_php_fpm_location
+if [ "$?" -ne 0 ]
+then
+    echo "ERROR: PHP socket $EMP_PHP_FPM_RUN_SOCK non-existent or otherwise wrong."
+
+    exit 1
+fi
+
+
+
+# Write main config file
 
 echo "# $EMP_MAIN_CONFIG" > "$EMP_MAIN_CONFIG"
 chmod "$EMP_CONFIG_CHMOD_PERMS" "$EMP_MAIN_CONFIG"
@@ -281,27 +303,14 @@ then
 fi
 
 
-
-echo ""
-echo "Preparing to write config files."
-
-
-# Try to figure out php fpm socket location
-EMP_PHP_FPM_RUN_SOCK="/dev/null"
-ls -1 /run/php/*.sock &> /dev/null
-echo "starting"
-
-if [ "$?" -eq 0 ]
-then
-    # Just pick the first one for now
-    echo -n "Locating php-fpm ... "
-    EMP_PHP_FPM_RUN_SOCK="`ls -1 /run/php/*.sock | head -n 1`"
-fi
-echo "ready"
-exit 1
+# Creating individual config files from templates
 
 # Read the new config file again, just in case
 emp_read_config "$EMP_MAIN_CONFIG"
+
+echo ""
+echo "Preparing to write include config files."
+
 
 echo -n "Writing $EMP_APACHE_CONF_FINAL ... " 
 sed "s|{EMP_CONFIG_DIR}|$EMP_CONFIG_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$EMP_WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$EMP_SCRIPTS_DIR|g;s|{EMP_ASSETS_ROOT_DIR}|$EMP_ASSETS_ROOT_DIR|g;s|{EMP_TFTPROOT_DIR}|$EMP_TFTPROOT_DIR|g;" "$EMP_APACHE_CONF_TEMPLATE" > "$EMP_APACHE_CONF_FINAL"

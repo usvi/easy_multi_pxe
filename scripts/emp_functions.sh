@@ -55,6 +55,55 @@ emp_read_config()
 }
 
 
+emp_search_php_fpm_location()
+{
+    EMP_PHP_FPM_RUN_SOCK=""
+
+    if [ -d /run/php ]
+    then
+	for TEMP_FILE in /run/php/*.sock
+	do
+	    EMP_PHP_FPM_RUN_SOCK="$TEMP_FILE"
+
+	    case "$TEMP_FILE" in
+		*"/php-fpm.sock")
+		    # Got proper, we can return
+		    return
+		    ;;
+	    esac
+	done
+    fi
+
+    # If not found in loop, inspect another directory
+    if [ -d /var/run/php-fpm ]
+    then
+	for TEMP_FILE in /var/run/php-fpm/*.sock
+	do
+	    EMP_PHP_FPM_RUN_SOCK="$TEMP_FILE"
+
+	    case "$TEMP_FILE" in
+		*"/php-fpm.sock")
+		    # Got proper, we can return
+		    return
+		    ;;
+	    esac
+	done
+    fi
+}
+
+
+# Add more validation later
+emp_validate_php_fpm_location()
+{
+    if [ -S "$EMP_PHP_FPM_RUN_SOCK" ]
+    then
+	return 0
+    fi
+
+    return 1
+}
+
+
 check_iso_file()
 {
     if [ ! -f "$1" ]
