@@ -127,8 +127,6 @@ do
 	    fi
 	    printf "j:\setup.exe\r\n" >> "$STARTNET"
 		
-	    cat "$STARTNET"
-
 	    # Need strange sleep here on mounted cifs for some reason
 	    sleep 5
 	    wimunmount --commit "$ROOT_WIM_DIR/$WIM_ENTRY/mount"
