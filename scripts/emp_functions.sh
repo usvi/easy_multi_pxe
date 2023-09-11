@@ -7,7 +7,7 @@ copy_dir_progress()
 
     SIZE_SRC=$(du --apparent-size -s "$SRC_DIR" | sed "s|\s.*||;" )
 
-    cp -r "$SRC_DIR" "$DEST_DIR" &
+    cp -r "$SRC_DIR"/* "$DEST_DIR" &
     COPY_PID="$!"
 
     echo -n "Copying $BOOT_OS_ENTRY_ID.iso : 0%"

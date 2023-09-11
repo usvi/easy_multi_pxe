@@ -66,20 +66,42 @@ WEBSERVER_HTTP_BASE="http://$WEBSERVER_IP/$WEBSERVER_PREFIX/$BOOT_OS_WITH_FAMILY
 # And start
 echo "Processing $BOOT_OS_ENTRY_ID as $BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID"
 
-if [ -f "$FS_BOOT_OS_IPXE_EFI_FRAGMENT_UNIX_PATH" ]
-then
-    rm "$FS_BOOT_OS_IPXE_EFI_FRAGMENT_UNIX_PATH"
-
-    if [ "$?" -ne 0 ]
+for IPXE_FRAGMENT in "$FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH" "$FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH" "$FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH" "$FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH"
+do
+    if [ -f "$IPXE_FRAGMENT" ]
     then
-	echo "ERROR: Unable to remove old ipxe fragment $FS_BOOT_OS_IPXE_EFI_FRAGMENT_UNIX_PATH"
+	rm "$IPXE_FRAGMENT"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to remove old ipxe fragment $IPXE_FRAGMENT"
+	    exit 1
+	fi
+    fi
+done
+		     
+		     
+
+
+
+# Try to remove only if copying iso
+if [ -z "$COPY_ISO" -o "$COPY_ISO" != "no" ]
+then
+    chmod u+rwX "$FS_BOOT_OS_UNIX_PATH"/ -R > /dev/null 2>&1
+    rm -r "$FS_BOOT_OS_UNIX_PATH"/* > /dev/null 2>&1
+
+    # Check that old has been removed
+    ls "$FS_BOOT_OS_UNIX_PATH"/* > /dev/null 2>&1
+    
+    if [ "$?" -eq 0 ]
+    then
+	echo "ERROR: Unable to remove old files from $FS_BOOT_OS_UNIX_PATH"
 	exit 1
     fi
 fi
 
 
 
-rm -r "$FS_BOOT_OS_UNIX_PATH" > /dev/null 2>&1
 
 if [ ! -d "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" ]
 then
@@ -124,18 +146,7 @@ fi
 # Copy the iso mount dir as new path if not forbidden
 if [ -z "$COPY_ISO" -o "$COPY_ISO" != "no" ]
 then
-    # Remove old
-    rm -r "$FS_BOOT_OS_UNIX_PATH"/*
-    # Check that it was removed
-    ls "$FS_BOOT_OS_UNIX_PATH"/* > /dev/null 2>&1
-    
-    if [ "$?" -eq 0 ]
-    then
-	echo "ERROR: Unable to remove old files from $FS_BOOT_OS_UNIX_PATH"
-	umount -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
-	exit 1
-    fi
-    
+    # Old has been removed in the beginning
     copy_dir_progress "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" "$FS_BOOT_OS_UNIX_PATH"
 
     if [ "$?" -ne 0 ]
