@@ -25,53 +25,71 @@ fclose($main_conf_file);
 
 //print_r($main_conf_db);
 
-# Find all fragments
-$fragments_i386_pcbios = [];
-$fragments_i386_efi = [];
-$fragments_x86_64_pcbios = [];
-$fragments_x86_64_efi = [];
+# Find all submenus. Lots of esoteric stuff here.
+
+$id_lookups = [];
+$submenus = [];
+$submenu_names = [];
 
 //print("$assets_prefix_dir\n");
+$emp_platform_to_ipxe_native_platform = array(
+    "32bit-bios" => "i386_pcbios",
+    "32bit-efi" => "i386_efi",
+    "64bit-bios" => "x86_64_pcbios",
+    "64bit-efi" => "x86_64_efi");
+
+$native_platform_names = array(
+    "i386_pcbios" => "iPXE 32bit BIOS boot menu",
+    "i386_efi" => "iPXE 32bit EFI boot menu",
+    "x86_64_pcbios" => "iPXE 64bit BIOS boot menu",
+    "x86_64_efi" => "iPXE 64bit EFI boot menu");
+    
+$default_entries = array(
+    "reboot" => array("Reboot computer",
+                      "reboot\n" .
+                      "goto end\n")
+);
+                      
 
 $ipxe_fragment_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($assets_prefix_dir));
 $ipxe_fragment_iterator->setMaxDepth(3);
 
 foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
 {
+    
     if ($ipxe_file_candidate->getExtension() === "ipxe")
     {
-        $ipxe_file = $ipxe_file_candidate->getBasename(".ipxe");
-        #print("$ipxe_file\n");
-        list($entry_id, $entry_class) = explode(".", $ipxe_file);
-
-        //print("$entry_id\n");
-        //print("$entry_class\n");
-
-        switch($entry_class)
+        
+        list($path_with_os_label_id, $emp_platform, $ipxe_suffix) = explode(".", $ipxe_file_candidate);
+        
+        if (array_key_exists($emp_platform, $emp_platform_to_ipxe_native_platform))
         {
-            case "32bit-bios":
-                $fragments_i386_pcbios[$entry_id] = file_get_contents($ipxe_file_candidate);
-                break;
+            $os_label_id = basename($path_with_os_label_id);
+            $os_family = basename(dirname($path_with_os_label_id, 3));
+            $os_ipxe_native_platform = $emp_platform_to_ipxe_native_platform[$emp_platform];
+            $os_family_label_id = $os_ipxe_native_platform . "-" . $os_family;
+            //print("BBB " . $os_label_id . " " . $os_family_label_id . "\n");
 
-            case "32bit-efi":
-                $fragments_i386_efi[$entry_id] = file_get_contents($ipxe_file_candidate);
-                break;
-                
-            case "64bit-bios":
-                $fragments_x86_64_pcbios[$entry_id] = file_get_contents($ipxe_file_candidate);
-                break;
+            $id_lookups[$os_family_label_id] = ucfirst($os_family);
+            $id_lookups[$os_label_id] = str_replace("_", " ", $os_label_id);
 
-            case "64bit-efi":
-                $fragments_x86_64_efi[$entry_id] = file_get_contents($ipxe_file_candidate);
-                break;
+            if (!array_key_exists($os_ipxe_native_platform, $submenus))
+            {
+                $submenus[$os_ipxe_native_platform] = [];
+            }
+            if (!array_key_exists($os_family_label_id, $submenus[$os_ipxe_native_platform]))
+            {
+                $submenus[$os_ipxe_native_platform][$os_family_label_id] = [];
+            }
+            $submenus[$os_ipxe_native_platform][$os_family_label_id][$os_label_id] = file_get_contents($ipxe_file_candidate);
         }
-
     }
 }
 //print_r($fragments_x86_64_pcbios);
 //print_r($fragments_x86_64_efi);
 //print($fragments_x86_64_efi["Win10_21H1_English_x64_2021-10-09"]);
-
+//print_r($submenus);
+//exit(0);
 ?>
 
 cpuid --ext 29 && set arch x86_64 || set arch i386
@@ -83,127 +101,35 @@ goto menu_${arch}_${platform}
 
 
 
-:menu_i386_pcbios
-menu iPXE 32bit BIOS boot menu
-item reboot         Reboot computer
 <?php
-foreach ($fragments_i386_pcbios as $key => $value)
+
+foreach($submenus as $os_ipxe_native_platform => $os_family_label_id)
 {
-    print("item " . $key . " " . str_replace("_", " ", $key) . "\n");
+    print(":menu_" . $os_ipxe_native_platform . "\n");
+    print("menu " . $native_platform_names[$os_ipxe_native_platform] . "\n");
+
+    foreach($default_entries as $entry_suffix => $entry_contents)
+    {
+        print("item " . $os_ipxe_native_platform . "-" . $entry_suffix . " " . $entry_contents[0] . "\n");
+    }
+    print("\n");
+    print("choose selected\n");
+    print("set menu-timeout 0\n");
+    print("goto \${selected}\n");
+    print("\n");
+
+    foreach($default_entries as $entry_suffix => $entry_contents)
+    {
+        print(":" . $os_ipxe_native_platform . "-" . $entry_suffix . "\n");
+        print($entry_contents[1] . "\n");
+    }
+
+    print("\n\n\n\n\n");
 }
-?>
-choose selected
-set menu-timeout 0
-goto ${selected}
 
-:reboot
-reboot
-sleep 5
-goto end
-
-<?php
-foreach ($fragments_i386_pcbios as $key => $value)
-{
-    print($value . "\n");
-}
-?>
-
-
-
-
-
-
-
-:menu_i386_efi
-menu iPXE 32bit EFI boot menu
-item reboot         Reboot computer
-<?php
-foreach ($fragments_i386_efi as $key => $value)
-{
-    print("item " . $key . " " . str_replace("_", " ", $key) . "\n");
-}
-?>
-
-choose selected
-set menu-timeout 0
-goto ${selected}
-
-:reboot
-reboot
-sleep 5
-goto end
-
-<?php
-foreach ($fragments_i386_efi as $key => $value)
-{
-    print($value . "\n");
-}
 ?>
 
 
 
-
-
-
-
-:menu_x86_64_pcbios
-menu iPXE 64bit BIOS boot menu
-item reboot         Reboot computer
-<?php
-foreach ($fragments_x86_64_pcbios as $key => $value)
-{
-    print("item " . $key . " " . str_replace("_", " ", $key) . "\n");
-}
-?>
-
-choose selected
-set menu-timeout 0
-goto ${selected}
-
-:reboot
-reboot
-sleep 5
-goto end
-
-<?php
-foreach ($fragments_x86_64_pcbios as $key => $value)
-{
-    print($value . "\n");
-}
-?>
-
-
-
-
-
-
-
-:menu_x86_64_efi
-menu iPXE 64bit EFI boot menu
-item reboot         Reboot computer
-<?php
-foreach ($fragments_x86_64_efi as $key => $value)
-{
-    print("item " . $key . " " . str_replace("_", " ", $key) . "\n");
-}
-?>
-
-choose selected
-set menu-timeout 0
-goto ${selected}
-
-:reboot
-reboot
-sleep 5
-goto end
-
-<?php
-foreach ($fragments_x86_64_efi as $key => $value)
-{
-    print($value . "\n");
-}
-?>
-
-
-    
 :end
+
