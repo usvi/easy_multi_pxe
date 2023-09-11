@@ -118,9 +118,12 @@ emp_collect_provisioning_parameters()
     # --copyiso=no
 
     # Or the same:
+    # ./emp_provision_ubuntu_iso_to_assets_dir.sh
     # -i /opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso
     # -a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
     # -c no
+
+    # copyiso is not mandatory, others are.
 
     for TEMP_PARAM in "$@"
     do
@@ -209,6 +212,26 @@ emp_verify_provisioning_parameters()
     TEMP_OS_FAMILY="${TEMP_OS_FAMILY%%_*}"
     EMP_SCRIPT_OS_FAMILY="$TEMP_OS_FAMILY"
 
+    if [ -z "$EMP_BOOT_OS_ISO_PATH" ]
+    then
+	echo "ERROR: No iso path given at all"
+	TEMP_RETVAL="1"
+    fi
+
+    if [ -z "$EMP_BOOT_OS_ASSETS_DIR" ]
+    then
+	echo "ERROR: No assets dir given at all"
+	TEMP_RETVAL="1"
+    fi
+
+    # Bailing out already on errors because would create too many messages
+
+    if [ "$TEMP_RETVAL" -ne 0 ]
+    then
+	return "$TEMP_RETVAL"
+    fi
+
+    # Then the actual checks
     if [ ! -f "$EMP_BOOT_OS_ISO_PATH" ]
     then
 	echo "ERROR: Cannot find iso file $EMP_BOOT_OS_ISO_PATH"
