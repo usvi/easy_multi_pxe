@@ -1,11 +1,11 @@
-# /opt/easy_multi_pxe/conf/dnsmasq_emp_inc.conf
+# {EMP_DNSMASQ_CONF_FILE}
 #
 # Include this file from your actual dnsmasq.conf
-# Use: conf-file=/opt/easy_multi_pxe/conf/dnsmasq_emp_inc.conf
+# Use: conf-file={EMP_DNSMASQ_CONF_FILE}
 
 
 enable-tftp
-tftp-root=/opt/easy_multi_pxe/tftproot
+tftp-root={EMP_TFTPROOT_DIR}
 tftp-lowercase
 
 # Bios, runs on both 32bit and 64bit hardware
@@ -36,4 +36,4 @@ dhcp-boot=tag:efi64,ipxe.efi
 
 # Config file
 dhcp-match=set:ipxe-menu,175,39
-dhcp-boot=tag:ipxe-menu,http://172.16.8.254/netbootassets/root.ipxe
+dhcp-boot=tag:ipxe-menu,http://{EMP_WEBSERVER_IP}/{EMP_WEBSERVER_PREFIX}/root.ipxe
