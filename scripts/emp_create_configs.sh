@@ -1,5 +1,10 @@
 #!/bin/sh
 
+EMP_OP="create_configs"
+EMP_COMMON_INC="$(dirname "$(realpath "$0")")/emp_common_inc.sh"
+if [ ! -f "$EMP_COMMON_INC" ]; then echo "Error: No common include file $EMP_COMMON_INC"; exit 1; fi
+. "$EMP_COMMON_INC"
+
 WEBSERVER_PREFIX_DEFAULT="netbootassets"
 CIFS_SHARE_NAME_DEFAULT="Netboot"
 
