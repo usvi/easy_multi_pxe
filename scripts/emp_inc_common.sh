@@ -43,19 +43,11 @@ then
 
 elif [ "$EMP_OP" = "do_provisioning" ]
 then
-    if [ ! -f "$EMP_MAIN_CONFIG" ]
-    then
-	echo "Error: Config file $EMP_MAIN_CONFIG does not exist."
+    # Main config and functions have been already included in the common section
+    emp_collect_provisioning_parameters "$@"
 
-	exit 1
-    fi
-    # Main config is guaranteed to exist now, including it
-    . "$EMP_MAIN_CONFIG"
-    # Already include the provisioning functions file,
-    # we might need it in figuring out variables.
-    . "$EMP_TOPDIR/emp_functions.sh"
-
-    # Prereq for prechecks
+    echo "provisioning debug exit"
+    exit 1
     COPY_ISO="yes"
     # Need to do a couple of prechecks
     check_iso_file "$1"

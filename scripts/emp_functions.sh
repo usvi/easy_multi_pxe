@@ -104,6 +104,65 @@ emp_validate_php_fpm_location()
 }
 
 
+emp_collect_provisioning_parameters()
+{
+    EMP_ISO_PATH=""
+    EMP_ASSETS_DIR=""
+    EMP_COPY_ISO="Y" # Default value
+    
+    TEMP_OPEN=""
+    # Example run (wrapped):
+    # root@gw:/opt/easy_multi_pxe# ./scripts/emp_provision_ubuntu_iso_to_assets_dir.sh
+    # --isofile /opt/isos_ro/ubuntu/ubuntu-20.04.3-desktop-amd64.iso (mandatory)
+    # --assetsdir /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 (mandatory)
+    # --nocopyiso (optional)
+
+    # Interchangeable params
+    # --isofile -i
+    # --assetsdir -a
+    # --nocopyiso -n
+
+    for TEMP_PARAM in "$@"
+    do
+	if [ -z "$TEMP_OPEN" ]
+	then
+	    # Nothing open
+	    if [ "$TEMP_PARAM" = "--isofile" -o "$TEMP_PARAM" = "-i" ]
+	    then
+		TEMP_OPEN="EMP_ISO_PATH"
+
+	    elif [ "$TEMP_PARAM" = "--assetsdir" -o "$TEMP_PARAM" = "-a" ]
+	    then
+		TEMP_OPEN="EMP_ASSETS_DIR"
+
+	    elif [ "$TEMP_PARAM" = "--nocopyiso" -o "$TEMP_PARAM" = "-n" ]
+	    then
+		EMP_COPY_ISO="N"
+	    fi
+	else
+	    if [ "$TEMP_OPEN" = "EMP_ISO_PATH" ]
+	    then
+		EMP_ISO_PATH="$(realpath $TEMP_PARAM)"
+		TEMP_OPEN=""
+		
+	    elif [ "$TEMP_OPEN" = "EMP_ASSETS_DIR" ]
+	    then
+		EMP_ASSETS_DIR="$(realpath "${TEMP_PARAM}")"
+		TEMP_OPEN=""
+	    fi
+	fi
+    done
+
+    echo "EMP_ISO_PATH: $EMP_ISO_PATH"
+    echo "EMP_ASSETS_DIR: $EMP_ASSETS_DIR"
+}
+
+
+
+
+
+
+
 check_iso_file()
 {
     if [ ! -f "$1" ]
