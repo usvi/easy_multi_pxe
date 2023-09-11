@@ -1,5 +1,91 @@
 #!/bin/sh
 
+# We need config functions to read the variables we want
+# and assign them with program prefix. We dont want to put
+# strange prefixes to config files to confuse the user. Yes,
+# this adds some complexity but is worth the effort.
+# Also, this way we do not need to be using confusing quotes
+# in the file.
+emp_process_config_line()
+{
+    case "$1" in
+        "WEBSERVER_IP="*)
+            EMP_WEBSERVER_IP=${1#"WEBSERVER_IP="}
+	    ;;
+        "WEBSERVER_PREFIX="*)
+            EMP_WEBSERVER_PREFIX=${1#"WEBSERVER_PREFIX="}
+	    ;;
+        "DRIVERS_BASE_DIR="*)
+            EMP_DRIVERS_BASE_DIR=${1#"DRIVERS_BASE_DIR="}
+	    ;;
+        "CIFS_SERVER_IP="*)
+            EMP_CIFS_SERVER_IP=${1#"CIFS_SERVER_IP="}
+	    ;;
+        "CIFS_SHARE_NAME="*)
+            EMP_CIFS_SHARE_NAME=${1#"CIFS_SHARE_NAME="}
+	    ;;
+        "CIFS_USER="*)
+            EMP_CIFS_USER=${1#"CIFS_USER="}
+	    ;;
+        "CIFS_PASSWD="*)
+            EMP_CIFS_PASSWD=${1#"CIFS_PASSWD="}
+	    ;;
+    esac
+}
+
+ 
+emp_read_config()
+{
+    # Zero existing
+    EMP_WEBSERVER_IP=""
+    EMP_WEBSERVER_PREFIX=""
+    EMP_DRIVERS_BASE_DIR=""
+    EMP_CIFS_SERVER_IP=""
+    EMP_CIFS_SHARE_NAME=""
+    EMP_CIFS_USER=""
+    EMP_CIFS_PASSWD=""
+
+    if [ -f "$1" ]
+    then
+	while read -r EMP_LINE;
+	do
+            emp_process_config_line "$EMP_LINE"
+	done < "$1"
+    fi
+}
+
+
+check_iso_file()
+{
+    if [ ! -f "$1" ]
+    then
+	echo "ERROR: Given iso file $1 does not exist"
+
+	exit 1
+    fi
+}
+
+
+check_assets_prefix_dir()
+{
+    if [ ! -d "$1" ]
+    then
+	echo "ERROR: Given boot OS assets prefix directory $1 does not exist"
+
+	exit 1
+    fi
+}
+
+
+check_copy_iso()
+{
+    if [ "$1" = "nocopyiso" ]
+    then
+	COPY_ISO="no"
+    fi
+}
+
+
 copy_dir_progress()
 {
     SRC_DIR="$1"
@@ -42,32 +128,4 @@ copy_dir_progress()
     fi
 
     return "$COPY_RETVAL"
-}
-
-check_iso_file()
-{
-    if [ ! -f "$1" ]
-    then
-	echo "ERROR: Given iso file $1 does not exist"
-
-	exit 1
-    fi
-}
-
-check_assets_prefix_dir()
-{
-    if [ ! -d "$1" ]
-    then
-	echo "ERROR: Given boot OS assets prefix directory $1 does not exist"
-
-	exit 1
-    fi
-}
-
-check_copy_iso()
-{
-    if [ "$1" = "nocopyiso" ]
-    then
-	COPY_ISO="no"
-    fi
 }

@@ -6,36 +6,27 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 . "$EMP_INC_COMMON"
 
 
-# Take old config as base if existing
-echo "INCLUDING main config $MAIN_CONFIG"
-
-if [ -f "$MAIN_CONFIG" ]
-then
-    . "$MAIN_CONFIG"
-fi
-
 echo ""
 echo "Creating Easy Multi Pxe configs"
 echo ""
-
 
 
 # Webserver-related stuff.
 
 # Webserver IP.
 # Mandatory.
-echo -n "Give webserver IP [$WEBSERVER_IP]: "
+echo -n "Give webserver IP [$EMP_WEBSERVER_IP]: "
 read INPUT
 
 if [ -z "$INPUT" ]
 then
-    if [ -z "$WEBSERVER_IP" ]
+    if [ -z "$EMP_WEBSERVER_IP" ]
     then
 	echo "Error: No webserver IP given, exiting."
 	exit 1
     fi
 else
-    WEBSERVER_IP="$INPUT"
+    EMP_WEBSERVER_IP="$INPUT"
 fi
 
 
@@ -43,23 +34,23 @@ fi
 # Webserver prefix.
 # Mandatory.
 # Take prefix from default as base.
-if [ -z "$WEBSERVER_PREFIX" ]
+if [ -z "$EMP_WEBSERVER_PREFIX" ]
 then
-    WEBSERVER_PREFIX="$WEBSERVER_PREFIX_DEFAULT"
+    EMP_WEBSERVER_PREFIX="$EMP_WEBSERVER_PREFIX_DEFAULT"
 fi
 
-echo -n "Give webserver prefix [$WEBSERVER_PREFIX]: "
+echo -n "Give webserver prefix [$EMP_WEBSERVER_PREFIX]: "
 read INPUT
 
 if [ -z "$INPUT" ]
 then
-    if [ -z "$WEBSERVER_PREFIX" ]
+    if [ -z "$EMP_WEBSERVER_PREFIX" ]
     then
 	echo "Error: No webserver prefix given, exiting."
 	exit 1
     fi
 else
-    WEBSERVER_PREFIX="$INPUT"
+    EMP_WEBSERVER_PREFIX="$INPUT"
 fi
 
 
@@ -70,7 +61,7 @@ fi
 USE="N"
 
 # But if we have it from old config, assume it is used:
-if [ -n "$DRIVERS_BASE_DIR" ]
+if [ -n "$EMP_DRIVERS_BASE_DIR" ]
 then
     USE="Y"
 fi
@@ -92,21 +83,21 @@ fi
 
 if [ "$USE" = "Y" ]
 then
-    echo -n "Give drivers directory [$DRIVERS_BASE_DIR]: "
+    echo -n "Give drivers directory [$EMP_DRIVERS_BASE_DIR]: "
     read INPUT
 
     if [ -z "$INPUT" ]
     then
-	if [ -z "$DRIVERS_BASE_DIR" ]
+	if [ -z "$EMP_DRIVERS_BASE_DIR" ]
 	then
 	    echo "Error: No drivers directory given, exiting."
 	    exit 1
 	fi
     else
-	DRIVERS_BASE_DIR="$INPUT"
+	EMP_DRIVERS_BASE_DIR="$INPUT"
     fi
 else
-    DRIVERS_BASE_DIR=""
+    EMP_DRIVERS_BASE_DIR=""
 fi
 
 
@@ -115,41 +106,41 @@ fi
 
 # CIFS/SMB Server IP.
 # Mandatory.
-echo -n "Give CIFS/SMB server IP [$CIFS_SERVER_IP]: "
+echo -n "Give CIFS/SMB server IP [$EMP_CIFS_SERVER_IP]: "
 read INPUT
 
 if [ -z "$INPUT" ]
 then
-    if [ -z "$CIFS_SERVER_IP" ]
+    if [ -z "$EMP_CIFS_SERVER_IP" ]
     then
 	echo "Error: No CIFS/SMB server IP given, exiting."
 	exit 1
     fi
 else
-    CIFS_SERVER_IP="$INPUT"
+    EMP_CIFS_SERVER_IP="$INPUT"
 fi
 
 
 
 # CIFS/SMB share name.
 # Take share name from default as base
-if [ -z "$CIFS_SHARE_NAME" ]
+if [ -z "$EMP_CIFS_SHARE_NAME" ]
 then
-    CIFS_SHARE_NAME="$CIFS_SHARE_NAME_DEFAULT"
+    EMP_CIFS_SHARE_NAME="$EMP_CIFS_SHARE_NAME_DEFAULT"
 fi
 
-echo -n "Give CIFS/SMB share name [$CIFS_SHARE_NAME]: "
+echo -n "Give CIFS/SMB share name [$EMP_CIFS_SHARE_NAME]: "
 read INPUT
 
 if [ -z "$INPUT" ]
 then
-    if [ -z "$CIFS_SHARE_NAME" ]
+    if [ -z "$EMP_CIFS_SHARE_NAME" ]
     then
 	echo "Error: No CIFS/SMB share name given, exiting."
 	exit 1
     fi
 else
-    CIFS_SHARE_NAME="$INPUT"
+    EMP_CIFS_SHARE_NAME="$INPUT"
 fi
 
 
@@ -160,7 +151,7 @@ fi
 USE="N"
 
 # But if we have it from old config, assume it is used:
-if [ -n "$CIFS_USER" ]
+if [ -n "$EMP_CIFS_USER" ]
 then
     USE="Y"
 fi
@@ -181,21 +172,21 @@ fi
 
 if [ "$USE" = "Y" ]
 then
-    echo -n "Give username for CIFS/SMB [$CIFS_USER]: "
+    echo -n "Give username for CIFS/SMB [$EMP_CIFS_USER]: "
     read INPUT
 
     if [ -z "$INPUT" ]
     then
-	if [ -z "$CIFS_USER" ]
+	if [ -z "$EMP_CIFS_USER" ]
 	then
 	    echo "Error: No username for CIFS/SMB given, exiting."
 	    exit 1
 	fi
     else
-	CIFS_USER="$INPUT"
+	EMP_CIFS_USER="$INPUT"
     fi
 else
-    CIFS_USER=""
+    EMP_CIFS_USER=""
 fi
 
 
@@ -206,7 +197,7 @@ fi
 USE="N"
 
 # But if we have it from old config, assume it is used:
-if [ -n "$CIFS_PASSWD" ]
+if [ -n "$EMP_CIFS_PASSWD" ]
 then
     USE="Y"
 fi
@@ -229,57 +220,57 @@ fi
 if [ "$USE" = "Y" ]
 then
     # Special check that username given
-    if [ -z "$CIFS_USER" ]
+    if [ -z "$EMP_CIFS_USER" ]
     then
 	echo "Error: CIFS/SMB password requested but username not given."
 	exit 1
     fi
 
-    echo -n "Give password for CIFS/SMB [$CIFS_PASSWD]: "
+    echo -n "Give password for CIFS/SMB [$EMP_CIFS_PASSWD]: "
     read INPUT
 
     if [ -z "$INPUT" ]
     then
-	if [ -z "$CIFS_PASSWD" ]
+	if [ -z "$EMP_CIFS_PASSWD" ]
 	then
 	    echo "Error: No password for CIFS/SMB given, exiting."
 	    exit 1
 	fi
     else
-	CIFS_PASSWD="$INPUT"
+	EMP_CIFS_PASSWD="$INPUT"
     fi
 else
-    CIFS_PASSWD=""
+    EMP_CIFS_PASSWD=""
 fi
 
 
 
 # And write everything out
 
-echo "# $MAIN_CONFIG" > "$MAIN_CONFIG"
-chmod ug=r "$MAIN_CONFIG"
-chown ":$WEBSERVER_USERNAME" "$MAIN_CONFIG"
-echo "# Easy Multi Pxe config file" >> "$MAIN_CONFIG"
-echo "" >> "$MAIN_CONFIG"
-echo "WEBSERVER_IP=\"$WEBSERVER_IP\"" >> "$MAIN_CONFIG"
-echo "WEBSERVER_PREFIX=\"$WEBSERVER_PREFIX\"" >> "$MAIN_CONFIG"
+echo "# $EMP_MAIN_CONFIG" > "$EMP_MAIN_CONFIG"
+chmod ug=r "$EMP_MAIN_CONFIG"
+chown ":$EMP_WEBSERVER_USERNAME" "$EMP_MAIN_CONFIG"
+echo "# Easy Multi Pxe config file" >> "$EMP_MAIN_CONFIG"
+echo "" >> "$EMP_MAIN_CONFIG"
+echo "WEBSERVER_IP=$EMP_WEBSERVER_IP" >> "$EMP_MAIN_CONFIG"
+echo "WEBSERVER_PREFIX=$EMP_WEBSERVER_PREFIX" >> "$EMP_MAIN_CONFIG"
 
-if [ -n "$DRIVERS_BASE_DIR" ]
+if [ -n "$EMP_DRIVERS_BASE_DIR" ]
 then
-    echo "DRIVERS_BASE_DIR=\"$DRIVERS_BASE_DIR\"" >> "$MAIN_CONFIG"
+    echo "DRIVERS_BASE_DIR=$EMP_DRIVERS_BASE_DIR" >> "$EMP_MAIN_CONFIG"
 fi
 
-echo "CIFS_SERVER_IP=\"$CIFS_SERVER_IP\"" >> "$MAIN_CONFIG"
-echo "CIFS_SHARE_NAME=\"$CIFS_SHARE_NAME\"" >> "$MAIN_CONFIG"
+echo "CIFS_SERVER_IP=$EMP_CIFS_SERVER_IP" >> "$EMP_MAIN_CONFIG"
+echo "CIFS_SHARE_NAME=$EMP_CIFS_SHARE_NAME" >> "$EMP_MAIN_CONFIG"
 
-if [ -n "$CIFS_USER" ]
+if [ -n "$EMP_CIFS_USER" ]
 then
-    echo "CIFS_USER=\"$CIFS_USER\"" >> "$MAIN_CONFIG"
+    echo "CIFS_USER=$EMP_CIFS_USER" >> "$EMP_MAIN_CONFIG"
 fi
 
-if [ -n "$CIFS_PASSWD" ]
+if [ -n "$EMP_CIFS_PASSWD" ]
 then
-    echo "CIFS_PASSWD=\"$CIFS_PASSWD\"" >> "$MAIN_CONFIG"
+    echo "CIFS_PASSWD=$EMP_CIFS_PASSWD" >> "$EMP_MAIN_CONFIG"
 fi
 
 
@@ -289,31 +280,31 @@ echo "Preparing to Write config files."
 
 
 # Try to figure out php fpm socket location
-PHP_FPM_RUN_SOCK="/dev/null"
+EMP_PHP_FPM_RUN_SOCK="/dev/null"
 ls -1 /run/php/*.sock &> /dev/null
 
 if [ "$?" -eq 0 ]
 then
     # Just pick the first one for now
     echo -n "Locating php-fpm ... "
-    PHP_FPM_RUN_SOCK="`ls -1 /run/php/*.sock | head -n 1`"
+    EMP_PHP_FPM_RUN_SOCK="`ls -1 /run/php/*.sock | head -n 1`"
 fi
 
 
 
-# Include the new config file, just in case
-. "$MAIN_CONFIG"
+# Read the new config file again, just in case
+emp_read_config "$EMP_MAIN_CONFIG"
 
-echo -n "Writing $APACHE_EMP_CONF_FINAL ... " 
-sed "s|{EMP_CONFIG_DIR}|$CONFIGS_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$EMP_ASSETS_ROOT_DIR|g;s|{EMP_TFTPROOT_DIR}|$TFTPROOT_DIR|g;" "$APACHE_EMP_CONF_TEMPLATE" > "$APACHE_EMP_CONF_FINAL"
+echo -n "Writing $EMP_APACHE_CONF_FINAL ... " 
+sed "s|{EMP_CONFIG_DIR}|$EMP_CONFIG_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$EMP_WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$EMP_SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$EMP_ASSETS_ROOT_DIR|g;s|{EMP_TFTPROOT_DIR}|$EMP_TFTPROOT_DIR|g;" "$EMP_APACHE_CONF_TEMPLATE" > "$EMP_APACHE_CONF_FINAL"
 echo "done."
 
 
-echo -n "Writing $DNSMASQ_EMP_CONF_FINAL ... " 
-sed "s|{EMP_DNSMASQ_CONF_FILE}|$DNSMASQ_EMP_CONF_FINAL|g;s|{EMP_TFTPROOT_DIR}|$TFTPROOT_DIR|g;s|{EMP_WEBSERVER_IP}|$WEBSERVER_IP|g;s|{EMP_WEBSERVER_PREFIX}|$WEBSERVER_PREFIX|g;" "$DNSMASQ_EMP_CONF_TEMPLATE" > "$DNSMASQ_EMP_CONF_FINAL"
+echo -n "Writing $EMP_DNSMASQ_CONF_FINAL ... " 
+sed "s|{EMP_DNSMASQ_CONF_FILE}|$EMP_DNSMASQ_CONF_FINAL|g;s|{EMP_TFTPROOT_DIR}|$EMP_TFTPROOT_DIR|g;s|{EMP_WEBSERVER_IP}|$EMP_WEBSERVER_IP|g;s|{EMP_WEBSERVER_PREFIX}|$EMP_WEBSERVER_PREFIX|g;" "$EMP_DNSMASQ_CONF_TEMPLATE" > "$EMP_DNSMASQ_CONF_FINAL"
 echo "done."
 
 
-echo -n "Writing $NGINX_EMP_CONF_FINAL ... " 
-sed "s|{EMP_CONFIG_DIR}|$CONFIGS_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$EMP_ASSETS_ROOT_DIR|g;s|{EMP_TFTPROOT_DIR}|$TFTPROOT_DIR|g;s|{EMP_PHP_FPM_RUN_SOCK}|$PHP_FPM_RUN_SOCK|g;" "$NGINX_EMP_CONF_TEMPLATE" > "$NGINX_EMP_CONF_FINAL"
+echo -n "Writing $EMP_NGINX_CONF_FINAL ... " 
+sed "s|{EMP_CONFIG_DIR}|$EMP_CONFIG_DIR|g;s|{EMP_WEBSERVER_PREFIX}|$EMP_WEBSERVER_PREFIX|g;s|{EMP_SCRIPTS_DIR}|$EMP_SCRIPTS_DIR|g;s|{EMP_ASSETS_DIR}|$EMP_ASSETS_ROOT_DIR|g;s|{EMP_TFTPROOT_DIR}|$EMP_TFTPROOT_DIR|g;s|{EMP_PHP_FPM_RUN_SOCK}|$EMP_PHP_FPM_RUN_SOCK|g;" "$EMP_NGINX_CONF_TEMPLATE" > "$EMP_NGINX_CONF_FINAL"
 echo "done."
