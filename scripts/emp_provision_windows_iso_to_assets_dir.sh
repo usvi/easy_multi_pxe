@@ -284,7 +284,6 @@ echo "done"
 if [ "$BOOT_OS_ARCH" = "x86" ]
 then
     cat <<EOF > "$FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH"
-:$BOOT_OS_ENTRY_ID
 kernel wimboot.i386
 set http_base $WEBSERVER_HTTP_BASE/\${selected}
 initrd \${http_base}/BCD BCD
@@ -301,7 +300,6 @@ EOF
     fi
 
     cat <<EOF > "$FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH"
-:$BOOT_OS_ENTRY_ID
 kernel wimboot.i386
 set http_base $WEBSERVER_HTTP_BASE/\${selected}
 initrd \${http_base}/BCD BCD
@@ -325,7 +323,6 @@ fi
 if [ "$BOOT_OS_ARCH" = "x64" ]
 then
     cat <<EOF > "$FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH"
-:$BOOT_OS_ENTRY_ID
 kernel wimboot
 set http_base $WEBSERVER_HTTP_BASE/\${selected}
 initrd \${http_base}/BCD BCD
@@ -343,7 +340,6 @@ EOF
     fi
     
     cat <<EOF > "$FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH"
-:$BOOT_OS_ENTRY_ID
 kernel wimboot
 set http_base $WEBSERVER_HTTP_BASE/\${selected}
 initrd \${http_base}/BCD BCD

@@ -65,14 +65,18 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
         
         if (array_key_exists($emp_platform, $emp_platform_to_ipxe_native_platform))
         {
-            $os_label_id = basename($path_with_os_label_id);
             $os_family = basename(dirname($path_with_os_label_id, 3));
+            $os_major_version = basename(dirname($path_with_os_label_id, 2));
             $os_ipxe_native_platform = $emp_platform_to_ipxe_native_platform[$emp_platform];
-            $os_family_menu_label_id = "collection_" . $os_ipxe_native_platform . "-" . $os_family;
-            //print("BBB " . $os_label_id . " " . $os_family_menu_label_id . "\n");
+            $os_family_menu_label_id = $os_ipxe_native_platform . "-" . $os_family;
+            $os_family_with_major_menu_label_id = $os_family_menu_label_id . "-" . $os_major_version;
+            $os_target_base_label_id = basename($path_with_os_label_id);
+            $os_target_full_label_id = $os_family_with_major_menu_label_id . "-" . $os_target_base_label_id;
+            //print("BBB " . $os_target_full_label_id . " " . $os_family_menu_label_id . "\n");
 
             $id_lookups[$os_family_menu_label_id] = ucfirst($os_family);
-            $id_lookups[$os_label_id] = str_replace("_", " ", $os_label_id);
+            $id_lookups[$os_family_with_major_menu_label_id] = ucfirst($os_family) . " " . $os_major_version;
+            $id_lookups[$os_target_full_label_id] = str_replace("_", " ", $os_target_base_label_id);
 
             if (!array_key_exists($os_ipxe_native_platform, $submenus))
             {
@@ -82,7 +86,11 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
             {
                 $submenus[$os_ipxe_native_platform][$os_family_menu_label_id] = [];
             }
-            $submenus[$os_ipxe_native_platform][$os_family_menu_label_id][$os_label_id] = file_get_contents($ipxe_file_candidate);
+            if (!array_key_exists($os_family_with_major_menu_label_id, $submenus[$os_ipxe_native_platform][$os_family_menu_label_id]))
+            {
+                $submenus[$os_ipxe_native_platform][$os_family_menu_label_id][$os_family_with_major_menu_label_id] = [];
+            }
+            $submenus[$os_ipxe_native_platform][$os_family_menu_label_id][$os_family_with_major_menu_label_id][$os_target_full_label_id] = file_get_contents($ipxe_file_candidate);
         }
     }
 }
@@ -98,7 +106,7 @@ cpuid --ext 29 && set arch x86_64 || set arch i386
 # arch = i386 or x86_64
 # platform = pcbios or efi
 
-goto arch_platform_${arch}_${platform}
+goto ${arch}_${platform}
 
 
 
@@ -107,7 +115,7 @@ goto arch_platform_${arch}_${platform}
 foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
 {
     print("# Main arch platform menu\n");
-    print(":arch_platform_" . $os_ipxe_native_platform . "\n");
+    print(":" . $os_ipxe_native_platform . "\n");
     print("menu " . $native_platform_names[$os_ipxe_native_platform] . "\n");
 
     foreach($default_entries as $entry_suffix => $entry_contents)
@@ -126,33 +134,61 @@ foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
 
     foreach($default_entries as $entry_suffix => $entry_contents)
     {
-        print(":" . "target_" . $os_ipxe_native_platform . "-" . $entry_suffix . "\n");
+        print(":" . $os_ipxe_native_platform . "-" . $entry_suffix . "\n");
         print($entry_contents[1] . "\n");
     }
-    print("\n");
-    print("# Submenu\n");
-    foreach($submenus[$os_ipxe_native_platform] as $os_family_menu_label_id => $os_family_ipxe_entries)
+    print("# Os family submenu\n");
+    
+    foreach($submenus[$os_ipxe_native_platform] as $os_family_menu_label_id => $os_family_with_major_menu_label_ids_array)
     {
         print(":" . $os_family_menu_label_id . "\n");
         print("menu " . $id_lookups[$os_family_menu_label_id] . "\n");
 
-        foreach ($os_family_ipxe_entries as $target_id => $target_ipxe_script)
+        foreach ($os_family_with_major_menu_label_ids_array as $os_family_with_major_menu_label_id => $os_target_full_label_ids_array)
         {
-            print("item " . $target_id . " " . $id_lookups[$target_id] . "\n");
+            print("item " . $os_family_with_major_menu_label_id . " " . $id_lookups[$os_family_with_major_menu_label_id] . "\n");
         }
-        print("item arch_platform_" . $os_ipxe_native_platform . " Back\n");
+        print("item " . $os_ipxe_native_platform . " Back\n");
 
         print("\n");
         print("choose selected\n");
         print("set menu-timeout 0\n");
         print("goto \${selected}\n");
         print("\n");
-        
+
+        foreach ($os_family_with_major_menu_label_ids_array as $os_family_with_major_menu_label_id => $os_target_full_label_ids_array)
+        {
+            print("# Os family and major submenu\n");
+            print(":" . $os_family_with_major_menu_label_id . "\n");
+            print("menu " . $id_lookups[$os_family_with_major_menu_label_id] . "\n");
+            //print("item " . $os_family_with_major_menu_label_id . " " . $id_lookups[$os_family_with_major_menu_label_id] . "\n");
+
+            foreach ($os_target_full_label_ids_array as $os_target_full_label_id => $target_ipxe_script)
+            {
+                print("item " . $os_target_full_label_id . " " . $id_lookups[$os_target_full_label_id] . "\n");
+            }
+            print("item " . $os_family_menu_label_id . " Back\n");
+            
+            print("\n");
+            print("choose selected\n");
+            print("set menu-timeout 0\n");
+            print("goto \${selected}\n");
+            print("\n");
+            
+            foreach ($os_target_full_label_ids_array as $os_target_full_label_id => $target_ipxe_script)
+            {
+                //print("item " . $os_target_full_label_id . " " . $id_lookups[$os_target_full_label_id] . "\n");
+                print(":" . $os_target_full_label_id . "\n");
+                print($target_ipxe_script . "\n");
+            }
+        }
+        /*
         foreach ($os_family_ipxe_entries as $target_id => $target_ipxe_script)
         {
             print(":" . $target_id . "\n");
             print($target_ipxe_script . "\n");
         }
+        */
     }
 
     print("\n\n\n\n\n");
