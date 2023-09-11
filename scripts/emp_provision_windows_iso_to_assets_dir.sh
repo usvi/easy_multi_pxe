@@ -77,40 +77,50 @@ then
     exit 1
 fi
 
+
 # Copy the iso mount dir as new path if not forbidden
 if [ -z "$COPY_ISO" -o "$COPY_ISO" != "no" ]
 then
     copy_dir_progress "$EMP_BOOT_OS_ENTRY_MOUNT_POINT" "$FS_BOOT_OS_UNIX_PATH"
 
-    echo "Return code of function $?"
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Failed copying iso contents from $EMP_BOOT_OS_ENTRY_MOUNT_POINT to $FS_BOOT_OS_UNIX_PATH"
+	umount -f "$EMP_BOOT_OS_ENTRY_MOUNT_POINT" > /dev/null 2>&1
+	exit 1
+    fi
 fi
 
-#rsync -aHv "$EMP_BOOT_OS_ENTRY_MOUNT_POINT/" "$FS_BOOT_OS_UNIX_PATH"
-exit 0
 
+# Necessary files need to exist in template directory for copying
 ERRORS=0
 
-if [ ! -d "$ROOT_WIM_DIR/template/mount" ]
-then
-    mkdir "$ROOT_WIM_DIR/template/mount"
-fi
-
-# Files need to exist in template directory
 for DIR_ENTRY in "BCD" "boot.sdi" "boot.wim"
 do
-
-    if [ ! -f "$ROOT_WIM_DIR/template/$DIR_ENTRY" ]
+    if [ ! -f "$FS_BOOT_TEMPLATE_UNIX_PATH/$DIR_ENTRY" ]
     then
-	echo "ERROR: Template file $ROOT_WIM_DIR/template/$DIR_ENTRY not found"
+	echo "ERROR: Template file $FS_BOOT_TEMPLATE_UNIX_PATH/$DIR_ENTRY not found"
 	ERRORS=1
-    fi
+    else
+	cp "$FS_BOOT_TEMPLATE_UNIX_PATH/$DIR_ENTRY" "$FS_BOOT_OS_UNIX_PATH"
 
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to copy template file $FS_BOOT_TEMPLATE_UNIX_PATH/$DIR_ENTRY to $FS_BOOT_OS_UNIX_PATH"
+	    ERRORS=1
+	fi
+    fi
 done
 
 if [ "$ERRORS" -ne 0 ]
 then
+    umount -f "$EMP_BOOT_OS_ENTRY_MOUNT_POINT" > /dev/null 2>&1
     exit 1
 fi
+
+echo "Exiting anycase"
+exit 0
+
 
 
 for WIM_ENTRY in `ls -1 $ROOT_WIM_DIR`
