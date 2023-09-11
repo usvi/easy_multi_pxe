@@ -75,7 +75,7 @@ The .iso file will be KB3AIK_EN.iso (for english), sha1sum:
 2. Profit
 
 ### Windows 10
-1. Download Windows Assessment and Deployment Kit for Windows 10, version 2004: https://software-static.download.prss.microsoft.com/pr/download/20348.1.210507-1500.fe_release_amd64fre_ADK.iso , sha1sum:
+1. Download Windows Assessment and Deployment Kit for Windows 10, version 2004: https://software-static.download.prss.microsoft.com/pr/download/20348.1.210507-1500.fe_release_amd64fre_ADK.iso , sha1sum:  
 **ae34d78d1c09e68a677c84dacabfb191a76dea9d**  20348.1.210507-1500.fe_release_amd64fre_ADK.iso
 2. Download Windows PE add-on for the ADK, version 2004: https://software-static.download.prss.microsoft.com/sg/download/20348.1.210507-1500.fe_release_amd64fre_ADKWINPEADDONS.iso , sha1sum:  
 **35cee1e3d8afde3e40f346a694b82b03169b6a79**  20348.1.210507-1500.fe_release_amd64fre_ADKWINPEADDONS.iso
