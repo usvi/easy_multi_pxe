@@ -58,8 +58,10 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
     
     if ($ipxe_file_candidate->getExtension() === "ipxe")
     {
-        
-        list($path_with_os_label_id, $emp_platform, $ipxe_suffix) = explode(".", $ipxe_file_candidate);
+        $dot_parts = explode(".", $ipxe_file_candidate);
+        $ipxe_suffix = array_pop($dot_parts);
+        $emp_platform = array_pop($dot_parts);
+        $path_with_os_label_id = str_replace("." . $emp_platform . "." . $ipxe_suffix, "", $ipxe_file_candidate);
         
         if (array_key_exists($emp_platform, $emp_platform_to_ipxe_native_platform))
         {
