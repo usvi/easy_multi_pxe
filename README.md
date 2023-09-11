@@ -108,7 +108,21 @@ C:\winpe_xp_7_amd64\winpe.wim => /opt/easy_multi_pxe/netbootassets/windows/7/x64
 **35cee1e3d8afde3e40f346a694b82b03169b6a79**  20348.1.210507-1500.fe_release_amd64fre_ADKWINPEADDONS.iso
 3. First mount the ADK.iso, then run adksetup.exe to install the ADK, pick only the "Deployment Tool".
 4. Then mount the ADKWINPEADDONS.iso, then run adkwinpesetup.exe to install the PE Addons
-5. Profit
+5. Hit Start, type **EXACTLY THE FOLLOWING**: Deployment and Imaging Tools Environment  
+Right-click on it an run as Administrator
+6. Run the following commands:  
+copype.cmd x86 c:\winpe_10_x86  
+copype.cmd amd64 c:\winpe_10_amd64
+7. Copy files as follows from Windows to Easy Multi Pxe installation mounted assets directory (**MAKE SURE THE CASES MATCH!**):  
+Windows 10 32bit:  
+C:\winpe_10_x86\media\Boot\BCD => /opt/easy_multi_pxe/netbootassets/windows/10/x86/BCD  
+C:\winpe_10_x86\media\Boot\boot.sdi => /opt/easy_multi_pxe/netbootassets/windows/10/x86/boot.sdi  
+C:\winpe_10_x86\media\sources\boot.wim => /opt/easy_multi_pxe/netbootassets/windows/10/x86/boot.wim  
+Windows 10 64bit:  
+C:\winpe_10_amd64\media\Boot\BCD => /opt/easy_multi_pxe/netbootassets/windows/10/x64/BCD  
+C:\winpe_10_amd64\media\Boot\boot.sdi => /opt/easy_multi_pxe/netbootassets/windows/10/x64/boot.sdi  
+C:\winpe_10_amd64\media\sources\boot.wim => /opt/easy_multi_pxe/netbootassets/windows/10/x64/boot.wim  
+8. Done!
 
 Example: Windows 10 x64 bios:
 1. Go to actual Windows x64
