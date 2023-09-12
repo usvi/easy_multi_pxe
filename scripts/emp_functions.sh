@@ -261,7 +261,7 @@ emp_collect_provisioning_parameters()
 }
 
 
-emp_verify_provisioning_parameters()
+emp_assert_provisioning_parameters()
 {
     TEMP_RETVAL="0"
     TEMP_OS_FAMILY="$(basename ${0})"
@@ -366,8 +366,13 @@ emp_verify_provisioning_parameters()
 	echo "ERROR: Unable to create assets directory $EMP_BOOT_OS_ASSETS_PARENT"
 	TEMP_RETVAL=1
     fi
-    
-    return "$TEMP_RETVAL"
+
+    if [ "$TEMP_RETVAL" -ne 0 ]
+    then
+	emp_print_call_help
+	
+	exit 1
+    fi
 }
 
 

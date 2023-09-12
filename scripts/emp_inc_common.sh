@@ -42,31 +42,36 @@ elif [ "$EMP_OP" = "do_provisioning" ]
 then
     # Main config and functions have been already included in the common section
     emp_collect_provisioning_parameters "$@"
-    emp_verify_provisioning_parameters
-
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Provisioning parameters failed, exiting."
-	emp_print_call_help
-	
-	exit 1
-    fi
+    emp_assert_provisioning_parameters
 
     # Now we can create all the rest of the variables
+    EMP_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
     EMP_BOOT_OS_ISO_FILE="$(basename "$EMP_BOOT_OS_ISO_PATH")"
     EMP_BOOT_OS_ISO_NAME="${EMP_BOOT_OS_ISO_FILE%.*}"
     # EMP_BOOT_OS_ASSETS_SUBDIR is like ubuntu/20.04/x64/ubuntu-20.04-mini-amd64
     EMP_BOOT_OS_ASSETS_SUBDIR="${EMP_BOOT_OS_ASSETS_PARENT#$EMP_ASSETS_ROOT_DIR/}/$EMP_BOOT_OS_ISO_NAME"
     EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH="$EMP_WEBSERVER_PROTOCOL://$EMP_WEBSERVER_IP/$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR"
-    echo "EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH"
     EMP_BOOT_OS_ASSETS_FS_BASE_PATH="$EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_ASSETS_SUBDIR"
-    echo "EMP_BOOT_OS_ASSETS_FS_BASE_PATH $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
     EMP_BOOT_OS_ASSETS_CIFS_BASE_PATH="$(echo "//$EMP_CIFS_SERVER_IP/$EMP_CIFS_SHARE_NAME/$EMP_BOOT_OS_ASSETS_SUBDIR" | sed 's|\/|\\\\|g')"
-    echo "EMP_BOOT_OS_ASSETS_CIFS_BASE_PATH $EMP_BOOT_OS_ASSETS_CIFS_BASE_PATH"
-    EMP_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
-    #EMP_BOOT_OS_ASSETS_SUBDIR="$EMP_BOOT_OS_ASSETS_PARENT/$EMP_BOOT_OS_ISO_NAME"
+    EMP_BOOT_OS_FRAGMENT_PATH_X32_BIOS="$EMP_BOOT_OS_ASSETS_FS_BASE_PATH.x32-bios.ipxe"
+    EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI="$EMP_BOOT_OS_ASSETS_FS_BASE_PATH.x32-efi.ipxe"
+    EMP_BOOT_OS_FRAGMENT_PATH_X64_BIOS="$EMP_BOOT_OS_ASSETS_FS_BASE_PATH.x64-bios.ipxe"
+    EMP_BOOT_OS_FRAGMENT_PATH_X64_EFI="$EMP_BOOT_OS_ASSETS_FS_BASE_PATH.x64-efi.ipxe"
+    # Based on actual arch, select first and second proper fragments.
+    # All fragments will be initially removed if existing. Basically
+    # arch A fragments cannot live in arch B directory, so removing
+    # all first is ok. We then recreate the actual fragments, first
+    # and second.
+    if [ "$EMP_BOOT_OS_MAIN_ARCH" = "x32" ]
+    then
+	EMP_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X32_BIOS"
+	EMP_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI"
 
-    
+    elif [ "$EMP_BOOT_OS_MAIN_ARCH" = "x64" ]
+    then
+	EMP_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X64_BIOS"
+	EMP_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X64_EFI"
+    fi
 fi
 
 
