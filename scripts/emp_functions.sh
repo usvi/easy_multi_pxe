@@ -670,12 +670,60 @@ emp_unmount_and_sync()
 }
 
 
+emp_create_single_linux_ipxe_fragment()
+{
+    TEMP_PARAM_IPXE_FRAGMENT="$1"
+
+    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
+    then
+	cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
+set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
+set http_iso \${http_base}/$EMP_BOOT_OS_ISO_FILE
+kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 root=/dev/ram0 initrd=initrd ip=dhcp url=\${http_iso} cloud-config-url=/dev/null
+initrd \${http_base}/initrd
+boot
+sleep 5
+goto end
+EOF
+	
+	if [ "$?" -ne 0 ]
+	then
+	    echo ""
+	    echo "Error creating ipxe fragment $TEMP_PARAM_IPXE_FRAGMENT"
+
+	    exit 1
+	fi
+    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
+    then
+	cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
+set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
+kernel \${http_base}/linux nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp
+initrd \${http_base}/initrd.gz
+boot
+sleep 5
+goto end
+EOF
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo ""
+	    echo "Error creating ipxe fragment $TEMP_PARAM_IPXE_FRAGMENT"
+
+	    exit 1
+	fi
+    fi
+}
+
+
 emp_create_linux_ipxe_fragments()
 {
+    echo -n "Creating ipxe fragments..."
+    
     for TEMP_IPXE_FRAGMENT in "$EMP_BOOT_OS_FRAGMENT_PATH_FIRST" "$EMP_BOOT_OS_FRAGMENT_PATH_SECOND"
     do
-	echo "MOI"
+	emp_create_single_linux_ipxe_fragment "$TEMP_IPXE_FRAGMENT"
     done
+    echo "done"
 }
 
 
