@@ -7,7 +7,7 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 
 
 
-emp_remove_old_fragment_remnants
+emp_remove_old_ipxe_fragment_remnants
 emp_remove_old_iso_if_needed
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
@@ -17,6 +17,7 @@ emp_copy_linux_asset_files
 emp_copy_iso_if_needed
 # Include driver copying later and especially in debian
 emp_unmount_and_sync
+emp_create_linux_ipxe_fragments
 echo "Debug exit"
 exit 1
 
@@ -25,24 +26,6 @@ exit 1
 
 
 
-
-# Finally, create entries. Entries are pairwise: every arch has bios and efi variant.
-FIRST_FRAGMENT=""
-SECOND_FRAGMENT=""
-
-if [ "$BOOT_OS_ARCH" = "x86" ]
-then
-    FIRST_FRAGMENT="$FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH"
-    SECOND_FRAGMENT="$FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH"
-
-elif [ "$BOOT_OS_ARCH" = "x64" ]
-then
-    FIRST_FRAGMENT="$FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH"
-    SECOND_FRAGMENT="$FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH"
-else
-    echo "ERROR: Unrecognized boot OS arch $BOOT_OS_ARCH"
-    exit 1
-fi
 
 
 for IPXE_FRAGMENT in "$FIRST_FRAGMENT" "$SECOND_FRAGMENT"

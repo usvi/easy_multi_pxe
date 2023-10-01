@@ -238,7 +238,7 @@ emp_collect_provisioning_parameters()
     # Rudimentary checks for some values here after dereferencing
     # Separate function checks that params are fine in all ways
 
-    EMP_BOOT_OS_ISO_PATH="$(realpath "${TEMP_ISO_PATH}" 2>/dev/null)"
+    EMP_BOOT_OS_ISO_PATH="$(realpath "${TEMP_ISO_PATH}" > /dev/null 2>&1)"
     # If path is garbage, variable is empty. In this
     # case assign the original, even if it was erroneous.
     if [ -z "$EMP_BOOT_OS_ISO_PATH" ]
@@ -246,7 +246,7 @@ emp_collect_provisioning_parameters()
 	EMP_BOOT_OS_ISO_PATH="${TEMP_ISO_PATH}"
     fi
     
-    EMP_BOOT_OS_ASSETS_PARENT="$(realpath "${TEMP_ASSETS_PARENT}" 2>/dev/null)"
+    EMP_BOOT_OS_ASSETS_PARENT="$(realpath "${TEMP_ASSETS_PARENT}" > /dev/null 2>&1)"
     # Ditto
     if [ -z "$EMP_BOOT_OS_ASSETS_PARENT" ]
     then
@@ -449,7 +449,7 @@ ensure_assets_dirs()
 # they exist. We are also going to remove other fragments of
 # the same "base" because if they happen to exist in current
 # directory, they are in the wrong place anyways
-emp_remove_old_fragment_remnants()
+emp_remove_old_ipxe_fragment_remnants()
 {
     echo -n "Removing old ipxe fragment remnants..."
     
@@ -460,7 +460,7 @@ emp_remove_old_fragment_remnants()
     do
 	if [ -f "$TEMP_FRAGMENT" ]
 	then
-	    rm "$TEMP_FRAGMENT"
+	    rm "$TEMP_FRAGMENT" > /dev/null 2>&1
 
 	    if [ "$?" -ne 0 ]
 	    then
@@ -484,7 +484,7 @@ emp_remove_old_iso_if_needed()
 	if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE" ]
 	then
 	    echo -n "Removing old iso before copying new..."
-	    rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
+	    rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE" > /dev/null 2>&1
 
 	    if [ "$?" -ne 0 ]
 	    then
@@ -557,7 +557,7 @@ emp_remove_old_existing_linux_asset_files()
 	do
 	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
 	    then
-		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" > /dev/null 2>&1
 
 		if [ "$?" -ne 0 ]
 		then
@@ -576,7 +576,7 @@ emp_remove_old_existing_linux_asset_files()
 	do
 	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
 	    then
-		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" > /dev/null 2>&1
 
 		if [ "$?" -ne 0 ]
 		then
@@ -599,8 +599,8 @@ emp_copy_linux_asset_files()
     
     if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
     then
-	cp "$EMP_MOUNT_POINT/casper/vmlinuz" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" &&
-	    cp "$EMP_MOUNT_POINT/casper/initrd" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+	cp "$EMP_MOUNT_POINT/casper/vmlinuz" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" > /dev/null 2>&1 &&
+	    cp "$EMP_MOUNT_POINT/casper/initrd" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" > /dev/null 2>&1
 
 	if [ "$?" -ne 0 ]
 	then
@@ -614,8 +614,8 @@ emp_copy_linux_asset_files()
 	    
     elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
     then
-	cp "$EMP_MOUNT_POINT/linux" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" &&
-	    cp "$EMP_MOUNT_POINT/initrd.gz" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+	cp "$EMP_MOUNT_POINT/linux" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" > /dev/null 2>&1 &&
+	    cp "$EMP_MOUNT_POINT/initrd.gz" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" > /dev/null 2>&1
 
 	if [ "$?" -ne 0 ]
 	then
@@ -650,25 +650,33 @@ emp_copy_iso_if_needed()
 
 emp_unmount_and_sync()
 {
-    sync
-    umount "$EMP_MOUNT_POINT"
+    echo -n "Unmounting and syncinc..."
+    sync > /dev/null 2>&1
+    umount "$EMP_MOUNT_POINT" > /dev/null 2>&1
 
     if [ "$?" -ne 0 ]
     then
-
+	echo ""
 	echo "ERROR: Unable to unmount generic mount point $EMP_MOUNT_POINT"
 	emp_force_unmount_generic_mountpoint
 
 	exit 1
     fi
 
-    echo -n "Syncinc..."
-    sync
-    sleep 5
-    sync
+    sync > /dev/null 2>&1
+    sleep 5 > /dev/null 2>&1
+    sync > /dev/null 2>&1
     echo "done"
 }
 
+
+emp_create_linux_ipxe_fragments()
+{
+    for TEMP_IPXE_FRAGMENT in "$EMP_BOOT_OS_FRAGMENT_PATH_FIRST" "$EMP_BOOT_OS_FRAGMENT_PATH_SECOND"
+    do
+	echo "MOI"
+    done
+}
 
 
 check_iso_file()
