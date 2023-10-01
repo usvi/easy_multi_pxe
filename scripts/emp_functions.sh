@@ -492,45 +492,6 @@ emp_remove_old_iso_if_needed()
 }
 
 
-emp_remove_old_existing_asset_files()
-{
-    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
-    then
-	for TEMP_FILE in "vmlinuz" "initrd"
-	do
-	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
-	    then
-		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
-
-		if [ "$?" -ne 0 ]
-		then
-		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
-
-		    exit 1
-		fi
-	    fi
-	done
-	
-    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
-    then
-	for TEMP_FILE in "linux" "initrd.gz"
-	do
-	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
-	    then
-		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
-
-		if [ "$?" -ne 0 ]
-		then
-		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
-
-		    exit 1
-		fi
-	    fi
-	done
-    fi
-}
-
-
 emp_force_unmount_generic_mountpoint()
 {
     sync
@@ -553,6 +514,98 @@ emp_mount_iso()
 }
 
 
+emp_analyze_linux_assets_type()
+{
+    if [ -f "$EMP_MOUNT_POINT/casper/vmlinuz" -a -f "$EMP_MOUNT_POINT/casper/initrd" ]
+    then
+	EMP_BOOT_OS_ASSETS_TYPE="casper"
+	
+    elif [ -f "$EMP_MOUNT_POINT/linux" -a -f "$EMP_MOUNT_POINT/initrd.gz" ]
+    then
+	EMP_BOOT_OS_ASSETS_TYPE="plain"
+    else
+	echo "ERROR: Unable to determine Linux OS assets type"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+}
+
+
+emp_remove_old_existing_linux_asset_files()
+{
+    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
+    then
+	for TEMP_FILE in "vmlinuz" "initrd"
+	do
+	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
+	    then
+		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+
+		if [ "$?" -ne 0 ]
+		then
+		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+		    emp_force_unmount_generic_mountpoint
+		    
+		    exit 1
+		fi
+	    fi
+	done
+	
+    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
+    then
+	for TEMP_FILE in "linux" "initrd.gz"
+	do
+	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
+	    then
+		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+
+		if [ "$?" -ne 0 ]
+		then
+		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+		    emp_force_unmount_generic_mountpoint
+		    
+		    exit 1
+		fi
+	    fi
+	done
+    fi
+}
+
+
+emp_copy_linux_asset_files()
+{
+    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
+    then
+	cp "$EMP_MOUNT_POINT/casper/vmlinuz" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" &&
+	    cp "$EMP_MOUNT_POINT/casper/initrd" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Failed copying asset files $EMP_MOUNT_POINT/casper/vmlinuz,initrd to " \
+		 "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+	    emp_force_unmount_generic_mountpoint
+	    
+	    exit 1
+	fi
+	    
+    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
+    then
+	cp "$EMP_MOUNT_POINT/linux" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" &&
+	    cp "$EMP_MOUNT_POINT/initrd.gz" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Failed copying asset files $EMP_MOUNT_POINT/linux,initrd.gz to " \
+		 "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+	    emp_force_unmount_generic_mountpoint
+	    
+	    exit 1
+	fi
+    fi
+}
+
+
 emp_copy_iso_if_needed()
 {
     if [ "$EMP_COPY_ISO" = "Y" ]
@@ -570,21 +623,27 @@ emp_copy_iso_if_needed()
 }
 
 
-emp_analyze_linux_assets_type()
+emp_unmount_and_sync()
 {
-    if [ -f "$EMP_MOUNT_POINT/casper/vmlinuz" -a -f "$EMP_MOUNT_POINT/casper/initrd" ]
+    sync
+    umount "$EMP_MOUNT_POINT"
+
+    if [ "$?" -ne 0 ]
     then
-	EMP_BOOT_OS_ASSETS_TYPE="casper"
-	
-    elif [ -f "$EMP_MOUNT_POINT/linux" -a -f "$EMP_MOUNT_POINT/initrd.gz" ]
-    then
-	EMP_BOOT_OS_ASSETS_TYPE="plain"
-    else
-	echo "ERROR: Unable to determine Linux OS assets type"
+
+	echo "ERROR: Unable to unmount generic mount point $EMP_MOUNT_POINT"
+	emp_force_unmount_generic_mountpoint
 
 	exit 1
     fi
+
+    echo -n "Syncinc..."
+    sync
+    sleep 5
+    sync
+    echo "done"
 }
+
 
 
 check_iso_file()

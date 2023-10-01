@@ -12,65 +12,18 @@ emp_remove_old_iso_if_needed
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_analyze_linux_assets_type
-emp_remove_old_existing_asset_files
+emp_remove_old_existing_linux_asset_files
+emp_copy_linux_asset_files
 emp_copy_iso_if_needed
+# Include driver copying later and especially in debian
+emp_unmount_and_sync
 echo "Debug exit"
 exit 1
 
 
 
-# Need to copy a couple of extra files
-OS_BOOT_ASSETS_TYPE="unknown"
-
-if [ -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/vmlinuz" -a -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/initrd" ]
-then
-    cp "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/vmlinuz" "$FS_BOOT_OS_UNIX_PATH/vmlinuz" &&
-	pv -w 80 -N "Copying initrd" "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/initrd" > "$FS_BOOT_OS_UNIX_PATH/initrd"
-    
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Unable to copy vmlinuz and initrd from $EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/casper/ to $FS_BOOT_OS_UNIX_PATH/"
-	exit 1
-	umount -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
-	exit 1
-    fi
-    OS_BOOT_ASSETS_TYPE="casper"
-
-elif [ "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/linux" -a -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/initrd.gz" ]
-then
-
-    cp "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/linux" "$FS_BOOT_OS_UNIX_PATH/linux" &&
-	pv -w 80 -N "Copying initrd.gz" "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/initrd.gz" > "$FS_BOOT_OS_UNIX_PATH/initrd.gz"
-    
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Unable to copy linux and initrd.gz from $EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT/ to $FS_BOOT_OS_UNIX_PATH/"
-	exit 1
-	umount -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
-	exit 1
-    fi
-    OS_BOOT_ASSETS_TYPE="plain"
-fi
 
 
-# Copying done, so unmount the iso already
-sync
-umount "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
-
-if [ "$?" -ne 0 ]
-then
-    echo "ERROR: Unable to unmount $EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT"
-    exit 1
-fi
-
-
-# Include driver copying later and especially in debian
-
-echo -n "Syncinc..."
-sync
-sleep 5
-sync
-echo "done"
 
 
 # Finally, create entries. Entries are pairwise: every arch has bios and efi variant.
