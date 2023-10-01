@@ -358,15 +358,6 @@ emp_assert_provisioning_parameters()
 	    ;;
     esac
 
-    # Try to make the assets dir
-    mkdir -p "$EMP_BOOT_OS_ASSETS_PARENT"
-
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Unable to create assets directory $EMP_BOOT_OS_ASSETS_PARENT"
-	TEMP_RETVAL=1
-    fi
-
     if [ "$TEMP_RETVAL" -ne 0 ]
     then
 	emp_print_call_help
@@ -375,8 +366,61 @@ emp_assert_provisioning_parameters()
     fi
 }
 
-ensure_assets_base_dir()
+
+emp_ensure_general_directories()
 {
+    # Check the mount directory
+    if [ ! -d "$EMP_MOUNT_POINT" ]
+    then
+	mkdir -p "$EMP_MOUNT_POINT"
+	
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to create monut point directory $EMP_MOUNT_POINT"
+
+	    exit 1
+	fi
+
+	chmod "$EMP_MOUNT_POINT_CHMOD_PERMS" "$EMP_MOUNT_POINT"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to ensure chmod permissions for mouny point directory $EMP_MOUNT_POINT"
+
+	    exit 1
+	fi
+
+    fi
+}
+
+
+ensure_assets_dirs()
+{
+    # Try to make the assets parent dir, like
+    # /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
+    if [ ! -d "$EMP_BOOT_OS_ASSETS_PARENT" ]
+    then
+	mkdir -p "$EMP_BOOT_OS_ASSETS_PARENT"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to create assets parent directory $EMP_BOOT_OS_ASSETS_PARENT"
+
+	    exit 1
+	fi
+	
+	chmod "$EMP_ASSETS_DIRS_CHMOD_PERMS" "$EMP_BOOT_OS_ASSETS_PARENT"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to ensure chmod permissions for assets parent directory $EMP_BOOT_OS_ASSETS_PARENT"
+
+	    exit 1
+	fi
+    fi
+    
+    # Then the actual specific assets directory, like
+    # /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64/ubuntu-20.04-mini-amd64
     if [ ! -d "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" ]
     then
 	mkdir "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
@@ -388,7 +432,7 @@ ensure_assets_base_dir()
 	    exit 1
 	fi
 
-	chmod "$EMP_ASSETS_DIR_CHMOD_PERMS" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+	chmod "$EMP_ASSETS_DIRS_CHMOD_PERMS" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
 
 	if [ "$?" -ne 0 ]
 	then
@@ -398,6 +442,8 @@ ensure_assets_base_dir()
 	fi
     fi
 }
+
+
 
 # This functions removes fragment we are going to remove if
 # they exist. We are also going to remove other fragments of

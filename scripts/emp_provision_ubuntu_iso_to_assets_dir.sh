@@ -7,7 +7,6 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 
 
 
-ensure_assets_base_dir
 remove_old_fragment_remnants
 remove_old_iso_if_needed
 remove_old_existing_asset_files "vmlinuz" "initrd" "kernel" # Recent regular ("casper") isos have these

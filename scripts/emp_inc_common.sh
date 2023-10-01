@@ -52,7 +52,9 @@ then
     # EMP_BOOT_OS_MAIN_ARCH
     # EMP_BOOT_OS_MAIN_VERSION
 
-    EMP_ASSETS_DIR_CHMOD_PERMS="u+rwX"
+    EMP_MOUNT_POINT_CHMOD_PERMS="u+rwX"
+    EMP_ASSETS_DIRS_CHMOD_PERMS="u+rwX"
+    emp_ensure_general_directories
     
     # Now we can create all the rest of the variables
     EMP_BOOT_OS_ISO_FILE="$(basename "$EMP_BOOT_OS_ISO_PATH")"
@@ -86,6 +88,7 @@ then
 	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X32_BIOS"
 	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI"
     fi
+    ensure_assets_dirs
 fi
 
 
