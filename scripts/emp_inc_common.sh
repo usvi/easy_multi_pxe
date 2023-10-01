@@ -40,15 +40,23 @@ then
 
 elif [ "$EMP_OP" = "do_provisioning" ]
 then
-    # Main config and functions have been already included in the common section
+    # Static provision-specific variables not affected
+    # by parameters or configurations
+    EMP_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
+    
+    # Collect and verify provision-specific variables
     emp_collect_provisioning_parameters "$@"
     emp_assert_provisioning_parameters
+    # emp_assert_provisioning_parameters provides:
+    # EMP_BOOT_OS_FAMILY
+    # EMP_BOOT_OS_MAIN_ARCH
+    # EMP_BOOT_OS_MAIN_VERSION
 
     # Now we can create all the rest of the variables
-    EMP_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
     EMP_BOOT_OS_ISO_FILE="$(basename "$EMP_BOOT_OS_ISO_PATH")"
     EMP_BOOT_OS_ISO_NAME="${EMP_BOOT_OS_ISO_FILE%.*}"
     # EMP_BOOT_OS_ASSETS_SUBDIR is like ubuntu/20.04/x64/ubuntu-20.04-mini-amd64
+    EMP_BOOT_OS_ASSETS_TYPE="unknown"
     EMP_BOOT_OS_ASSETS_SUBDIR="${EMP_BOOT_OS_ASSETS_PARENT#$EMP_ASSETS_ROOT_DIR/}/$EMP_BOOT_OS_ISO_NAME"
     EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH="$EMP_WEBSERVER_PROTOCOL://$EMP_WEBSERVER_IP/$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR"
     EMP_BOOT_OS_ASSETS_FS_BASE_PATH="$EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_ASSETS_SUBDIR"
@@ -66,11 +74,15 @@ then
     then
 	EMP_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X32_BIOS"
 	EMP_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI"
+	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X64_BIOS"
+	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X64_EFI"
 
     elif [ "$EMP_BOOT_OS_MAIN_ARCH" = "x64" ]
     then
 	EMP_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X64_BIOS"
 	EMP_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X64_EFI"
+	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X32_BIOS"
+	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI"
     fi
 fi
 

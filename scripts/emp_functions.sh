@@ -264,10 +264,10 @@ emp_collect_provisioning_parameters()
 emp_assert_provisioning_parameters()
 {
     TEMP_RETVAL="0"
-    TEMP_OS_FAMILY="$(basename ${0})"
-    TEMP_OS_FAMILY="${TEMP_OS_FAMILY##emp_provision_}"
-    TEMP_OS_FAMILY="${TEMP_OS_FAMILY%%_*}"
-    EMP_SCRIPT_OS_FAMILY="$TEMP_OS_FAMILY"
+    TEMP_SCRIPT_OS_FAMILY="$(basename ${0})"
+    TEMP_SCRIPT_OS_FAMILY="${TEMP_SCRIPT_OS_FAMILY##emp_provision_}"
+    TEMP_SCRIPT_OS_FAMILY="${TEMP_SCRIPT_OS_FAMILY%%_*}"
+    TEMP_SCRIPT_OS_FAMILY="$TEMP_SCRIPT_OS_FAMILY"
 
     if [ -z "$EMP_BOOT_OS_ISO_PATH" ]
     then
@@ -296,20 +296,20 @@ emp_assert_provisioning_parameters()
     
     # Can be:
     #
-    # $EMP_SCRIPT_OS_FAMILY=ubuntu
+    # $TEMP_SCRIPT_OS_FAMILY=ubuntu
     # $EMP_BOOT_OS_ASSETS_PARENT=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
     # $EMP_ASSETS_ROOT_DIR=/opt/easy_multi_pxe/netbootassets
     #
     # Conclusion:
-    # $EMP_ASSETS_ROOT_DIR/$EMP_SCRIPT_OS_FAMILY must be the beginning
+    # $EMP_ASSETS_ROOT_DIR/$TEMP_SCRIPT_OS_FAMILY must be the beginning
     # of $EMP_BOOT_OS_ASSETS_PARENT
 
     case "$EMP_BOOT_OS_ASSETS_PARENT" in
-	"$EMP_ASSETS_ROOT_DIR/$EMP_SCRIPT_OS_FAMILY"*)
-	    EMP_BOOT_OS_FAMILY="$EMP_SCRIPT_OS_FAMILY"	    
+	"$EMP_ASSETS_ROOT_DIR/$TEMP_SCRIPT_OS_FAMILY"*)
+	    EMP_BOOT_OS_FAMILY="$TEMP_SCRIPT_OS_FAMILY"
 	    ;;
 	*)
-	    echo "ERROR: Wrong family given in assets directory $EMP_BOOT_OS_ASSETS_PARENT , expected $EMP_SCRIPT_OS_FAMILY"
+	    echo "ERROR: Wrong family given in assets directory $EMP_BOOT_OS_ASSETS_PARENT , expected $TEMP_SCRIPT_OS_FAMILY"
 	    TEMP_RETVAL="1"
 	    ;;
     esac
@@ -341,8 +341,8 @@ emp_assert_provisioning_parameters()
     # $EMP_BOOT_OS_ASSETS_PARENT beginning $EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_FAMILY/
     # and from end /$EMP_BOOT_OS_MAIN_ARCH
     # Then check that it is nonzero and does not contains slashes
-    EMP_BOOT_OS_MAIN_VERSION="${EMP_BOOT_OS_ASSETS_PARENT##$EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_FAMILY/}"
-    EMP_BOOT_OS_MAIN_VERSION="${EMP_BOOT_OS_MAIN_VERSION%%/$EMP_BOOT_OS_MAIN_ARCH}"
+    TEMP_OS_MAIN_VERSION="${EMP_BOOT_OS_ASSETS_PARENT##$EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_FAMILY/}"
+    EMP_BOOT_OS_MAIN_VERSION="${TEMP_OS_MAIN_VERSION%%/$EMP_BOOT_OS_MAIN_ARCH}"
 
     case "$EMP_BOOT_OS_MAIN_VERSION" in
 	*/*)
@@ -376,7 +376,55 @@ emp_assert_provisioning_parameters()
 }
 
 
+# This functions removes fragment we are going to remove if
+# they exist. We are also going to remove other fragments of
+# the same "base" because if they happen to exist in current
+# directory, they are in the wrong place anyways
+remove_old_fragment_remnants()
+{
+    for TEMP_FRAGMENT in "$EMP_BOOT_OS_FRAGMENT_PATH_FIRST" \
+			 "$EMP_BOOT_OS_FRAGMENT_PATH_SECOND" \
+			 "$EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_FIRST" \
+			 "$EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_SECOND"
+    do
+	if [ -f "$TEMP_FRAGMENT" ]
+	then
+	    rm "$TEMP_FRAGMENT"
 
+	    if [ "$?" -ne 0 ]
+	    then
+		echo "ERROR: Unable to remove old ipxe fragment $TEMP_FRAGMENT"
+		exit 1
+	    fi
+	fi
+    done
+}
+
+
+remove_old_iso_if_needed()
+{
+    if [ "$EMP_COPY_ISO" = "Y" ]
+    then
+	# Remove only if iso exists
+	if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE" ]
+	then
+	    rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
+
+	    if [ "$?" -ne 0 ]
+	    then
+		echo "ERROR: Unable to remove old iso file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
+		exit 1
+	    fi
+	fi
+    fi
+
+}
+
+
+remove_old_existing_asset_files()
+{
+    echo "Hello"
+}
 
 
 check_iso_file()
