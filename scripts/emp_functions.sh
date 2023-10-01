@@ -449,7 +449,7 @@ ensure_assets_dirs()
 # they exist. We are also going to remove other fragments of
 # the same "base" because if they happen to exist in current
 # directory, they are in the wrong place anyways
-remove_old_fragment_remnants()
+emp_remove_old_fragment_remnants()
 {
     for TEMP_FRAGMENT in "$EMP_BOOT_OS_FRAGMENT_PATH_FIRST" \
 			 "$EMP_BOOT_OS_FRAGMENT_PATH_SECOND" \
@@ -471,7 +471,7 @@ remove_old_fragment_remnants()
 }
 
 
-remove_old_iso_if_needed()
+emp_remove_old_iso_if_needed()
 {
     if [ "$EMP_COPY_ISO" = "Y" ]
     then
@@ -492,7 +492,7 @@ remove_old_iso_if_needed()
 }
 
 
-remove_old_existing_asset_files()
+emp_remove_old_existing_asset_files()
 {
     for TEMP_FILE in "$@"
     do
@@ -508,6 +508,45 @@ remove_old_existing_asset_files()
 	    fi
 	fi
     done
+}
+
+
+emp_force_unmount_generic_mountpoint()
+{
+    sync
+    umount -f "$EMP_MOUNT_POINT" > /dev/null 2>&1
+    sleep 5
+}
+
+
+emp_mount_iso()
+{
+    mount -t auto -o loop "$EMP_BOOT_OS_ISO_PATH" "$EMP_MOUNT_POINT"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to mount the iso file $EMP_BOOT_OS_ISO_PATH to $EMP_MOUNT_POINT"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+}
+
+
+emp_copy_iso_if_needed()
+{
+    if [ "$EMP_COPY_ISO" = "Y" ]
+    then
+	pv -w 80 -N "Copying iso" "$EMP_BOOT_OS_ISO_PATH" > "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/EMP_BOOT_OS_ISO_FILE"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to copy iso file $EMP_BOOT_OS_ISO_PATH to $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+	    emp_force_unmount_generic_mountpoint
+
+	    exit 1
+	fi
+    fi
 }
 
 

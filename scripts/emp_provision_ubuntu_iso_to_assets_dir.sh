@@ -7,70 +7,17 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 
 
 
-remove_old_fragment_remnants
-remove_old_iso_if_needed
-remove_old_existing_asset_files "vmlinuz" "initrd" "kernel" # Recent regular ("casper") isos have these
-remove_old_existing_asset_files "initrd.gz" "linux" # Mini iso has these
+emp_remove_old_fragment_remnants
+emp_remove_old_iso_if_needed
+emp_remove_old_existing_asset_files "vmlinuz" "initrd" "kernel" # Recent regular ("casper") isos have these
+emp_remove_old_existing_asset_files "initrd.gz" "linux" # Mini iso has these
+emp_force_unmount_generic_mountpoint
+emp_mount_iso
+emp_copy_iso_if_needed
 echo "Debug exit"
 exit 1
 
 
-
-
-
-if [ ! -d "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" ]
-then
-    mkdir "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT"
-
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Failed creating mount point $EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT"
-	exit 1
-    fi
-fi
-
-
-sync
-umount -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
-sleep 5
-
-
-if [ ! -d "$FS_BOOT_OS_UNIX_PATH" ]
-then
-    mkdir "$FS_BOOT_OS_UNIX_PATH"
-
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Unable to create boot OS path $FS_BOOT_OS_UNIX_PATH"
-	exit 1
-    fi
-fi
-
- 
-# Mount to generic mountpoint
-mount -t auto -o loop "$BOOT_OS_ISO_PATH" "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT"
-
-if [ "$?" -ne 0 ]
-then
-    echo "ERROR: Unable to mount iso file $BOOT_OS_ISO_PATH to $EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT"
-    exit 1
-fi
-
-
-
-# Copy the iso mount dir as new path if not forbidden
-if [ -z "$COPY_ISO" -o "$COPY_ISO" != "no" ]
-then
-    # Old has been removed in the beginning
-    pv -w 80 -N "Copying iso" "$BOOT_OS_ISO_PATH" > "$FS_BOOT_OS_UNIX_PATH/$BOOT_OS_ISO_FILE"
-
-    if [ "$?" -ne 0 ]
-    then
-	echo "ERROR: Failed copying iso contents from $EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT to $FS_BOOT_OS_UNIX_PATH"
-	umount -f "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" > /dev/null 2>&1
-	exit 1
-    fi
-fi
 
 # Need to copy a couple of extra files
 OS_BOOT_ASSETS_TYPE="unknown"
