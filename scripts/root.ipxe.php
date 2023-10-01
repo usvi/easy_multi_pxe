@@ -31,10 +31,10 @@ $submenu_names = [];
 
 
 $emp_platform_to_ipxe_native_platform = array(
-    "32bit-bios" => "i386_pcbios",
-    "32bit-efi" => "i386_efi",
-    "64bit-bios" => "x86_64_pcbios",
-    "64bit-efi" => "x86_64_efi");
+    "x32-bios" => "i386_pcbios",
+    "x32-efi" => "i386_efi",
+    "x64-bios" => "x86_64_pcbios",
+    "x64-efi" => "x86_64_efi");
 
 $native_platform_names = array(
     "i386_pcbios" => "iPXE 32bit BIOS boot menu",
