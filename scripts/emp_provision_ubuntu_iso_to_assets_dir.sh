@@ -9,10 +9,10 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 
 emp_remove_old_fragment_remnants
 emp_remove_old_iso_if_needed
-emp_remove_old_existing_asset_files "vmlinuz" "initrd" "kernel" # Recent regular ("casper") isos have these
-emp_remove_old_existing_asset_files "initrd.gz" "linux" # Mini iso has these
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
+emp_analyze_linux_assets_type
+emp_remove_old_existing_asset_files
 emp_copy_iso_if_needed
 echo "Debug exit"
 exit 1

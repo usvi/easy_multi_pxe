@@ -494,20 +494,40 @@ emp_remove_old_iso_if_needed()
 
 emp_remove_old_existing_asset_files()
 {
-    for TEMP_FILE in "$@"
-    do
-	if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
-	then
-	    rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
-
-	    if [ "$?" -ne 0 ]
+    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
+    then
+	for TEMP_FILE in "vmlinuz" "initrd"
+	do
+	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
 	    then
-		echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
 
-		exit 1
+		if [ "$?" -ne 0 ]
+		then
+		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+
+		    exit 1
+		fi
 	    fi
-	fi
-    done
+	done
+	
+    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
+    then
+	for TEMP_FILE in "linux" "initrd.gz"
+	do
+	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
+	    then
+		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+
+		if [ "$?" -ne 0 ]
+		then
+		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+
+		    exit 1
+		fi
+	    fi
+	done
+    fi
 }
 
 
@@ -546,6 +566,23 @@ emp_copy_iso_if_needed()
 
 	    exit 1
 	fi
+    fi
+}
+
+
+emp_analyze_linux_assets_type()
+{
+    if [ -f "$EMP_MOUNT_POINT/casper/vmlinuz" -a -f "$EMP_MOUNT_POINT/casper/initrd" ]
+    then
+	EMP_BOOT_OS_ASSETS_TYPE="casper"
+	
+    elif [ -f "$EMP_MOUNT_POINT/linux" -a -f "$EMP_MOUNT_POINT/initrd.gz" ]
+    then
+	EMP_BOOT_OS_ASSETS_TYPE="plain"
+    else
+	echo "ERROR: Unable to determine Linux OS assets type"
+
+	exit 1
     fi
 }
 
