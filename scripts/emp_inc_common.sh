@@ -52,6 +52,8 @@ then
     # EMP_BOOT_OS_MAIN_ARCH
     # EMP_BOOT_OS_MAIN_VERSION
 
+    EMP_ASSETS_DIR_CHMOD_PERMS="u+rwX"
+    
     # Now we can create all the rest of the variables
     EMP_BOOT_OS_ISO_FILE="$(basename "$EMP_BOOT_OS_ISO_PATH")"
     EMP_BOOT_OS_ISO_NAME="${EMP_BOOT_OS_ISO_FILE%.*}"

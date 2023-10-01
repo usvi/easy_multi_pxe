@@ -375,6 +375,29 @@ emp_assert_provisioning_parameters()
     fi
 }
 
+ensure_assets_base_dir()
+{
+    if [ ! -d "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" ]
+    then
+	mkdir "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to create the assets base path $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+
+	    exit 1
+	fi
+
+	chmod "$EMP_ASSETS_DIR_CHMOD_PERMS" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to ensure chmod permissions for assets base path $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+
+	    exit 1
+	fi
+    fi
+}
 
 # This functions removes fragment we are going to remove if
 # they exist. We are also going to remove other fragments of
@@ -394,6 +417,7 @@ remove_old_fragment_remnants()
 	    if [ "$?" -ne 0 ]
 	    then
 		echo "ERROR: Unable to remove old ipxe fragment $TEMP_FRAGMENT"
+
 		exit 1
 	    fi
 	fi
@@ -413,6 +437,7 @@ remove_old_iso_if_needed()
 	    if [ "$?" -ne 0 ]
 	    then
 		echo "ERROR: Unable to remove old iso file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
+
 		exit 1
 	    fi
 	fi
@@ -423,7 +448,20 @@ remove_old_iso_if_needed()
 
 remove_old_existing_asset_files()
 {
-    echo "Hello"
+    for TEMP_FILE in "$@"
+    do
+	if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
+	then
+	    rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+
+	    if [ "$?" -ne 0 ]
+	    then
+		echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
+
+		exit 1
+	    fi
+	fi
+    done
 }
 
 

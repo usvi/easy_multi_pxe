@@ -7,133 +7,16 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 
 
 
-#BOOT_OS_ISO_PATH="$1"
-#BOOT_OS_ISO_FILE="$(basename "$BOOT_OS_ISO_PATH")"
-
-# following is now $EMP_BOOT_OS_ASSETS_DIR
-#BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR="$(dirname "$2/path_normalizer")"
-
-# follwing is now EMP_BOOT_OS_ISO_NAME
-#BOOT_OS_ENTRY_ID="$(basename "${BOOT_OS_ISO_PATH%.*}")"
-
-# fowllowing is now EMP_MOUNT_POINT
-#EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
-
-# Not needed, emp_verify_provisioning_parameters checks
-#case "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" in
-#    "$EMP_ASSETS_ROOT_DIR"*)
-#	# Do nothing, prefix was fine
-#	;;
-#    *)
-#	echo "ERROR: Given assets directory $BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR not under top directory $EMP_TOP_DIR"
-#	exit 1
-#	;;
-#esac
-
-
-# Just to get bearings, earlier run before overhaul
-#
-# root@gw:/opt/easy_multi_pxe# ./scripts/emp_provision_ubuntu_iso_to_assets_dir.sh /opt/isos_ro/ubuntu/ubuntu-20.04.3-desktop-amd64.iso /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
-# Processing ubuntu-20.04.3-desktop-amd64 as ubuntu/20.04/x64
-# Copying iso: 2.86GiB 0:01:09 [41.9MiB/s] [===================>] 100%
-# Copying initrd: 94.5MiB 0:00:12 [7.83MiB/s] [================>] 100%
-# Syncinc...done
-# ALL DONE
-#
-# This creates the following resources
-# Assets directory:
-# /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64/
-# Core fragments
-# /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64/ubuntu-20.04.3-desktop-amd64.64bit-efi.ipxe
-# /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64/ubuntu-20.04.3-desktop-amd64.64bit-bios.ipxe
-#
-# Example of one such core fragment, which in at least this case were the same
-# set http_base http://172.16.8.254/netbootassets/ubuntu/20.04/x64/ubuntu-20.04.3-desktop-amd64
-# set http_iso ${http_base}/ubuntu-20.04.3-desktop-amd64.iso
-# kernel ${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 root=/dev/ram0 initrd=initrd ip=dhcp url=${http_iso} cloud-config-url=/dev/null
-# initrd ${http_base}/initrd
-# boot
-# sleep 5
-# goto end
-
-
-
-
-#BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID="$(echo "$BOOT_OS_ASSETS_WITH_FAMILY_ARCH_PREFIX_DIR" | sed "s|^$EMP_ASSETS_ROOT_DIR\/||")"
-#BOOT_OS_ARCH="$(basename "$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID")"
-#FS_BOOT_TEMPLATE_UNIX_PATH="$EMP_ASSETS_ROOT_DIR/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID/template"
-#FS_BOOT_OS_UNIX_PATH="$EMP_ASSETS_ROOT_DIR/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID/$BOOT_OS_ENTRY_ID"
-#CIFS_BOOT_OS_UNIX_PATH="//$CIFS_SERVER_IP/$CIFS_SHARE_NAME/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID/$BOOT_OS_ENTRY_ID"
-#CIFS_BOOT_OS_WIN_PATH="$(echo "$CIFS_BOOT_OS_UNIX_PATH" | sed 's|\/|\\\\|g')"
-#FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH="$FS_BOOT_OS_UNIX_PATH.32bit-bios.ipxe"
-#FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH="$FS_BOOT_OS_UNIX_PATH.32bit-efi.ipxe"
-#FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH="$FS_BOOT_OS_UNIX_PATH.64bit-bios.ipxe"
-#FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH="$FS_BOOT_OS_UNIX_PATH.64bit-efi.ipxe"
-#WEBSERVER_HTTP_BASE="http://$WEBSERVER_IP/$WEBSERVER_PATH_PREFIX/$BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID"
-
-
-
-
-
-# And start
-#echo "Processing $BOOT_OS_ENTRY_ID as $BOOT_OS_WITH_FAMILY_ARCH_INFIX_ID"
-
-#for IPXE_FRAGMENT in "$FS_BOOT_OS_32BIT_BIOS_FRAGMENT_UNIX_PATH" "$FS_BOOT_OS_32BIT_EFI_FRAGMENT_UNIX_PATH" "$FS_BOOT_OS_64BIT_BIOS_FRAGMENT_UNIX_PATH" "$FS_BOOT_OS_64BIT_EFI_FRAGMENT_UNIX_PATH"
-#do
-#    if [ -f "$IPXE_FRAGMENT" ]
-#    then
-#	rm "$IPXE_FRAGMENT"
-#
-#	if [ "$?" -ne 0 ]
-#	then
-#	    echo "ERROR: Unable to remove old ipxe fragment $IPXE_FRAGMENT"
-#	    exit 1
-#	fi
-#    fi
-#done
-		     
-		     
-
+ensure_assets_base_dir
 remove_old_fragment_remnants
 remove_old_iso_if_needed
-# For Ubuntu there can be initrd and initrd.gz. gz was at least in some mini iso
-remove_old_existing_asset_files "vmlinuz" "initrd" "kernel" "initrd.gz"
+remove_old_existing_asset_files "vmlinuz" "initrd" "kernel" # Recent regular ("casper") isos have these
+remove_old_existing_asset_files "initrd.gz" "linux" # Mini iso has these
 echo "Debug exit"
 exit 1
 
 
-# Try to remove only if copying iso
-if [ -z "$COPY_ISO" -o "$COPY_ISO" != "no" ]
-then
-    chmod u+rwX "$FS_BOOT_OS_UNIX_PATH"/ -R > /dev/null 2>&1
-    rm -r "$FS_BOOT_OS_UNIX_PATH"/* > /dev/null 2>&1
 
-    # Check that old has been removed
-    ls "$FS_BOOT_OS_UNIX_PATH"/* > /dev/null 2>&1
-    
-    if [ "$?" -eq 0 ]
-    then
-	echo "ERROR: Unable to remove old files from $FS_BOOT_OS_UNIX_PATH"
-	exit 1
-    fi
-
-else
-    # Remove the non-iso files anyways
-    for REMOVE_FILE in "vmlinuz" "initrd" "kernel" "initrd.gz"
-    do
-	if [ -f "$FS_BOOT_OS_UNIX_PATH/$REMOVE_FILE" ]
-	then
-	    chmod u+rw "$FS_BOOT_OS_UNIX_PATH/$REMOVE_FILE"
-	    rm "$FS_BOOT_OS_UNIX_PATH/$REMOVE_FILE"
-
-	    if [ "$?" -ne 0 ]
-	    then
-		echo "ERROR: Unable to remove old kernel or initrd file $FS_BOOT_OS_UNIX_PATH/$REMOVE_FILE"
-		exit 1
-	    fi
-	fi
-    done
-fi
 
 
 if [ ! -d "$EMP_BOOT_OS_ENTRY_GENERIC_MOUNT_POINT" ]
