@@ -30,18 +30,12 @@ $submenus = [];
 $submenu_names = [];
 
 
-$emp_platform_to_ipxe_native_platform = array(
-    "x32-bios" => "i386_pcbios",
-    "x32-efi" => "i386_efi",
-    "x64-bios" => "x86_64_pcbios",
-    "x64-efi" => "x86_64_efi");
+$emp_platform_to_names = array(
+    "x32-bios" => "iPXE 32bit BIOS boot menu",
+    "x32-efi" => "iPXE 32bit EFI boot menu",
+    "x64-bios" => "iPXE 64bit BIOS boot menu",
+    "x64-efi" => "iPXE 64bit EFI boot menu");
 
-$native_platform_names = array(
-    "i386_pcbios" => "iPXE 32bit BIOS boot menu",
-    "i386_efi" => "iPXE 32bit EFI boot menu",
-    "x86_64_pcbios" => "iPXE 64bit BIOS boot menu",
-    "x86_64_efi" => "iPXE 64bit EFI boot menu");
-    
 $default_entries = array(
     "reboot" => array("Reboot computer",
                       "reboot\n" .
@@ -63,12 +57,11 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
         $emp_platform = array_pop($dot_parts);
         $path_with_os_label_id = str_replace("." . $emp_platform . "." . $ipxe_suffix, "", $ipxe_file_candidate);
         
-        if (array_key_exists($emp_platform, $emp_platform_to_ipxe_native_platform))
+        if (array_key_exists($emp_platform, $emp_platform_to_names))
         {
             $os_family = basename(dirname($path_with_os_label_id, 3));
             $os_major_version = basename(dirname($path_with_os_label_id, 2));
-            $os_ipxe_native_platform = $emp_platform_to_ipxe_native_platform[$emp_platform];
-            $os_family_menu_label_id = $os_ipxe_native_platform . "-" . $os_family;
+            $os_family_menu_label_id = $emp_platform . "-" . $os_family;
             $os_family_with_major_menu_label_id = $os_family_menu_label_id . "-" . $os_major_version;
             $os_target_base_label_id = basename($path_with_os_label_id);
             $os_target_full_label_id = $os_family_with_major_menu_label_id . "-" . $os_target_base_label_id;
@@ -77,43 +70,47 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
             $id_lookups[$os_family_with_major_menu_label_id] = ucfirst($os_family) . " " . $os_major_version;
             $id_lookups[$os_target_full_label_id] = ucfirst(str_replace(["_","-"], " ", $os_target_base_label_id));
 
-            if (!array_key_exists($os_ipxe_native_platform, $submenus))
+            if (!array_key_exists($emp_platform, $submenus))
             {
-                $submenus[$os_ipxe_native_platform] = [];
+                $submenus[$emp_platform] = [];
             }
-            if (!array_key_exists($os_family_menu_label_id, $submenus[$os_ipxe_native_platform]))
+            if (!array_key_exists($os_family_menu_label_id, $submenus[$emp_platform]))
             {
-                $submenus[$os_ipxe_native_platform][$os_family_menu_label_id] = [];
+                $submenus[$emp_platform][$os_family_menu_label_id] = [];
             }
-            if (!array_key_exists($os_family_with_major_menu_label_id, $submenus[$os_ipxe_native_platform][$os_family_menu_label_id]))
+            if (!array_key_exists($os_family_with_major_menu_label_id, $submenus[$emp_platform][$os_family_menu_label_id]))
             {
-                $submenus[$os_ipxe_native_platform][$os_family_menu_label_id][$os_family_with_major_menu_label_id] = [];
+                $submenus[$emp_platform][$os_family_menu_label_id][$os_family_with_major_menu_label_id] = [];
             }
-            $submenus[$os_ipxe_native_platform][$os_family_menu_label_id][$os_family_with_major_menu_label_id][$os_target_full_label_id] = file_get_contents($ipxe_file_candidate);
+            $submenus[$emp_platform][$os_family_menu_label_id][$os_family_with_major_menu_label_id][$os_target_full_label_id] = file_get_contents($ipxe_file_candidate);
         }
     }
 }
 ?>
 
-cpuid --ext 29 && set arch x86_64 || set arch i386
+cpuid --ext 29 && set arch x64 || set arch x32
+set method unknown
+iseq ${platform} pcbios && set method bios ||
+iseq ${platform} efi && set method efi ||
 
-# arch = i386 or x86_64
+# arch = x32 or x64
 # platform = pcbios or efi
+# method = bios or efi
 
-goto ${arch}_${platform}
+goto ${arch}-${method}
 
 
 
 <?php
 
-foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
+foreach($submenus as $emp_platform => $os_family_menu_label_id)
 {
     print("# Main arch platform menu\n");
-    print(":" . $os_ipxe_native_platform . "\n");
-    print("menu " . $native_platform_names[$os_ipxe_native_platform] . "\n");
+    print(":" . $emp_platform . "\n");
+    print("menu " . $emp_platform_to_names[$emp_platform] . "\n");
     print("item --gap -- Operating system families\n");
     
-    foreach($submenus[$os_ipxe_native_platform] as $os_family_menu_label_id => $os_family_ipxe_entries)
+    foreach($submenus[$emp_platform] as $os_family_menu_label_id => $os_family_ipxe_entries)
     {
         print("item " . $os_family_menu_label_id . " " . $id_lookups[$os_family_menu_label_id] . "\n");
     }
@@ -121,7 +118,7 @@ foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
     
     foreach($default_entries as $entry_suffix => $entry_contents)
     {
-        print("item " . $os_ipxe_native_platform . "-" . $entry_suffix . " " . $entry_contents[0] . "\n");
+        print("item " . $emp_platform . "-" . $entry_suffix . " " . $entry_contents[0] . "\n");
     }
     print("\n");
     print("choose selected\n");
@@ -131,7 +128,7 @@ foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
 
     print("# Os family submenu\n");
     
-    foreach($submenus[$os_ipxe_native_platform] as $os_family_menu_label_id => $os_family_with_major_menu_label_ids_array)
+    foreach($submenus[$emp_platform] as $os_family_menu_label_id => $os_family_with_major_menu_label_ids_array)
     {
         print(":" . $os_family_menu_label_id . "\n");
         print("menu " . $id_lookups[$os_family_menu_label_id] . " major versions \n");
@@ -140,7 +137,7 @@ foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
         {
             print("item " . $os_family_with_major_menu_label_id . " " . $id_lookups[$os_family_with_major_menu_label_id] . "\n");
         }
-        print("item " . $os_ipxe_native_platform . " Back\n");
+        print("item " . $emp_platform . " Back\n");
 
         print("\n");
         print("choose selected\n");
@@ -175,7 +172,7 @@ foreach($submenus as $os_ipxe_native_platform => $os_family_menu_label_id)
     }
     foreach($default_entries as $entry_suffix => $entry_contents)
     {
-        print(":" . $os_ipxe_native_platform . "-" . $entry_suffix . "\n");
+        print(":" . $emp_platform . "-" . $entry_suffix . "\n");
         print($entry_contents[1] . "\n");
     }
 
