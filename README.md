@@ -2,8 +2,8 @@
 
 Easy Multi PXE is an iPXE-powered simple pxe server. Currently it is able to boot in 64bit BIOS mode, but in the future it will support all crisscrossses from 32/64bit and BIOS/EFI. Possibly even signed efi stuff.
 
-<img src="./doc/010_main_menu_arch.png" style="width: 30vw;"><img src="./doc/020_windows_submenu.png" style="width: 30vw;"><img src="./doc/030_windows_10_submenu.png" style="width: 30vw;"><img src="./doc/040_windows_10_boot_1.png" style="width: 30vw;"><img src="./doc/050_windows_10_boot_2.png" style="width: 30vw;"><img src="./doc/060_windows_10_boot_3.png" style="width: 30vw;"><img src="./doc/070_main_menu_arch_ubuntu.png" style="width: 30vw;"><img src="./doc/080_ubuntu_submenu.png" style="width: 30vw;"><img src="./doc/090_ubuntu_20.04_submenu.png" style="width: 30vw;"><img src="./doc/100_ubuntu_20.04_boot_1.png" style="width: 30vw;"><img src="./doc/110_ubuntu_20.04_boot_2.png" style="width: 30vw;"><img src="./doc/120_ubuntu_20.04_boot_3.png" style="width: 30vw;"><img src="./doc/130_ubuntu_20.04_submenu_2.png" style="width: 30vw;"><img src="./doc/140_ubuntu_20.04_boot_4.png" style="width: 30vw;"><img src="./doc/150_ubuntu_20.04_boot_5.png" style="width: 30vw;"><img src="./doc/160_ubuntu_20.04_boot_6.png" style="width: 30vw;">
-
+## Status
+As of 2023-09-12 doing heavy refactoring. Everything will break.
 
 ## Hilights
 
