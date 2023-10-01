@@ -89,6 +89,9 @@ then
 	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI"
     fi
     ensure_assets_dirs
+    echo "Starting provisioning for $EMP_BOOT_OS_ISO_NAME"
+    echo "Using iso $EMP_BOOT_OS_ISO_PATH"
+    echo "Target dir $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
 fi
 
 

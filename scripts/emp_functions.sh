@@ -451,6 +451,8 @@ ensure_assets_dirs()
 # directory, they are in the wrong place anyways
 emp_remove_old_fragment_remnants()
 {
+    echo -n "Removing old ipxe fragment remnants..."
+    
     for TEMP_FRAGMENT in "$EMP_BOOT_OS_FRAGMENT_PATH_FIRST" \
 			 "$EMP_BOOT_OS_FRAGMENT_PATH_SECOND" \
 			 "$EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_FIRST" \
@@ -462,12 +464,15 @@ emp_remove_old_fragment_remnants()
 
 	    if [ "$?" -ne 0 ]
 	    then
+		echo ""
 		echo "ERROR: Unable to remove old ipxe fragment $TEMP_FRAGMENT"
 
 		exit 1
 	    fi
 	fi
     done
+
+    echo "done"
 }
 
 
@@ -478,14 +483,17 @@ emp_remove_old_iso_if_needed()
 	# Remove only if iso exists
 	if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE" ]
 	then
+	    echo -n "Removing old iso before copying new..."
 	    rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
 
 	    if [ "$?" -ne 0 ]
 	    then
+		echo ""
 		echo "ERROR: Unable to remove old iso file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
 
 		exit 1
 	    fi
+	    echo "done"
 	fi
     fi
 
@@ -502,20 +510,25 @@ emp_force_unmount_generic_mountpoint()
 
 emp_mount_iso()
 {
-    mount -t auto -o loop "$EMP_BOOT_OS_ISO_PATH" "$EMP_MOUNT_POINT"
+    echo -n "Mounting iso via loop device..."
+    mount -t auto -o loop "$EMP_BOOT_OS_ISO_PATH" "$EMP_MOUNT_POINT" > /dev/null 2>&1
 
     if [ "$?" -ne 0 ]
     then
+	echo ""
 	echo "ERROR: Unable to mount the iso file $EMP_BOOT_OS_ISO_PATH to $EMP_MOUNT_POINT"
 	emp_force_unmount_generic_mountpoint
 
 	exit 1
     fi
+    echo "done"
 }
 
 
 emp_analyze_linux_assets_type()
 {
+    echo -n "Analyzing Linux assets type..."
+    
     if [ -f "$EMP_MOUNT_POINT/casper/vmlinuz" -a -f "$EMP_MOUNT_POINT/casper/initrd" ]
     then
 	EMP_BOOT_OS_ASSETS_TYPE="casper"
@@ -524,16 +537,20 @@ emp_analyze_linux_assets_type()
     then
 	EMP_BOOT_OS_ASSETS_TYPE="plain"
     else
+	echo ""
 	echo "ERROR: Unable to determine Linux OS assets type"
 	emp_force_unmount_generic_mountpoint
 
 	exit 1
     fi
+    echo "$EMP_BOOT_OS_ASSETS_TYPE"
 }
 
 
 emp_remove_old_existing_linux_asset_files()
 {
+    echo -n "Removing old asset files..."
+
     if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
     then
 	for TEMP_FILE in "vmlinuz" "initrd"
@@ -544,6 +561,7 @@ emp_remove_old_existing_linux_asset_files()
 
 		if [ "$?" -ne 0 ]
 		then
+		    echo ""
 		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
 		    emp_force_unmount_generic_mountpoint
 		    
@@ -562,6 +580,7 @@ emp_remove_old_existing_linux_asset_files()
 
 		if [ "$?" -ne 0 ]
 		then
+		    echo ""
 		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
 		    emp_force_unmount_generic_mountpoint
 		    
@@ -570,11 +589,14 @@ emp_remove_old_existing_linux_asset_files()
 	    fi
 	done
     fi
+    echo "done"
 }
 
 
 emp_copy_linux_asset_files()
 {
+    echo -n "Copying Linux asset files..."
+    
     if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
     then
 	cp "$EMP_MOUNT_POINT/casper/vmlinuz" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" &&
@@ -582,6 +604,7 @@ emp_copy_linux_asset_files()
 
 	if [ "$?" -ne 0 ]
 	then
+	    echo ""
 	    echo "ERROR: Failed copying asset files $EMP_MOUNT_POINT/casper/vmlinuz,initrd to " \
 		 "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
 	    emp_force_unmount_generic_mountpoint
@@ -596,6 +619,7 @@ emp_copy_linux_asset_files()
 
 	if [ "$?" -ne 0 ]
 	then
+	    echo ""
 	    echo "ERROR: Failed copying asset files $EMP_MOUNT_POINT/linux,initrd.gz to " \
 		 "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
 	    emp_force_unmount_generic_mountpoint
@@ -603,6 +627,7 @@ emp_copy_linux_asset_files()
 	    exit 1
 	fi
     fi
+    echo "done"
 }
 
 
@@ -610,7 +635,7 @@ emp_copy_iso_if_needed()
 {
     if [ "$EMP_COPY_ISO" = "Y" ]
     then
-	pv -w 80 -N "Copying iso" "$EMP_BOOT_OS_ISO_PATH" > "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/EMP_BOOT_OS_ISO_FILE"
+	pv -w 80 -N "Copying iso" "$EMP_BOOT_OS_ISO_PATH" > "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
 
 	if [ "$?" -ne 0 ]
 	then
