@@ -21,6 +21,7 @@ emp_read_config "$EMP_MAIN_CONFIG"
 
 # Rest of common definitions
 EMP_ASSETS_ROOT_DIR="$EMP_TOPDIR/netbootassets"
+EMP_COPY_WITH_PROGRESS_SIZE="10000000"
 
 if [ "$EMP_OP" = "create_configs" ]
 then
@@ -42,7 +43,7 @@ elif [ "$EMP_OP" = "do_provisioning" ]
 then
     # Static provision-specific variables not affected
     # by parameters or configurations
-    EMP_MOUNT_POINT="$EMP_TOP_DIR/work/mount"
+    EMP_MOUNT_POINT="$EMP_TOPDIR/work/mount"
     
     # Collect and verify provision-specific variables
     emp_collect_provisioning_parameters "$@"
@@ -61,6 +62,7 @@ then
     EMP_BOOT_OS_ISO_NAME="${EMP_BOOT_OS_ISO_FILE%.*}"
     # EMP_BOOT_OS_ASSETS_SUBDIR is like ubuntu/20.04/x64/ubuntu-20.04-mini-amd64
     EMP_BOOT_OS_ASSETS_TYPE="unknown"
+    EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST=""
     EMP_BOOT_OS_ASSETS_SUBDIR="${EMP_BOOT_OS_ASSETS_PARENT#$EMP_ASSETS_ROOT_DIR/}/$EMP_BOOT_OS_ISO_NAME"
     EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH="$EMP_WEBSERVER_PROTOCOL://$EMP_WEBSERVER_IP/$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR"
     EMP_BOOT_OS_ASSETS_FS_BASE_PATH="$EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_ASSETS_SUBDIR"

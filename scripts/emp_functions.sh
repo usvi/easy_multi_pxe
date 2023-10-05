@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 emp_print_call_help()
 {
     echo ""
@@ -16,7 +17,6 @@ emp_print_call_help()
     echo "[-c no] "
     echo ""
 }
-
 
 
 emp_posix_shell_string_replace()
@@ -52,6 +52,26 @@ emp_posix_shell_string_replace()
     done
 }
 
+
+emp_copy_file()
+{
+    TEMP_SOURCE="$1"
+    TEMP_FULL_DESTINATION="$2"
+
+    TEMP_SOURCE_FILE_NAME="$(basename ${TEMP_SOURCE})"
+    TEMP_SIZE="$(stat --printf=%s ${TEMP_SOURCE})"
+    
+    if [ "$TEMP_SIZE" -lt "$EMP_COPY_WITH_PROGRESS_SIZE" ]
+    then
+	# Normal copy
+	cp "$TEMP_SOURCE" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1
+    else
+	# Progress copy
+	pv -w 80 -N "$TEMP_SOURCE_FILE_NAME" "$TEMP_SOURCE" > "$TEMP_FULL_DESTINATION"
+    fi
+
+    return "$?"
+}
 
 
 # We need config functions to read the variables we want
@@ -512,7 +532,7 @@ emp_mount_iso()
 {
     echo -n "Mounting iso via loop device..."
     mount -t auto -o loop "$EMP_BOOT_OS_ISO_PATH" "$EMP_MOUNT_POINT" > /dev/null 2>&1
-
+    
     if [ "$?" -ne 0 ]
     then
 	echo ""
@@ -525,109 +545,53 @@ emp_mount_iso()
 }
 
 
-emp_analyze_linux_assets_type()
+emp_copy_simple_asset_files()
 {
-    echo -n "Analyzing Linux assets type..."
+    echo "Copying simple asset files"
     
-    if [ -f "$EMP_MOUNT_POINT/casper/vmlinuz" -a -f "$EMP_MOUNT_POINT/casper/initrd" ]
-    then
-	EMP_BOOT_OS_ASSETS_TYPE="casper"
-	
-    elif [ -f "$EMP_MOUNT_POINT/linux" -a -f "$EMP_MOUNT_POINT/initrd.gz" ]
-    then
-	EMP_BOOT_OS_ASSETS_TYPE="plain"
-    else
-	echo ""
-	echo "ERROR: Unable to determine Linux OS assets type"
-	emp_force_unmount_generic_mountpoint
+    TEMP_LIST_TAIL="$EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST"
 
-	exit 1
-    fi
-    echo "$EMP_BOOT_OS_ASSETS_TYPE"
-}
+    while [ -n "$TEMP_LIST_TAIL" ]
+    do
+	TEMP_FILE_ISOPATH="${TEMP_LIST_TAIL%% *}"
+	TEMP_LIST_TAIL="${TEMP_LIST_TAIL#* }"
 
+	if [ "$TEMP_FILE_ISOPATH" = "$TEMP_LIST_TAIL" ]
+	then
+	    TEMP_LIST_TAIL=""
+	fi
+	TEMP_FILE_NAME="$(basename ${TEMP_FILE_ISOPATH})"
 
-emp_remove_old_existing_linux_asset_files()
-{
-    echo -n "Removing old asset files..."
-
-    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
-    then
-	for TEMP_FILE in "vmlinuz" "initrd"
-	do
-	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
+	# Need to remove them first from assets if existing
+	if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME" ]
+	then
+	    rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME" > /dev/null 2>&1
+	    
+	    if [ "$?" -ne 0 ]
 	    then
-		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" > /dev/null 2>&1
-
-		if [ "$?" -ne 0 ]
-		then
-		    echo ""
-		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
-		    emp_force_unmount_generic_mountpoint
-		    
-		    exit 1
-		fi
+		echo ""
+		echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME"
+		emp_force_unmount_generic_mountpoint
+		
+		exit 1
 	    fi
-	done
-	
-    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
-    then
-	for TEMP_FILE in "linux" "initrd.gz"
-	do
-	    if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" ]
-	    then
-		rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE" > /dev/null 2>&1
+	fi
 
-		if [ "$?" -ne 0 ]
-		then
-		    echo ""
-		    echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE"
-		    emp_force_unmount_generic_mountpoint
-		    
-		    exit 1
-		fi
-	    fi
-	done
-    fi
-    echo "done"
-}
-
-
-emp_copy_linux_asset_files()
-{
-    echo -n "Copying Linux asset files..."
-    
-    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
-    then
-	cp "$EMP_MOUNT_POINT/casper/vmlinuz" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" > /dev/null 2>&1 &&
-	    cp "$EMP_MOUNT_POINT/casper/initrd" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" > /dev/null 2>&1
+	# Next actually copy from path to file
+	# Decide by stat
+	emp_copy_file "$EMP_MOUNT_POINT/$TEMP_FILE_ISOPATH" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME"
 
 	if [ "$?" -ne 0 ]
 	then
 	    echo ""
-	    echo "ERROR: Failed copying asset files $EMP_MOUNT_POINT/casper/vmlinuz,initrd to " \
-		 "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+	    echo "ERROR: Unable to copy asset file from $EMP_MOUNT_POINT/$TEMP_FILE_ISOPATH to $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME "
 	    emp_force_unmount_generic_mountpoint
 	    
 	    exit 1
 	fi
-	    
-    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
-    then
-	cp "$EMP_MOUNT_POINT/linux" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" > /dev/null 2>&1 &&
-	    cp "$EMP_MOUNT_POINT/initrd.gz" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" > /dev/null 2>&1
+    done
 
-	if [ "$?" -ne 0 ]
-	then
-	    echo ""
-	    echo "ERROR: Failed copying asset files $EMP_MOUNT_POINT/linux,initrd.gz to " \
-		 "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
-	    emp_force_unmount_generic_mountpoint
-	    
-	    exit 1
-	fi
-    fi
-    echo "done"
+    echo "Done copying simple asset files"
 }
 
 
@@ -670,58 +634,15 @@ emp_unmount_and_sync()
 }
 
 
-emp_create_single_linux_ipxe_fragment()
-{
-    TEMP_PARAM_IPXE_FRAGMENT="$1"
-
-    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
-    then
-	cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
-set http_iso \${http_base}/$EMP_BOOT_OS_ISO_FILE
-kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 root=/dev/ram0 initrd=initrd ip=dhcp url=\${http_iso} cloud-config-url=/dev/null
-initrd \${http_base}/initrd
-boot
-sleep 5
-goto end
-EOF
-	
-	if [ "$?" -ne 0 ]
-	then
-	    echo ""
-	    echo "Error creating ipxe fragment $TEMP_PARAM_IPXE_FRAGMENT"
-
-	    exit 1
-	fi
-    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
-    then
-	cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
-kernel \${http_base}/linux nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp
-initrd \${http_base}/initrd.gz
-boot
-sleep 5
-goto end
-EOF
-
-	if [ "$?" -ne 0 ]
-	then
-	    echo ""
-	    echo "Error creating ipxe fragment $TEMP_PARAM_IPXE_FRAGMENT"
-
-	    exit 1
-	fi
-    fi
-}
-
-
-emp_create_linux_ipxe_fragments()
+# Every provisioning script defines their own
+# emp_custom_create_single_ipxe_fragment()
+emp_create_ipxe_fragments()
 {
     echo -n "Creating ipxe fragments..."
     
     for TEMP_IPXE_FRAGMENT in "$EMP_BOOT_OS_FRAGMENT_PATH_FIRST" "$EMP_BOOT_OS_FRAGMENT_PATH_SECOND"
     do
-	emp_create_single_linux_ipxe_fragment "$TEMP_IPXE_FRAGMENT"
+	emp_custom_create_single_ipxe_fragment "$TEMP_IPXE_FRAGMENT"
     done
     echo "done"
 }
