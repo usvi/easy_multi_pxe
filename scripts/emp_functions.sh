@@ -9,12 +9,14 @@ emp_print_call_help()
     echo "--isofile=/opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
     echo "--assetsparent=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
     echo "[--copyiso=no] "
+    echo "[--unpackiso=no] "
     echo ""
     echo "Or with short forms:"
     echo "./emp_provision_ubuntu_iso_to_assets_dir.sh "
     echo "-i /opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
     echo "-a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
     echo "[-c no] "
+    echo "[-u no] "
     echo ""
 }
 
@@ -69,6 +71,26 @@ emp_copy_file()
 	# Progress copy
 	pv -w 80 -N "$TEMP_SOURCE_FILE_NAME" "$TEMP_SOURCE" > "$TEMP_FULL_DESTINATION"
     fi
+
+    return "$?"
+}
+
+
+emp_copy_directory()
+{
+    TEMP_SOURCE="$1"
+    TEMP_FULL_DESTINATION="$2"
+
+    # We can add later fancy progress thingy here
+    cp -r "$TEMP_SOURCE" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	return "$?"
+    fi
+
+    echo "DOING chmod -r $EMP_ASSETS_DIRS_CHMOD_PERMS $TEMP_FULL_DESTINATION"
+    chmod -R "$EMP_ASSETS_DIRS_CHMOD_PERMS" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1
 
     return "$?"
 }
@@ -187,6 +209,7 @@ emp_collect_provisioning_parameters()
     EMP_BOOT_OS_ISO_PATH=""
     EMP_BOOT_OS_ASSETS_PARENT=""
     EMP_COPY_ISO="Y" # Default value
+    EMP_UNPACK_ISO="Y" # Default value
     
     TEMP_OPEN=""
     # Example run (wrapped):
@@ -194,12 +217,14 @@ emp_collect_provisioning_parameters()
     # --isofile=/opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso
     # --assetsparent=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
     # --copyiso=no
+    # --unpackiso=no
 
     # Or the same:
     # ./emp_provision_ubuntu_iso_to_assets_dir.sh
     # -i /opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso
     # -a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64
     # -c no
+    # -u no
 
     # copyiso is not mandatory, others are.
 
@@ -220,6 +245,9 @@ emp_collect_provisioning_parameters()
 		--copyiso=*)
 		    TEMP_COPY_ISO="${TEMP_PARAM##--copyiso=}"
 		    ;;
+		--unpackiso=*)
+		    TEMP_UNPACK_ISO="${TEMP_PARAM##--unpackiso=}"
+		    ;;
 		*)
 		    # Here short form opening checks
 		    if [ "$TEMP_PARAM" = "-i" ]
@@ -233,6 +261,10 @@ emp_collect_provisioning_parameters()
 		    elif [ "$TEMP_PARAM" = "-c" ]
 		    then
 			TEMP_OPEN="EMP_COPY_ISO"
+			
+		    elif [ "$TEMP_PARAM" = "-u" ]
+		    then
+			TEMP_OPEN="EMP_UNPACK_ISO"
 		    fi
 		    ;;
 	    esac
@@ -250,7 +282,12 @@ emp_collect_provisioning_parameters()
 		
 	    elif [ "$TEMP_OPEN" = "EMP_COPY_ISO" ]
 	    then
-		TEMP_COPYISO="$TEMP_PARAM"
+		TEMP_COPY_ISO="$TEMP_PARAM"
+		TEMP_OPEN=""
+		
+	    elif [ "$TEMP_OPEN" = "EMP_UNPACK_ISO" ]
+	    then
+		TEMP_UNPACK_ISO="$TEMP_PARAM"
 		TEMP_OPEN=""
 	    fi
 	fi
@@ -274,9 +311,14 @@ emp_collect_provisioning_parameters()
     fi
     
     # Default is Y, so scan only for no in some forms
-    if [ "$TEMP_COPYISO" = "no" -o "$TEMP_COPYISO" = "NO" -o "$TEMP_COPYISO" = "n" -o "$TEMP_COPYISO" = "N" ]
+    if [ "$TEMP_COPY_ISO" = "no" -o "$TEMP_COPY_ISO" = "NO" -o "$TEMP_COPY_ISO" = "n" -o "$TEMP_COPY_ISO" = "N" ]
     then
 	EMP_COPY_ISO="N"
+    fi
+    # Same
+    if [ "$TEMP_UNPACK_ISO" = "no" -o "$TEMP_UNPACK_ISO" = "NO" -o "$TEMP_UNPACK_ISO" = "n" -o "$TEMP_UNPACK_ISO" = "N" ]
+    then
+	EMP_UNPACK_ISO="N"
     fi
 }
 
@@ -304,7 +346,9 @@ emp_assert_provisioning_parameters()
     # Bailing out already on errors because would create too many messages
     if [ "$TEMP_RETVAL" -ne 0 ]
     then
-	return "$TEMP_RETVAL"
+	emp_print_call_help
+	
+	exit "$TEMP_RETVAL"
     fi
 
     # Then the actual checks
@@ -516,8 +560,31 @@ emp_remove_old_iso_if_needed()
 	    echo "done"
 	fi
     fi
-
 }
+
+
+emp_remove_old_unpacked_if_needed()
+{
+    if [ "$EMP_UNPACK_ISO" = "Y" ]
+    then
+	# Remove only if iso exists
+	if [ -d "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR" ]
+	then
+	    echo -n "Removing old unpacked dir before copying new..."
+	    rm -r "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"  > /dev/null 2>&1
+	    
+	    if [ "$?" -ne 0 ]
+	    then
+		echo ""
+		echo "ERROR: Unable to remove old unpacked dir $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
+
+		exit 1
+	    fi
+	    echo "done"
+	fi
+    fi
+}
+
 
 
 emp_force_unmount_generic_mountpoint()
@@ -610,6 +677,28 @@ emp_copy_iso_if_needed()
 	fi
     fi
 }
+
+
+emp_unpack_iso()
+{
+    if [ "$EMP_UNPACK_ISO" = "Y" ]
+    then
+	echo "Unpacking iso..."
+
+	# Need to remove old if existing
+
+	emp_copy_directory "$EMP_MOUNT_POINT" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to unpack iso mounted at $EMP_MOUNT_POINT to $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
+	    emp_force_unmount_generic_mountpoint
+
+	    exit 1
+	fi
+	echo "Done unpacking iso"
+    fi
+} 
 
 
 emp_unmount_and_sync()
