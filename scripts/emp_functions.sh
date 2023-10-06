@@ -1,7 +1,7 @@
 #!/bin/sh
 
 
-emp_print_call_help()
+emp_print_provisioning_help()
 {
     echo ""
     echo "Example run:"
@@ -455,7 +455,7 @@ emp_assert_provisioning_parameters()
     # Bailing out already on errors because would create too many messages
     if [ "$TEMP_RETVAL" -ne 0 ]
     then
-	emp_print_call_help
+	emp_print_provisioning_help
 	
 	exit "$TEMP_RETVAL"
     fi
@@ -533,11 +533,94 @@ emp_assert_provisioning_parameters()
 
     if [ "$TEMP_RETVAL" -ne 0 ]
     then
-	emp_print_call_help
+	emp_print_provisioning_help
 	
 	exit 1
     fi
 }
+
+
+
+
+emp_collect_windows_template_creation_parameters()
+{
+    EMP_WIN_TEMPLATE_ISO_PATH=""
+    EMP_WIN_TEMPLATE_DIR_PATH=""
+    
+    TEMP_OPEN=""
+    # Example run (wrapped):
+    # ./emp_create_windows_template.sh.sh
+    # --iso-file=/opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso
+    # --template-dir=/opt/easy_multi_pxe/netbootassets/windows/template/x64
+
+    # Or the same:
+    # ./emp_create_windows_template.sh.sh
+    # -i /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso
+    # -t /opt/easy_multi_pxe/netbootassets/windows/template/x64
+
+
+    for TEMP_PARAM in "$@"
+    do
+	if [ -z "$TEMP_OPEN" ]
+	then
+	    # Nothing open
+
+	    # Check first if long forms
+	    case "$TEMP_PARAM" in
+		--iso-file=*)
+		    TEMP_WIN_TEMPLATE_ISO_PATH="${TEMP_PARAM##--iso-file=}"
+		    ;;
+		--template-dir=*)
+		    TEMP_WIN_TEMPLATE_DIR_PATH="${TEMP_PARAM##--template-dir=}"
+		    ;;
+		*)
+		    # Here short form opening checks
+		    if [ "$TEMP_PARAM" = "-i" ]
+		    then
+			TEMP_OPEN="TEMP_WIN_TEMPLATE_ISO_PATH"
+
+		    elif [ "$TEMP_PARAM" = "-t" ]
+		    then
+			TEMP_OPEN="TEMP_WIN_TEMPLATE_DIR_PATH"
+		    fi
+		    ;;
+	    esac
+
+	else
+	    if [ "$TEMP_OPEN" = "TEMP_WIN_TEMPLATE_ISO_PATH" ]
+	    then
+		TEMP_WIN_TEMPLATE_ISO_PATH="$TEMP_PARAM"
+		TEMP_OPEN=""
+		
+	    elif [ "$TEMP_OPEN" = "TEMP_WIN_TEMPLATE_DIR_PATH" ]
+	    then
+		TEMP_WIN_TEMPLATE_DIR_PATH="$TEMP_PARAM"
+		TEMP_OPEN=""
+	    fi
+	fi
+    done
+    # Rudimentary checks for some values here after dereferencing
+    # Separate function checks that params are fine in all ways
+
+    EMP_WIN_TEMPLATE_ISO_PATH="$(realpath "${TEMP_WIN_TEMPLATE_ISO_PATH}" 2>/dev/null)"
+    # If path is garbage, variable is empty. In this
+    # case assign the original, even if it was erroneous.
+    if [ -z "$EMP_WIN_TEMPLATE_ISO_PATH" ]
+    then
+	EMP_WIN_TEMPLATE_ISO_PATH="${TEMP_WIN_TEMPLATE_ISO_PATH}"
+    fi
+
+    EMP_WIN_TEMPLATE_DIR_PATH="$(realpath "${TEMP_WIN_TEMPLATE_DIR_PATH}" 2>/dev/null)"
+    # Ditto
+    if [ -z "$EMP_WIN_TEMPLATE_DIR_PATH" ]
+    then
+	EMP_WIN_TEMPLATE_DIR_PATH="${TEMP_WIN_TEMPLATE_DIR_PATH}"
+    fi
+}
+
+
+
+
 
 
 emp_assert_general_directories()
@@ -563,7 +646,7 @@ emp_assert_general_directories()
 }
 
 
-emp_ensure_assets_dirs()
+emp_ensure_provisioning_directories()
 {
     # Try to make the assets parent dir, like
     # /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64

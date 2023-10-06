@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ "$EMP_OP" != "create_configs" -a "$EMP_OP" != "do_provisioning" ]
+if [ "$EMP_OP" != "create_configs" -a "$EMP_OP" != "do_provisioning" -a "$EMP_OP" != "create_windows_template" ]
 then
     echo "Error: Unknown operation: $EMP_OP"
 
@@ -48,7 +48,8 @@ then
     
     emp_collect_general_post_parameters_variables
     emp_collect_provisioning_variables
-    emp_ensure_assets_dirs
+
+    emp_ensure_provisioning_directories
     
     echo "Starting provisioning for $EMP_BOOT_OS_MAIN_ARCH $EMP_BOOT_OS_FAMILY $EMP_BOOT_OS_MAIN_VERSION"
     echo "Using iso $EMP_BOOT_OS_ISO_PATH"
@@ -59,6 +60,13 @@ then
     emp_collect_general_pre_parameters_variables
     emp_assert_general_directories
 
+    emp_collect_windows_template_creation_parameters "$@"
+    #emp_assert_windows_template_creation_parameters
+
+    #emp_collect_general_post_parameters_variables
+    #emp_collect_windows_template_creation_variables
+    
+    #emp_ensure_windows_template_creation_directories
 fi
 
 
