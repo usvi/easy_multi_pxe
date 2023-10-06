@@ -76,20 +76,67 @@ emp_copy_file()
 }
 
 
+emp_count_dir_data_size()
+{
+    TEMP_DU_DIR="$1"
+
+    TEMP_DU_OUT="$(du --apparent-size -s "${TEMP_DU_DIR}" 2>/dev/null)"
+    TEMP_SIZE="${TEMP_DU_OUT%%	*}" # Literal tab!!
+    echo "$TEMP_SIZE"
+}
+
+
 emp_copy_directory()
 {
     TEMP_SOURCE="$1"
     TEMP_FULL_DESTINATION="$2"
+    TEMP_PRINT_PREFIX="$3"
 
+    TEMP_SIZE_SOURCE="$(emp_count_dir_data_size "$TEMP_SOURCE")"
     # We can add later fancy progress thingy here
-    cp -r "$TEMP_SOURCE" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1
+    cp -r "$TEMP_SOURCE" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1 &
+    TEMP_CP_PID="$!"
+    TEMP_STEP=0
+
+    while [ "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
+    do
+	sleep "$EMP_PROGRESS_INTERVAL_SECS" > /dev/null 2>&1
+	ps -p "$TEMP_CP_PID" > /dev/null 2>&1
+
+	if [ "$?" -eq 0 ]
+	then
+	    #echo "Still running"
+	    TEMP_SIZE_DESTINATION="$(emp_count_dir_data_size "$TEMP_FULL_DESTINATION")"
+	    #echo "$TEMP_SIZE_DESTINATION / $TEMP_SIZE_SOURCE"
+	    TEMP_PERCENTAGE="$(( 100 * TEMP_SIZE_DESTINATION / TEMP_SIZE_SOURCE))"
+	    #echo "$TEMP_PERCENTAGE"
+	    echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_PERCENTAGE}%"
+	else
+	    wait "$TEMP_CP_PID"
+	    TEMP_CP_RETVAL="$?"
+
+	    if [ "$TEMP_CP_RETVAL" -ne 0 ]
+	    then
+		# Fail case. End the no-endline echo. Caller writes
+		# more specific error info.
+		echo ""
+
+		return "$TEMP_CP_RETVAL"
+	    fi
+
+	    echo -n "\r${TEMP_PRINT_PREFIX}done\n"
+
+	    TEMP_STEP="$((EMP_PROGRESS_MAX_STEPS + 1))"
+	fi
+
+	TEMP_STEP="$((TEMP_STEP + 1))"
+    done
 
     if [ "$?" -ne 0 ]
     then
 	return "$?"
     fi
 
-    echo "DOING chmod -r $EMP_ASSETS_DIRS_CHMOD_PERMS $TEMP_FULL_DESTINATION"
     chmod -R "$EMP_ASSETS_DIRS_CHMOD_PERMS" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1
 
     return "$?"
@@ -295,7 +342,8 @@ emp_collect_provisioning_parameters()
     # Rudimentary checks for some values here after dereferencing
     # Separate function checks that params are fine in all ways
 
-    EMP_BOOT_OS_ISO_PATH="$(realpath "${TEMP_ISO_PATH}" > /dev/null 2>&1)"
+    EMP_BOOT_OS_ISO_PATH="$(realpath "${TEMP_ISO_PATH}" 2>/dev/null)"
+
     # If path is garbage, variable is empty. In this
     # case assign the original, even if it was erroneous.
     if [ -z "$EMP_BOOT_OS_ISO_PATH" ]
@@ -303,7 +351,7 @@ emp_collect_provisioning_parameters()
 	EMP_BOOT_OS_ISO_PATH="${TEMP_ISO_PATH}"
     fi
     
-    EMP_BOOT_OS_ASSETS_PARENT="$(realpath "${TEMP_ASSETS_PARENT}" > /dev/null 2>&1)"
+    EMP_BOOT_OS_ASSETS_PARENT="$(realpath "${TEMP_ASSETS_PARENT}" 2>/dev/null)"
     # Ditto
     if [ -z "$EMP_BOOT_OS_ASSETS_PARENT" ]
     then
@@ -683,11 +731,11 @@ emp_unpack_iso()
 {
     if [ "$EMP_UNPACK_ISO" = "Y" ]
     then
-	echo "Unpacking iso..."
+	echo -n "Unpacking iso..."
 
 	# Need to remove old if existing
 
-	emp_copy_directory "$EMP_MOUNT_POINT" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
+	emp_copy_directory "$EMP_MOUNT_POINT" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR" "Unpacking iso..."
 
 	if [ "$?" -ne 0 ]
 	then
@@ -696,7 +744,6 @@ emp_unpack_iso()
 
 	    exit 1
 	fi
-	echo "Done unpacking iso"
     fi
 } 
 

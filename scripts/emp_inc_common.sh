@@ -23,6 +23,7 @@ emp_read_config "$EMP_MAIN_CONFIG"
 EMP_ASSETS_ROOT_DIR="$EMP_TOPDIR/netbootassets"
 EMP_COPY_WITH_PROGRESS_SIZE="10000000"
 EMP_PROGRESS_INTERVAL_SECS="5"
+EMP_PROGRESS_MAX_STEPS="720" # 720 times 5 s step is 1 hour.
 
 if [ "$EMP_OP" = "create_configs" ]
 then
