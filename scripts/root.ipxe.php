@@ -31,10 +31,10 @@ $submenu_names = [];
 
 
 $emp_platform_to_names = array(
-    "x32-bios" => "iPXE 32bit BIOS boot menu",
-    "x32-efi" => "iPXE 32bit EFI boot menu",
-    "x64-bios" => "iPXE 64bit BIOS boot menu",
-    "x64-efi" => "iPXE 64bit EFI boot menu");
+    "x32-bios" => "iPXE 32bit BIOS",
+    "x32-efi" => "iPXE 32bit EFI",
+    "x64-bios" => "iPXE 64bit BIOS",
+    "x64-efi" => "iPXE 64bit EFI");
 
 $default_entries = array(
     "reboot" => array("Reboot computer",
@@ -49,7 +49,6 @@ $ipxe_fragment_iterator->setMaxDepth(3);
 
 foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
 {
-    
     if ($ipxe_file_candidate->getExtension() === "ipxe")
     {
         $dot_parts = explode(".", $ipxe_file_candidate);
@@ -107,7 +106,7 @@ foreach($submenus as $emp_platform => $os_family_menu_label_id)
 {
     print("# Main arch platform menu\n");
     print(":" . $emp_platform . "\n");
-    print("menu " . $emp_platform_to_names[$emp_platform] . "\n");
+    print("menu " . $emp_platform_to_names[$emp_platform] . " boot menu\n");
     print("item --gap -- Operating system families\n");
     
     foreach($submenus[$emp_platform] as $os_family_menu_label_id => $os_family_ipxe_entries)
@@ -131,7 +130,7 @@ foreach($submenus as $emp_platform => $os_family_menu_label_id)
     foreach($submenus[$emp_platform] as $os_family_menu_label_id => $os_family_with_major_menu_label_ids_array)
     {
         print(":" . $os_family_menu_label_id . "\n");
-        print("menu " . $id_lookups[$os_family_menu_label_id] . " major versions \n");
+        print("menu " . $id_lookups[$os_family_menu_label_id] . " major versions (" . $emp_platform_to_names[$emp_platform] . ")\n");
 
         foreach ($os_family_with_major_menu_label_ids_array as $os_family_with_major_menu_label_id => $os_target_full_label_ids_array)
         {
@@ -149,7 +148,7 @@ foreach($submenus as $emp_platform => $os_family_menu_label_id)
         {
             print("# Os family and major submenu\n");
             print(":" . $os_family_with_major_menu_label_id . "\n");
-            print("menu " . $id_lookups[$os_family_with_major_menu_label_id] . " variants\n");
+            print("menu " . $id_lookups[$os_family_with_major_menu_label_id] . " variants (" . $emp_platform_to_names[$emp_platform] . ")\n");
 
             foreach ($os_target_full_label_ids_array as $os_target_full_label_id => $target_ipxe_script)
             {
