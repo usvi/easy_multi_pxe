@@ -41,7 +41,7 @@ then
 elif [ "$EMP_OP" = "do_provisioning" ]
 then
     emp_collect_general_pre_parameters_variables
-    emp_ensure_general_directories
+    emp_assert_general_directories
     
     emp_collect_provisioning_parameters "$@"
     emp_assert_provisioning_parameters
@@ -53,6 +53,12 @@ then
     echo "Starting provisioning for $EMP_BOOT_OS_MAIN_ARCH $EMP_BOOT_OS_FAMILY $EMP_BOOT_OS_MAIN_VERSION"
     echo "Using iso $EMP_BOOT_OS_ISO_PATH"
     echo "Target dir $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
+
+elif [ "$EMP_OP" = "create_windows_template" ]
+then
+    emp_collect_general_pre_parameters_variables
+    emp_assert_general_directories
+
 fi
 
 

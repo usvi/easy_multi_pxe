@@ -152,8 +152,8 @@ emp_collect_general_pre_parameters_variables()
 
     EMP_MOUNT_POINT="$EMP_TOPDIR/work/mount"
     EMP_WIM_DIRS_PARENT="$EMP_TOPDIR/work/wims"
-    EMP_MOUNT_POINT_CHMOD_PERMS="u+rwX"
-    EMP_WIM_DIRS_PARENT_CHMOD_PERMS="u+rwX"
+    EMP_WIM_DIR_FIRST="$EMP_WIM_DIRS_PARENT/1"
+    EMP_WIM_DIR_SECOND="$EMP_WIM_DIRS_PARENT/2"
 }
 
 
@@ -540,29 +540,25 @@ emp_assert_provisioning_parameters()
 }
 
 
-emp_ensure_general_directories()
+emp_assert_general_directories()
 {
-    # Check the mount directory
-    if [ ! -d "$EMP_MOUNT_POINT" ]
+    TEMP_ERRORS=0
+    
+    for TEMP_GENERAL_DIRECTORY in "$EMP_MOUNT_POINT" \
+				  "$EMP_WIM_DIRS_PARENT" \
+				  "$EMP_WIM_DIR_FIRST" \
+				  "$EMP_WIM_DIR_SECOND"
+    do
+	if [ ! -d "$TEMP_GENERAL_DIRECTORY" -o ! -r "$TEMP_GENERAL_DIRECTORY" ]
+	then
+	    echo "ERROR: General directory $TEMP_GENERAL_DIRECTORY does not exist or is not readable"
+	    TEMP_ERRORS=1
+	fi
+    done
+
+    if [ "$TEMP_ERRORS" -ne 0 ]
     then
-	mkdir -p "$EMP_MOUNT_POINT"
-	
-	if [ "$?" -ne 0 ]
-	then
-	    echo "ERROR: Unable to create monut point directory $EMP_MOUNT_POINT"
-
-	    exit 1
-	fi
-
-	chmod "$EMP_MOUNT_POINT_CHMOD_PERMS" "$EMP_MOUNT_POINT"
-
-	if [ "$?" -ne 0 ]
-	then
-	    echo "ERROR: Unable to ensure chmod permissions for mouny point directory $EMP_MOUNT_POINT"
-
-	    exit 1
-	fi
-
+	exit 1
     fi
 }
 
