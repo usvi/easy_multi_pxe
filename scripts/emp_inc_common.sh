@@ -21,9 +21,6 @@ emp_read_config "$EMP_MAIN_CONFIG"
 
 # Rest of common definitions
 EMP_ASSETS_ROOT_DIR="$EMP_TOPDIR/netbootassets"
-EMP_COPY_WITH_PROGRESS_SIZE="10000000"
-EMP_PROGRESS_INTERVAL_SECS="5"
-EMP_PROGRESS_MAX_STEPS="720" # 720 times 5 s step is 1 hour.
 
 if [ "$EMP_OP" = "create_configs" ]
 then
@@ -43,58 +40,16 @@ then
 
 elif [ "$EMP_OP" = "do_provisioning" ]
 then
-    # Static provision-specific variables not affected
-    # by parameters or configurations
-    EMP_MOUNT_POINT="$EMP_TOPDIR/work/mount"
-    
-    # Collect and verify provision-specific variables
-    emp_collect_provisioning_parameters "$@"
-    emp_assert_provisioning_parameters
-    # emp_assert_provisioning_parameters provides:
-    # EMP_BOOT_OS_FAMILY
-    # EMP_BOOT_OS_MAIN_ARCH
-    # EMP_BOOT_OS_MAIN_VERSION
-
-    EMP_MOUNT_POINT_CHMOD_PERMS="u+rwX"
-    EMP_ASSETS_DIRS_CHMOD_PERMS="u+rwX"
+    emp_collect_general_pre_parameters_variables
     emp_ensure_general_directories
     
-    # Now we can create all the rest of the variables
-    EMP_BOOT_OS_ISO_FILE="$(basename "$EMP_BOOT_OS_ISO_PATH")"
-    EMP_BOOT_OS_ISO_NAME="${EMP_BOOT_OS_ISO_FILE%.*}"
-    # EMP_BOOT_OS_ASSETS_SUBDIR is like ubuntu/20.04/x64/ubuntu-20.04-mini-amd64
-    EMP_BOOT_OS_ASSETS_TYPE="unknown"
-    EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST=""
-    EMP_BOOT_OS_ASSETS_SUBDIR="${EMP_BOOT_OS_ASSETS_PARENT#$EMP_ASSETS_ROOT_DIR/}/$EMP_BOOT_OS_ISO_NAME"
-    EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR="unpacked"
-    EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH="$EMP_WEBSERVER_PROTOCOL://$EMP_WEBSERVER_IP/$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR"
-    EMP_BOOT_OS_ASSETS_FS_BASE_PATH="$EMP_ASSETS_ROOT_DIR/$EMP_BOOT_OS_ASSETS_SUBDIR"
-    EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR="unpacked"
-    EMP_BOOT_OS_ASSETS_CIFS_BASE_PATH="$(echo "//$EMP_CIFS_SERVER_IP/$EMP_CIFS_SHARE_NAME/$EMP_BOOT_OS_ASSETS_SUBDIR" | sed 's|\/|\\\\|g')"
-    EMP_BOOT_OS_FRAGMENT_PATH_X32_BIOS="$EMP_BOOT_OS_ASSETS_FS_BASE_PATH.x32-bios.ipxe"
-    EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI="$EMP_BOOT_OS_ASSETS_FS_BASE_PATH.x32-efi.ipxe"
-    EMP_BOOT_OS_FRAGMENT_PATH_X64_BIOS="$EMP_BOOT_OS_ASSETS_FS_BASE_PATH.x64-bios.ipxe"
-    EMP_BOOT_OS_FRAGMENT_PATH_X64_EFI="$EMP_BOOT_OS_ASSETS_FS_BASE_PATH.x64-efi.ipxe"
-    # Based on actual arch, select first and second proper fragments.
-    # All fragments will be initially removed if existing. Basically
-    # arch A fragments cannot live in arch B directory, so removing
-    # all first is ok. We then recreate the actual fragments, first
-    # and second.
-    if [ "$EMP_BOOT_OS_MAIN_ARCH" = "x32" ]
-    then
-	EMP_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X32_BIOS"
-	EMP_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI"
-	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X64_BIOS"
-	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X64_EFI"
-
-    elif [ "$EMP_BOOT_OS_MAIN_ARCH" = "x64" ]
-    then
-	EMP_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X64_BIOS"
-	EMP_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X64_EFI"
-	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X32_BIOS"
-	EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI"
-    fi
-    ensure_assets_dirs
+    emp_collect_provisioning_parameters "$@"
+    emp_assert_provisioning_parameters
+    
+    emp_collect_general_post_parameters_variables
+    emp_collect_provisioning_variables
+    emp_ensure_assets_dirs
+    
     echo "Starting provisioning for $EMP_BOOT_OS_MAIN_ARCH $EMP_BOOT_OS_FAMILY $EMP_BOOT_OS_MAIN_VERSION"
     echo "Using iso $EMP_BOOT_OS_ISO_PATH"
     echo "Target dir $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
