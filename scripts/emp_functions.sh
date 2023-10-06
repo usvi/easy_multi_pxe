@@ -21,6 +21,24 @@ emp_print_provisioning_help()
 }
 
 
+
+emp_print_windows_template_creation_help()
+{
+    echo ""
+    echo "Example run:"
+    echo "./emp_create_windows_template.sh "
+    echo "--iso-file=/opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
+    echo "--template-dir=/opt/easy_multi_pxe/netbootassets/windows/template/x64 "
+    echo ""
+    echo "Or with short forms:"
+    echo "./emp_create_windows_template.sh "
+    echo "-i /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
+    echo "-t /opt/easy_multi_pxe/netbootassets/windows/template/x64 "
+    echo ""
+}
+
+
+
 emp_posix_shell_string_replace()
 {
     TAIL="$1"
@@ -478,7 +496,7 @@ emp_assert_provisioning_parameters()
     # of $EMP_BOOT_OS_ASSETS_PARENT
 
     case "$EMP_BOOT_OS_ASSETS_PARENT" in
-	"$EMP_ASSETS_ROOT_DIR/$TEMP_SCRIPT_OS_FAMILY"*)
+	"$EMP_ASSETS_ROOT_DIR/$TEMP_SCRIPT_OS_FAMILY/"*)
 	    EMP_BOOT_OS_FAMILY="$TEMP_SCRIPT_OS_FAMILY"
 	    ;;
 	*)
@@ -549,12 +567,12 @@ emp_collect_windows_template_creation_parameters()
     
     TEMP_OPEN=""
     # Example run (wrapped):
-    # ./emp_create_windows_template.sh.sh
+    # ./emp_create_windows_template.sh
     # --iso-file=/opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso
     # --template-dir=/opt/easy_multi_pxe/netbootassets/windows/template/x64
 
     # Or the same:
-    # ./emp_create_windows_template.sh.sh
+    # ./emp_create_windows_template.sh
     # -i /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso
     # -t /opt/easy_multi_pxe/netbootassets/windows/template/x64
 
@@ -617,6 +635,104 @@ emp_collect_windows_template_creation_parameters()
 	EMP_WIN_TEMPLATE_DIR_PATH="${TEMP_WIN_TEMPLATE_DIR_PATH}"
     fi
 }
+
+
+
+
+
+
+
+emp_assert_windows_template_creation_parameters()
+{
+    TEMP_RETVAL=0
+
+    if [ -z "$EMP_WIN_TEMPLATE_ISO_PATH" ]
+    then
+	echo "ERROR: No iso path given at all"
+	TEMP_RETVAL=1
+    fi
+
+    if [ -z "$EMP_WIN_TEMPLATE_DIR_PATH" ]
+    then
+	echo "ERROR: No template directory path given at all"
+	TEMP_RETVAL=1
+    fi
+
+    # Bailing out already on errors because would create too many messages
+    if [ "$TEMP_RETVAL" -ne 0 ]
+    then
+	emp_print_windows_template_creation_help
+	
+	exit "$TEMP_RETVAL"
+    fi
+
+    # Then the actual checks
+    if [ ! -f "$EMP_WIN_TEMPLATE_ISO_PATH" ]
+    then
+	echo "ERROR: Cannot find iso file $EMP_BOOT_OS_ISO_PATH"
+	TEMP_RETVAL=1
+    fi
+    
+    # Can be:
+    #
+    # $EMP_WIN_TEMPLATE_DIR_PATH=/opt/easy_multi_pxe/netbootassets/windows/template/x64
+    # $EMP_ASSETS_ROOT_DIR=/opt/easy_multi_pxe/netbootassets
+    #
+    # Conclusion:
+    # $EMP_ASSETS_ROOT_DIR must be the beginning of $EMP_WIN_TEMPLATE_DIR_PATH
+
+    case "$EMP_WIN_TEMPLATE_DIR_PATH" in
+	"$EMP_ASSETS_ROOT_DIR/"*)
+	    ;;
+	*)
+	    echo "ERROR: Given template directory path $EMP_WIN_TEMPLATE_DIR_PATH not under $EMP_ASSETS_ROOT_DIR"
+	    TEMP_RETVAL=1
+	    ;;
+    esac
+
+    # Can be:
+    #
+    # $EMP_WIN_TEMPLATE_DIR_PATH=/opt/easy_multi_pxe/netbootassets/windows/template/x64
+    #
+    # Conclusion:
+    # Must validate the last fragment to have correct arch.
+    
+    EMP_WIN_TEMPLATE_MAIN_ARCH="${EMP_WIN_TEMPLATE_DIR_PATH##*/}"
+
+    if [ "$EMP_WIN_TEMPLATE_MAIN_ARCH" != "x32" -a "$EMP_WIN_TEMPLATE_MAIN_ARCH" != "x64" ]
+    then
+	echo "ERROR: Wrong main architecture given in template directory path $EMP_WIN_TEMPLATE_DIR_PATH , expected x32 or x64"
+	TEMP_RETVAL=1
+    fi
+
+    # Can be:
+    #
+    # $EMP_ASSETS_ROOT_DIR=/opt/easy_multi_pxe/netbootassets
+    # $EMP_WIN_TEMPLATE_DIR_PATH=/opt/easy_multi_pxe/netbootassets/windows/template/x64
+    # $EMP_WIN_TEMPLATE_MAIN_ARCH=x64
+    #
+    # Conclusion:
+    # Must check that only 20.04 remains, so strip from
+    # $EMP_WIN_TEMPLATE_DIR_PATH beginning $EMP_ASSETS_ROOT_DIR/
+    # and from end /$EMP_WIN_TEMPLATE_MAIN_ARCH
+    # Then check that the results is exactly windows/template
+    TEMP_WIN_TEMPLATE_IDENTIFIER_REMAINDER="${EMP_WIN_TEMPLATE_DIR_PATH##$EMP_ASSETS_ROOT_DIR/}"
+    TEMP_WIN_TEMPLATE_IDENTIFIER_REMAINDER="${TEMP_WIN_TEMPLATE_IDENTIFIER_REMAINDER%%/$EMP_WIN_TEMPLATE_MAIN_ARCH}"
+
+    if [ "$TEMP_WIN_TEMPLATE_IDENTIFIER_REMAINDER" != "windows/template" ]
+    then
+	echo "ERROR: Unable to fully validate EMP_WIN_TEMPLATE_DIR_PATH as template directory path"
+	TEMP_RETVAL=1
+    fi
+
+    if [ "$TEMP_RETVAL" -ne 0 ]
+    then
+	emp_print_windows_template_creation_help
+	
+	exit 1
+    fi
+}
+
 
 
 
