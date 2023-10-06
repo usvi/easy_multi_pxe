@@ -222,6 +222,13 @@ emp_collect_provisioning_variables()
     
 }
 
+
+emp_collect_windows_template_creation_variables()
+{
+    EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS="u+rwX"
+}
+
+
 # We need config functions to read the variables we want
 # and assign them with program prefix. We dont want to put
 # strange prefixes to config files to confuse the user. Yes,
@@ -812,6 +819,30 @@ emp_ensure_provisioning_directories()
 }
 
 
+emp_ensure_windows_template_creation_directories()
+{
+    if [ ! -d "$EMP_WIN_TEMPLATE_DIR_PATH" ]
+    then
+	mkdir -p "$EMP_WIN_TEMPLATE_DIR_PATH"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to create template directory path $EMP_WIN_TEMPLATE_DIR_PATH"
+
+	    exit 1
+	fi
+	
+	chmod "$EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS" "$EMP_WIN_TEMPLATE_DIR_PATH"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to ensure chmod permissions for template directory path $EMP_WIN_TEMPLATE_DIR_PATH"
+
+	    exit 1
+	fi
+
+    fi
+}
 
 # This functions removes fragment we are going to remove if
 # they exist. We are also going to remove other fragments of

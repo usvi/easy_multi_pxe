@@ -63,10 +63,14 @@ then
     emp_collect_windows_template_creation_parameters "$@"
     emp_assert_windows_template_creation_parameters
 
-    #emp_collect_general_post_parameters_variables
-    #emp_collect_windows_template_creation_variables
+    emp_collect_general_post_parameters_variables
+    emp_collect_windows_template_creation_variables
     
-    #emp_ensure_windows_template_creation_directories
+    emp_ensure_windows_template_creation_directories
+
+    echo "Starting creating windows template for $EMP_WIN_TEMPLATE_MAIN_ARCH"
+    echo "Using iso $EMP_WIN_TEMPLATE_ISO_PATH"
+    echo "Target dir $EMP_WIN_TEMPLATE_DIR_PATH"
 fi
 
 

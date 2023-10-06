@@ -6,9 +6,6 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 . "$EMP_INC_COMMON"
 
 
-echo "$EMP_WIN_TEMPLATE_ISO_PATH"
-echo "$EMP_WIN_TEMPLATE_DIR_PATH"
-
 echo "Windows template debug exit"
 exit 1
 
