@@ -10,6 +10,7 @@ fi
 # Common core definitions
 EMP_TOPDIR="$(realpath "$(dirname ${EMP_INC_COMMON})"/..)"
 EMP_MAIN_CONFIG="$EMP_TOPDIR/conf/easy_multi_pxe.conf"
+EMP_ALL_COMMAND_LINE_PARAMS="$@"
 
 # Functions are always needed to be available, even if some
 # dependant variables dont exist. We just dont run the scripts
