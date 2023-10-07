@@ -61,7 +61,7 @@ then
     emp_collect_general_pre_parameters_variables
     emp_assert_general_directories
 
-    emp_collect_windows_template_creation_parameters "$@"
+    emp_collect_windows_template_creation_parameters
     emp_assert_windows_template_creation_parameters
 
     emp_collect_general_post_parameters_variables

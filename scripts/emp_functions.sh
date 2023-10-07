@@ -355,7 +355,6 @@ emp_scan_for_single_parameter()
 	    case "$TEMP_PARAM" in
 		"$TEMP_LONG_OPTION"=*)
 		    TEMP_FOUND_PARAM="${TEMP_PARAM##${TEMP_LONG_OPTION}=}"
-		    echo "FOUND $TEMP_FOUND_PARAM"
 		    ;;
 		*)
 		    # Here short form opening checks
@@ -369,6 +368,7 @@ emp_scan_for_single_parameter()
 	else
 	    # What we seek was open
 	    TEMP_FOUND_PARAM="$TEMP_PARAM"
+	    TEMP_OPEN=0
 	fi
     done
 
@@ -622,47 +622,9 @@ emp_collect_windows_template_creation_parameters()
     # -i /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso
     # -t /opt/easy_multi_pxe/netbootassets/windows/template/x64
 
-
-    for TEMP_PARAM in "$@"
-    do
-	if [ -z "$TEMP_OPEN" ]
-	then
-	    # Nothing open
-
-	    # Check first if long forms
-	    case "$TEMP_PARAM" in
-		--iso-file=*)
-		    TEMP_WIN_TEMPLATE_ISO_PATH="${TEMP_PARAM##--iso-file=}"
-		    ;;
-		--template-dir=*)
-		    TEMP_WIN_TEMPLATE_DIR_PATH="${TEMP_PARAM##--template-dir=}"
-		    ;;
-		*)
-		    # Here short form opening checks
-		    if [ "$TEMP_PARAM" = "-i" ]
-		    then
-			TEMP_OPEN="TEMP_WIN_TEMPLATE_ISO_PATH"
-
-		    elif [ "$TEMP_PARAM" = "-t" ]
-		    then
-			TEMP_OPEN="TEMP_WIN_TEMPLATE_DIR_PATH"
-		    fi
-		    ;;
-	    esac
-
-	else
-	    if [ "$TEMP_OPEN" = "TEMP_WIN_TEMPLATE_ISO_PATH" ]
-	    then
-		TEMP_WIN_TEMPLATE_ISO_PATH="$TEMP_PARAM"
-		TEMP_OPEN=""
-		
-	    elif [ "$TEMP_OPEN" = "TEMP_WIN_TEMPLATE_DIR_PATH" ]
-	    then
-		TEMP_WIN_TEMPLATE_DIR_PATH="$TEMP_PARAM"
-		TEMP_OPEN=""
-	    fi
-	fi
-    done
+    TEMP_WIN_TEMPLATE_ISO_PATH="$(emp_scan_for_single_parameter --iso-file -i)"
+    TEMP_WIN_TEMPLATE_DIR_PATH="$(emp_scan_for_single_parameter --template-dir -t)"
+    
     # Rudimentary checks for some values here after dereferencing
     # Separate function checks that params are fine in all ways
 
@@ -718,7 +680,7 @@ emp_assert_windows_template_creation_parameters()
 	echo "ERROR: Cannot find iso file $EMP_BOOT_OS_ISO_PATH"
 	TEMP_RETVAL=1
     fi
-    
+
     # Can be:
     #
     # $EMP_WIN_TEMPLATE_DIR_PATH=/opt/easy_multi_pxe/netbootassets/windows/template/x64
