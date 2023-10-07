@@ -44,7 +44,7 @@ then
     emp_collect_general_pre_parameters_variables
     emp_assert_general_directories
     
-    emp_collect_provisioning_parameters "$@"
+    emp_collect_provisioning_parameters
     emp_assert_provisioning_parameters
     
     emp_collect_general_post_parameters_variables

@@ -219,7 +219,6 @@ emp_collect_provisioning_variables()
         EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_FIRST="$EMP_BOOT_OS_FRAGMENT_PATH_X32_BIOS"
         EMP_NONMATCHING_BOOT_OS_FRAGMENT_PATH_SECOND="$EMP_BOOT_OS_FRAGMENT_PATH_X32_EFI"
     fi
-    
 }
 
 
@@ -398,77 +397,15 @@ emp_collect_provisioning_parameters()
     # -c no
     # -u no
 
+    TEMP_ISO_PATH="$(emp_scan_for_single_parameter --iso-file -i)"
+    TEMP_ASSETS_PARENT="$(emp_scan_for_single_parameter --assets-parent -a)"
+    TEMP_COPY_ISO="$(emp_scan_for_single_parameter --copy-iso -c)"
+    TEMP_UNPACK_ISO="$(emp_scan_for_single_parameter --unpack-iso -u)"
 
-
-    for TEMP_PARAM in "$@"
-    do
-	if [ -z "$TEMP_OPEN" ]
-	then
-	    # Nothing open
-
-	    # Check first if long forms
-	    case "$TEMP_PARAM" in
-		--iso-file=*)
-		    TEMP_ISO_PATH="${TEMP_PARAM##--iso-file=}"
-		    ;;
-		--assets-parent=*)
-		    TEMP_ASSETS_PARENT="${TEMP_PARAM##--assets-parent=}"
-		    ;;
-		--copy-iso=*)
-		    TEMP_COPY_ISO="${TEMP_PARAM##--copy-iso=}"
-		    ;;
-		--unpack-iso=*)
-		    TEMP_UNPACK_ISO="${TEMP_PARAM##--unpack-iso=}"
-		    ;;
-		*)
-		    # Here short form opening checks
-		    if [ "$TEMP_PARAM" = "-i" ]
-		    then
-			TEMP_OPEN="EMP_BOOT_OS_ISO_PATH"
-
-		    elif [ "$TEMP_PARAM" = "-a" ]
-		    then
-			TEMP_OPEN="EMP_BOOT_OS_ASSETS_PARENT"
-
-		    elif [ "$TEMP_PARAM" = "-c" ]
-		    then
-			TEMP_OPEN="EMP_COPY_ISO"
-			
-		    elif [ "$TEMP_PARAM" = "-u" ]
-		    then
-			TEMP_OPEN="EMP_UNPACK_ISO"
-		    fi
-		    ;;
-	    esac
-
-	else
-	    if [ "$TEMP_OPEN" = "EMP_BOOT_OS_ISO_PATH" ]
-	    then
-		TEMP_ISO_PATH="$TEMP_PARAM"
-		TEMP_OPEN=""
-		
-	    elif [ "$TEMP_OPEN" = "EMP_BOOT_OS_ASSETS_PARENT" ]
-	    then
-		TEMP_ASSETS_PARENT="$TEMP_PARAM"
-		TEMP_OPEN=""
-		
-	    elif [ "$TEMP_OPEN" = "EMP_COPY_ISO" ]
-	    then
-		TEMP_COPY_ISO="$TEMP_PARAM"
-		TEMP_OPEN=""
-		
-	    elif [ "$TEMP_OPEN" = "EMP_UNPACK_ISO" ]
-	    then
-		TEMP_UNPACK_ISO="$TEMP_PARAM"
-		TEMP_OPEN=""
-	    fi
-	fi
-    done
     # Rudimentary checks for some values here after dereferencing
     # Separate function checks that params are fine in all ways
 
     EMP_BOOT_OS_ISO_PATH="$(realpath "${TEMP_ISO_PATH}" 2>/dev/null)"
-
     # If path is garbage, variable is empty. In this
     # case assign the original, even if it was erroneous.
     if [ -z "$EMP_BOOT_OS_ISO_PATH" ]
