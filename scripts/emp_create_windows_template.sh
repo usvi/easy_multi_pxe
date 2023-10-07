@@ -5,8 +5,13 @@ EMP_INC_COMMON="$(dirname "$(realpath "${0}")")/emp_inc_common.sh"
 if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC_COMMON"; exit 1; fi
 . "$EMP_INC_COMMON"
 
+EMP_ALL_COMMAND_LINE_PARAMS="$@"
+emp_scan_for_single_parameter "--iso-file" "-i"
+
 
 echo "Windows template debug exit"
+
+
 exit 1
 
 

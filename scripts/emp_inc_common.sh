@@ -73,4 +73,3 @@ then
     echo "Target dir $EMP_WIN_TEMPLATE_DIR_PATH"
 fi
 
-

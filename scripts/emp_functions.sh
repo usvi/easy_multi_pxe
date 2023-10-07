@@ -337,6 +337,45 @@ emp_validate_php_fpm_location()
 }
 
 
+emp_scan_for_single_parameter()
+{
+    TEMP_LONG_OPTION="$1"
+    TEMP_SHORT_OPTION="$2"
+
+    TEMP_OPEN=0
+    TEMP_FOUND_PARAM=""
+    
+    for TEMP_PARAM in $EMP_ALL_COMMAND_LINE_PARAMS
+    do
+	if [ "$TEMP_OPEN" -eq 0 ]
+	then
+	    # Nothing open
+
+	    # Check first if long forms
+	    case "$TEMP_PARAM" in
+		"$TEMP_LONG_OPTION"=*)
+		    TEMP_FOUND_PARAM="${TEMP_PARAM##${TEMP_LONG_OPTION}=}"
+		    echo "FOUND $TEMP_FOUND_PARAM"
+		    ;;
+		*)
+		    # Here short form opening checks
+		    if [ "$TEMP_PARAM" = "$TEMP_SHORT_OPTION" ]
+		    then
+			TEMP_OPEN=1
+		    fi
+		    ;;
+	    esac
+
+	else
+	    # What we seek was open
+	    TEMP_FOUND_PARAM="$TEMP_PARAM"
+	fi
+    done
+
+    echo "$TEMP_FOUND_PARAM"
+}
+
+
 emp_collect_provisioning_parameters()
 {
     EMP_BOOT_OS_ISO_PATH=""
