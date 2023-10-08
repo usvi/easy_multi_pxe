@@ -952,7 +952,24 @@ emp_force_unmount_generic_mountpoint()
 emp_mount_iso()
 {
     echo -n "Mounting iso via loop device..."
-    mount -t auto -o loop "$EMP_BOOT_OS_ISO_PATH" "$EMP_MOUNT_POINT" > /dev/null 2>&1
+    TEMP_MOUNT_ISO_PATH=""
+
+    if [ "$EMP_OP" = "do_provisioning" ]
+    then
+	TEMP_MOUNT_ISO_PATH="$EMP_BOOT_OS_ISO_PATH"
+	
+    elif [ "$EMP_OP" = "create_windows_template" ]
+    then
+	TEMP_MOUNT_ISO_PATH="$EMP_WIN_TEMPLATE_ISO_PATH"
+    else
+	echo ""
+	echo "ERROR: Unknown operation, not known what iso to mount"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+    
+    mount -t auto -o loop "$TEMP_MOUNT_ISO_PATH" "$EMP_MOUNT_POINT" > /dev/null 2>&1
     
     if [ "$?" -ne 0 ]
     then

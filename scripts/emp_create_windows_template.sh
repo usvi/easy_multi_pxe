@@ -8,6 +8,8 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 #EMP_ALL_COMMAND_LINE_PARAMS="$@"
 #emp_scan_for_single_parameter "--iso-file" "-i"
 
+emp_force_unmount_generic_mountpoint
+emp_mount_iso
 
 echo "Windows template debug exit"
 
@@ -93,8 +95,6 @@ EOF
 
 
 # Actual start
-emp_remove_old_ipxe_fragment_remnants
-emp_remove_old_iso_if_needed
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_custom_analyze_assets_type
