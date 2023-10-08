@@ -85,7 +85,6 @@ EOF
 
 # Actual start
 emp_remove_old_ipxe_fragment_remnants
-emp_remove_old_iso_if_needed
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_custom_analyze_assets_type

@@ -182,6 +182,7 @@ emp_collect_general_pre_parameters_variables()
 emp_collect_general_post_parameters_variables()
 {
     EMP_BOOT_OS_ISO_FILE="$(basename "$EMP_BOOT_OS_ISO_PATH")"
+    EMP_BOOT_OS_ISO_SOURCE_PARENT="$(dirname "$EMP_BOOT_OS_ISO_PATH")"
 }
 
 
@@ -817,29 +818,6 @@ emp_remove_old_ipxe_fragment_remnants()
 }
 
 
-emp_remove_old_iso_if_needed()
-{
-    if [ "$EMP_COPY_ISO" = "Y" ]
-    then
-	# Remove only if iso exists
-	if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE" ]
-	then
-	    echo -n "Removing old iso before copying new..."
-	    rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE" > /dev/null 2>&1
-
-	    if [ "$?" -ne 0 ]
-	    then
-		echo ""
-		echo "ERROR: Unable to remove old iso file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
-
-		exit 1
-	    fi
-	    echo "done"
-	fi
-    fi
-}
-
-
 emp_remove_old_unpacked_if_needed()
 {
     if [ "$EMP_UNPACK_ISO" = "Y" ]
@@ -903,7 +881,7 @@ emp_calculate_progress_interval_time()
 }
 
 
-emp_copy_file_list()
+emp_copy_file_list_to_dir()
 {
     TEMP_PARAMS_TAIL="$@"
 
@@ -922,7 +900,8 @@ emp_copy_file_list()
     for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
     do
 	TEMP_FULL_SOURCE_PATH="$TEMP_SOURCE_DIR/$TEMP_SOURCE_REL_FILE_PATH"
-	TEMP_FULL_DESTINATION_PATH="$TEMP_DESTINATION_DIR/$TEMP_SOURCE_REL_FILE_PATH"
+	TEMP_DESTINATION_FILE="$(basename "$TEMP_FULL_SOURCE_PATH")"
+	TEMP_FULL_DESTINATION_PATH="$TEMP_DESTINATION_DIR/$TEMP_DESTINATION_FILE"
 	TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_FULL_SOURCE_PATH")"
 	TEMP_SOURCE_FILES_SIZE_TOTAL="$((TEMP_SOURCE_FILES_SIZE_TOTAL + TEMP_SOURCE_PATH_SIZE))"
 
@@ -939,7 +918,8 @@ emp_copy_file_list()
     for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
     do
 	TEMP_FULL_SOURCE_PATH="$TEMP_SOURCE_DIR/$TEMP_SOURCE_REL_FILE_PATH"
-	TEMP_FULL_DESTINATION_PATH="$TEMP_DESTINATION_DIR/$TEMP_SOURCE_REL_FILE_PATH"
+	TEMP_DESTINATION_FILE="$(basename "$TEMP_FULL_SOURCE_PATH")"
+	TEMP_FULL_DESTINATION_PATH="$TEMP_DESTINATION_DIR/$TEMP_DESTINATION_FILE"
 
 	TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_FULL_SOURCE_PATH")"
 	TEMP_PROGRESS_INTERVAL_TIME="$(emp_calculate_progress_interval_time "$TEMP_SOURCE_PATH_SIZE")"
@@ -950,10 +930,6 @@ emp_copy_file_list()
 
 	while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
 	do
-	    #echo "Calling sleep, then asking pid $TEMP_CP_PID"
-	    #sleep "$EMP_PROGRESS_INTERVAL_SECS" > /dev/null 2>&1
-	    #sleep 5 > /dev/null 2>&1
-	    #sleep 1 > /dev/null 2>&1
 	    sleep "$TEMP_PROGRESS_INTERVAL_TIME" > /dev/null 2>&1
 	    ps -p "$TEMP_CP_PID" > /dev/null 2>&1
 
@@ -993,7 +969,7 @@ emp_copy_file_list()
 
 emp_copy_simple_asset_files()
 {
-    emp_copy_file_list "$EMP_MOUNT_POINT" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" "" "Copying asset files..." "$EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST"
+    emp_copy_file_list_to_dir "$EMP_MOUNT_POINT" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" "" "Copying asset files..." "$EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST"
 
     if [ "$?" -ne 0 ]
     then
@@ -1010,11 +986,11 @@ emp_copy_iso_if_needed()
 {
     if [ "$EMP_COPY_ISO" = "Y" ]
     then
-	pv -w 80 -N "Copying iso" "$EMP_BOOT_OS_ISO_PATH" > "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
+	#pv -w 80 -N "Copying iso" "$EMP_BOOT_OS_ISO_PATH" > "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ISO_FILE"
+	emp_copy_file_list_to_dir "$EMP_BOOT_OS_ISO_SOURCE_PARENT" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" "" "Copying iso..." "$EMP_BOOT_OS_ISO_FILE"
 
 	if [ "$?" -ne 0 ]
 	then
-	    echo "ERROR: Unable to copy iso file $EMP_BOOT_OS_ISO_PATH to $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
 	    emp_force_unmount_generic_mountpoint
 
 	    exit 1
