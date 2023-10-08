@@ -969,9 +969,9 @@ emp_copy_file_list()
 
 		if [ "$TEMP_CP_RETVAL" -ne 0 ]
 		then
-		    # Fail case. End the no-endline echo. Caller writes
-		    # more specific error info.
+		    # Fail case.
 		    echo ""
+		    echo "ERROR: Failed copying $TEMP_FULL_SOURCE_PATH to $TEMP_FULL_DESTINATION_PATH"
 
 		    return "$TEMP_CP_RETVAL"
 		fi
@@ -995,52 +995,14 @@ emp_copy_simple_asset_files()
 {
     emp_copy_file_list "$EMP_MOUNT_POINT" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" "" "Copying asset files..." "$EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST"
 
-    echo "DEBUG exit"
-    exit 1
-    
-    TEMP_LIST_TAIL="$EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST"
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME"
+	emp_force_unmount_generic_mountpoint
 
-    while [ -n "$TEMP_LIST_TAIL" ]
-    do
-	TEMP_FILE_ISOPATH="${TEMP_LIST_TAIL%% *}"
-	TEMP_LIST_TAIL="${TEMP_LIST_TAIL#* }"
-
-	if [ "$TEMP_FILE_ISOPATH" = "$TEMP_LIST_TAIL" ]
-	then
-	    TEMP_LIST_TAIL=""
-	fi
-	TEMP_FILE_NAME="$(basename ${TEMP_FILE_ISOPATH})"
-
-	# Need to remove them first from assets if existing
-	if [ -f "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME" ]
-	then
-	    rm "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME" > /dev/null 2>&1
-	    
-	    if [ "$?" -ne 0 ]
-	    then
-		echo ""
-		echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME"
-		emp_force_unmount_generic_mountpoint
-		
-		exit 1
-	    fi
-	fi
-
-	# Next actually copy from path to file
-	# Decide by stat
-	emp_copy_file "$EMP_MOUNT_POINT/$TEMP_FILE_ISOPATH" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME"
-
-	if [ "$?" -ne 0 ]
-	then
-	    echo ""
-	    echo "ERROR: Unable to copy asset file from $EMP_MOUNT_POINT/$TEMP_FILE_ISOPATH to $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME "
-	    emp_force_unmount_generic_mountpoint
-	    
-	    exit 1
-	fi
-    done
-
-    echo "Done copying simple asset files"
+	exit 1
+    fi
 }
 
 
