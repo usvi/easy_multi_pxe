@@ -899,12 +899,6 @@ emp_copy_file_list()
     TEMP_SOURCE_FILES_SIZE_TOTAL=0
     TEMP_DESTINATION_FILES_SIZE_TOTAL=0
     
-    echo "TEMP_SOURCE_DIR $TEMP_SOURCE_DIR"
-    echo "TEMP_DESTINATION_DIR $TEMP_DESTINATION_DIR"
-    echo "TEMP_DESTINATION_CHMOD_PERMS $TEMP_DESTINATION_CHMOD_PERMS"
-    echo "TEMP_PRINT_PREFIX $TEMP_PRINT_PREFIX"
-    echo "TEMP_SOURCE_REL_FILE_PATH_LIST $TEMP_SOURCE_REL_FILE_PATH_LIST"
-
     # First need to calculate size
     # Also while at it, remove olds
     for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
@@ -916,7 +910,6 @@ emp_copy_file_list()
 
 	if [ -f "$TEMP_FULL_DESTINATION_PATH" ]
 	then
-	    echo "Removing $TEMP_FULL_DESTINATION_PATH"
 	    rm "$TEMP_FULL_DESTINATION_PATH" > /dev/null 2>&1
 	fi
     done
@@ -924,27 +917,21 @@ emp_copy_file_list()
     # Actual copy loop
     # Steps is shared
     TEMP_STEP=0
-    TEMP_RUN_STATUS="ongoing"
     
     for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
     do
 	TEMP_FULL_SOURCE_PATH="$TEMP_SOURCE_DIR/$TEMP_SOURCE_REL_FILE_PATH"
 	TEMP_FULL_DESTINATION_PATH="$TEMP_DESTINATION_DIR/$TEMP_SOURCE_REL_FILE_PATH"
 
-	echo "Copying from $TEMP_FULL_SOURCE_PATH to $TEMP_FULL_DESTINATION_PATH"
-	#EMP_PROGRESS_INTERVAL_SECS
-
-
-
-
-	echo "Launching new copy"
+	TEMP_RUN_STATUS="ongoing"
 	cp "$TEMP_FULL_SOURCE_PATH" "$TEMP_FULL_DESTINATION_PATH" > /dev/null 2>&1 &
 	TEMP_CP_PID="$!"
 
 	while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
 	do
+	    #echo "Calling sleep, then asking pid $TEMP_CP_PID"
 	    #sleep "$EMP_PROGRESS_INTERVAL_SECS" > /dev/null 2>&1
-	    sleep 1 > /dev/null 2>&1
+	    #sleep 5 > /dev/null 2>&1
 	    #sleep 1 > /dev/null 2>&1
 	    ps -p "$TEMP_CP_PID" > /dev/null 2>&1
 
@@ -958,8 +945,8 @@ emp_copy_file_list()
 		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
 		TEMP_TOTAL_PRINT_COPIED_SIZE="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
 		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_TOTAL_PRINT_COPIED_SIZE / TEMP_SOURCE_FILES_SIZE_TOTAL))"
-		#echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
-		echo "status 1 ${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+		#echo "status 1 ${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
 	    else
 		wait "$TEMP_CP_PID"
 		TEMP_CP_RETVAL="$?"
@@ -973,11 +960,12 @@ emp_copy_file_list()
 		    return "$TEMP_CP_RETVAL"
 		fi
 		# This copy was fine
+		TEMP_RUN_STATUS="file_finished"
 		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
 		TEMP_DESTINATION_FILES_SIZE_TOTAL="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
 		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_DESTINATION_FILES_SIZE_TOTAL / TEMP_SOURCE_FILES_SIZE_TOTAL))"
-		#echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
-		echo "status 2 ${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+		#echo "status 2 ${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
 		
 		#echo -n "\r${TEMP_PRINT_PREFIX}done\n"
 
@@ -991,16 +979,13 @@ emp_copy_file_list()
 
     done
 
+    echo "\r${TEMP_PRINT_PREFIX}done"
     
-
-    echo "Total source size $TEMP_SOURCE_FILES_SIZE_TOTAL"
 }
 
 
 emp_copy_simple_asset_files()
 {
-    echo "Copying simple asset files"
-
     emp_copy_file_list "$EMP_MOUNT_POINT" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" "" "Copying asset files..." "$EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST"
 
     echo "DEBUG exit"
