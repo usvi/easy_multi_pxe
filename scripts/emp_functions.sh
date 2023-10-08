@@ -73,27 +73,6 @@ emp_posix_shell_string_replace()
 }
 
 
-emp_copy_file()
-{
-    TEMP_SOURCE="$1"
-    TEMP_FULL_DESTINATION="$2"
-
-    TEMP_SOURCE_FILE_NAME="$(basename ${TEMP_SOURCE})"
-    TEMP_SIZE="$(stat --printf=%s ${TEMP_SOURCE})"
-    
-    if [ "$TEMP_SIZE" -lt "$EMP_COPY_WITH_PROGRESS_SIZE" ]
-    then
-	# Normal copy
-	cp "$TEMP_SOURCE" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1
-    else
-	# Progress copy
-	pv -w 80 -N "$TEMP_SOURCE_FILE_NAME" "$TEMP_SOURCE" > "$TEMP_FULL_DESTINATION"
-    fi
-
-    return "$?"
-}
-
-
 emp_count_path_data_size()
 {
     TEMP_DU_DIR="$1"
@@ -104,6 +83,131 @@ emp_count_path_data_size()
 }
 
 
+emp_calculate_progress_interval_time()
+{
+    TEMP_BLOCKS="$1"
+    TEMP_CALCULATED_INTERVAL_TIME_SECS="$((TEMP_BLOCKS / EMP_PROGRESS_UNIT_BLOCKS))"
+
+    if [ "$TEMP_CALCULATED_INTERVAL_TIME_SECS" -gt "$EMP_PROGRESS_MAX_SECS" ]
+    then
+	TEMP_CALCULATED_INTERVAL_TIME_SECS="$EMP_PROGRESS_MAX_SECS"
+    fi
+
+    echo "$TEMP_CALCULATED_INTERVAL_TIME_SECS"
+}
+
+
+emp_copy_file_list_to_dir()
+{
+    TEMP_PARAMS_TAIL="$@"
+
+    TEMP_SOURCE_DIR="$1"
+    TEMP_DESTINATION_DIR="$2"
+    TEMP_DESTINATION_CHMOD_PERMS="$3"
+    TEMP_PRINT_PREFIX="$4"
+    #TEMP_SOURCE_REL_FILE_PATH_LIST="${TEMP_PARAMS_TAIL#* }"
+    TEMP_SOURCE_REL_FILE_PATH_LIST="${TEMP_PARAMS_TAIL#*$TEMP_PRINT_PREFIX* }"
+
+    TEMP_SOURCE_FILES_SIZE_TOTAL=0
+    TEMP_DESTINATION_FILES_SIZE_TOTAL=0
+    
+    # First need to calculate size
+    # Also while at it, remove olds
+    for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
+    do
+	TEMP_FULL_SOURCE_PATH="$TEMP_SOURCE_DIR/$TEMP_SOURCE_REL_FILE_PATH"
+	TEMP_DESTINATION_FILE="$(basename "$TEMP_FULL_SOURCE_PATH")"
+	TEMP_FULL_DESTINATION_PATH="$TEMP_DESTINATION_DIR/$TEMP_DESTINATION_FILE"
+	TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_FULL_SOURCE_PATH")"
+	TEMP_SOURCE_FILES_SIZE_TOTAL="$((TEMP_SOURCE_FILES_SIZE_TOTAL + TEMP_SOURCE_PATH_SIZE))"
+
+	if [ -f "$TEMP_FULL_DESTINATION_PATH" ]
+	then
+	    rm "$TEMP_FULL_DESTINATION_PATH" > /dev/null 2>&1
+	    TEMP_RM_RETVAL="$?"
+	    
+	    if [ "$TEMP_RM_RETVAL" -ne 0 ]
+	    then
+		echo ""
+		echo "ERROR: Unable to remove old file $TEMP_FULL_DESTINATION_PATH"
+
+		return "$TEMP_RM_RETVAL"
+
+	    fi
+	fi
+    done
+
+    # Actual copy loop
+    # Steps is shared
+    TEMP_STEP=0
+    
+    for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
+    do
+	TEMP_FULL_SOURCE_PATH="$TEMP_SOURCE_DIR/$TEMP_SOURCE_REL_FILE_PATH"
+	TEMP_DESTINATION_FILE="$(basename "$TEMP_FULL_SOURCE_PATH")"
+	TEMP_FULL_DESTINATION_PATH="$TEMP_DESTINATION_DIR/$TEMP_DESTINATION_FILE"
+
+	TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_FULL_SOURCE_PATH")"
+	TEMP_PROGRESS_INTERVAL_TIME="$(emp_calculate_progress_interval_time "$TEMP_SOURCE_PATH_SIZE")"
+
+	TEMP_RUN_STATUS="ongoing"
+	cp "$TEMP_FULL_SOURCE_PATH" "$TEMP_FULL_DESTINATION_PATH" > /dev/null 2>&1 &
+	TEMP_CP_PID="$!"
+
+	while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
+	do
+	    sleep "$TEMP_PROGRESS_INTERVAL_TIME" > /dev/null 2>&1
+	    ps -p "$TEMP_CP_PID" > /dev/null 2>&1
+
+	    if [ "$?" -eq 0 ]
+	    then
+		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
+		TEMP_TOTAL_PRINT_COPIED_SIZE="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
+		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_TOTAL_PRINT_COPIED_SIZE / TEMP_SOURCE_FILES_SIZE_TOTAL))"
+		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+	    else
+		wait "$TEMP_CP_PID"
+		TEMP_CP_RETVAL="$?"
+
+		if [ "$TEMP_CP_RETVAL" -ne 0 ]
+		then
+		    # Fail case.
+		    echo ""
+		    echo "ERROR: Failed copying $TEMP_FULL_SOURCE_PATH to $TEMP_FULL_DESTINATION_PATH"
+
+		    return "$TEMP_CP_RETVAL"
+		fi
+
+		if [ "$TEMP_DESTINATION_CHMOD_PERMS" != "" ]
+		then
+		    chmod "$TEMP_DESTINATION_CHMOD_PERMS" "$TEMP_FULL_DESTINATION_PATH" > /dev/null 2>&1
+		    TEMP_CHMOD_RETVAL="$?"
+		    
+		    if [ "$TEMP_CHMOD_RETVAL" -ne 0 ]
+		    then
+			echo ""
+			echo "ERROR: Unable to set permissons for file TEMP_FULL_DESTINATION_PATH"
+
+			return "$TEMP_CHMOD_RETVAL"
+		    fi
+		fi
+		
+		# This copy was fine
+		TEMP_RUN_STATUS="file_finished"
+		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
+		TEMP_DESTINATION_FILES_SIZE_TOTAL="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
+		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_DESTINATION_FILES_SIZE_TOTAL / TEMP_SOURCE_FILES_SIZE_TOTAL))"
+		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+	    fi
+
+	    TEMP_STEP="$((TEMP_STEP + 1))"
+	done
+    done
+
+    echo "\r${TEMP_PRINT_PREFIX}done"
+}
+
+
 emp_copy_directory()
 {
     TEMP_SOURCE="$1"
@@ -111,54 +215,73 @@ emp_copy_directory()
     TEMP_DESTINATION_CHMOD_PERMS="$3"
     TEMP_PRINT_PREFIX="$4"
 
-    TEMP_SIZE_SOURCE="$(emp_count_path_data_size "$TEMP_SOURCE")"
-    # We can add later fancy progress thingy here
-    cp -r "$TEMP_SOURCE" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1 &
-    TEMP_CP_PID="$!"
+    TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_SOURCE")"
+    TEMP_PROGRESS_INTERVAL_TIME="$(emp_calculate_progress_interval_time "$TEMP_SOURCE_PATH_SIZE")"
+    TEMP_RUN_STATUS="ongoing"
     TEMP_STEP=0
 
-    while [ "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
+    if [ -d "$TEMP_FULL_DESTINATION" ]
+    then
+	rm -r "$TEMP_FULL_DESTINATION"
+	TEMP_RM_RETVAL="$?"
+
+	if [ "$TEMP_RM_RETVAL" -ne 0 ]
+	then
+	    echo ""
+	    echo "ERROR: Unable to remove old directory $TEMP_FULL_DESTINATION_PATH"
+
+	    return "$TEMP_RM_RETVAL"
+	fi
+    fi
+    
+    cp -r "$TEMP_SOURCE" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1 &
+    TEMP_CP_PID="$!"
+
+    while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
     do
 	sleep "$EMP_PROGRESS_INTERVAL_SECS" > /dev/null 2>&1
 	ps -p "$TEMP_CP_PID" > /dev/null 2>&1
 
 	if [ "$?" -eq 0 ]
 	then
-	    #echo "Still running"
-	    TEMP_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION")"
-	    #echo "$TEMP_SIZE_DESTINATION / $TEMP_SIZE_SOURCE"
-	    TEMP_PERCENTAGE="$(( 100 * TEMP_SIZE_DESTINATION / TEMP_SIZE_SOURCE))"
-	    #echo "$TEMP_PERCENTAGE"
-	    echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_PERCENTAGE}%"
+	    TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION")"
+	    TEMP_TOTAL_PERCENTAGE="$(( 100 * TEMP_PATH_SIZE_DESTINATION / TEMP_SOURCE_PATH_SIZE))"
+	    echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
 	else
 	    wait "$TEMP_CP_PID"
 	    TEMP_CP_RETVAL="$?"
 
 	    if [ "$TEMP_CP_RETVAL" -ne 0 ]
 	    then
-		# Fail case. End the no-endline echo. Caller writes
-		# more specific error info.
+		# Fail case
 		echo ""
+		echo "ERROR: Failed copying $TEMP_SOURCE to $TEMP_FULL_DESTINATION"
 
 		return "$TEMP_CP_RETVAL"
 	    fi
-
+	    # Copying was fine
+	    TEMP_RUN_STATUS="file_finished"
 	    echo -n "\r${TEMP_PRINT_PREFIX}done\n"
-
-	    TEMP_STEP="$((EMP_PROGRESS_MAX_STEPS + 1))"
 	fi
 
 	TEMP_STEP="$((TEMP_STEP + 1))"
     done
 
-    if [ "$?" -ne 0 ]
+    if [ "$TEMP_DESTINATION_CHMOD_PERMS" != "" ]
     then
-	return "$?"
+	chmod -R "$TEMP_DESTINATION_CHMOD_PERMS" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1
+	TEMP_CHMOD_RETVAL="$?"
+	
+	if [ "$TEMP_CHMOD_RETVAL" -ne 0 ]
+	then
+	    echo ""
+	    echo "ERROR: Unable to set permissons for directory $TEMP_FULL_DESTINATION_PATH"
+
+	    return "$TEMP_CHMOD_RETVAL"
+	fi
     fi
 
-    chmod -R "$TEMP_DESTINATION_CHMOD_PERMS" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1
-
-    return "$?"
+    return 0
 }
 
 
@@ -818,30 +941,6 @@ emp_remove_old_ipxe_fragment_remnants()
 }
 
 
-emp_remove_old_unpacked_if_needed()
-{
-    if [ "$EMP_UNPACK_ISO" = "Y" ]
-    then
-	# Remove only if iso exists
-	if [ -d "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR" ]
-	then
-	    echo -n "Removing old unpacked dir before copying new..."
-	    rm -r "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"  > /dev/null 2>&1
-	    
-	    if [ "$?" -ne 0 ]
-	    then
-		echo ""
-		echo "ERROR: Unable to remove old unpacked dir $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
-
-		exit 1
-	    fi
-	    echo "done"
-	fi
-    fi
-}
-
-
-
 emp_force_unmount_generic_mountpoint()
 {
     sync
@@ -867,104 +966,6 @@ emp_mount_iso()
 }
 
 
-emp_calculate_progress_interval_time()
-{
-    TEMP_BLOCKS="$1"
-    TEMP_CALCULATED_INTERVAL_TIME_SECS="$((TEMP_BLOCKS / EMP_PROGRESS_UNIT_BLOCKS))"
-
-    if [ "$TEMP_CALCULATED_INTERVAL_TIME_SECS" -gt "$EMP_PROGRESS_MAX_SECS" ]
-    then
-	TEMP_CALCULATED_INTERVAL_TIME_SECS="$EMP_PROGRESS_MAX_SECS"
-    fi
-
-    echo "$TEMP_CALCULATED_INTERVAL_TIME_SECS"
-}
-
-
-emp_copy_file_list_to_dir()
-{
-    TEMP_PARAMS_TAIL="$@"
-
-    TEMP_SOURCE_DIR="$1"
-    TEMP_DESTINATION_DIR="$2"
-    TEMP_DESTINATION_CHMOD_PERMS="$3"
-    TEMP_PRINT_PREFIX="$4"
-    #TEMP_SOURCE_REL_FILE_PATH_LIST="${TEMP_PARAMS_TAIL#* }"
-    TEMP_SOURCE_REL_FILE_PATH_LIST="${TEMP_PARAMS_TAIL#*$TEMP_PRINT_PREFIX* }"
-
-    TEMP_SOURCE_FILES_SIZE_TOTAL=0
-    TEMP_DESTINATION_FILES_SIZE_TOTAL=0
-    
-    # First need to calculate size
-    # Also while at it, remove olds
-    for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
-    do
-	TEMP_FULL_SOURCE_PATH="$TEMP_SOURCE_DIR/$TEMP_SOURCE_REL_FILE_PATH"
-	TEMP_DESTINATION_FILE="$(basename "$TEMP_FULL_SOURCE_PATH")"
-	TEMP_FULL_DESTINATION_PATH="$TEMP_DESTINATION_DIR/$TEMP_DESTINATION_FILE"
-	TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_FULL_SOURCE_PATH")"
-	TEMP_SOURCE_FILES_SIZE_TOTAL="$((TEMP_SOURCE_FILES_SIZE_TOTAL + TEMP_SOURCE_PATH_SIZE))"
-
-	if [ -f "$TEMP_FULL_DESTINATION_PATH" ]
-	then
-	    rm "$TEMP_FULL_DESTINATION_PATH" > /dev/null 2>&1
-	fi
-    done
-
-    # Actual copy loop
-    # Steps is shared
-    TEMP_STEP=0
-    
-    for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
-    do
-	TEMP_FULL_SOURCE_PATH="$TEMP_SOURCE_DIR/$TEMP_SOURCE_REL_FILE_PATH"
-	TEMP_DESTINATION_FILE="$(basename "$TEMP_FULL_SOURCE_PATH")"
-	TEMP_FULL_DESTINATION_PATH="$TEMP_DESTINATION_DIR/$TEMP_DESTINATION_FILE"
-
-	TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_FULL_SOURCE_PATH")"
-	TEMP_PROGRESS_INTERVAL_TIME="$(emp_calculate_progress_interval_time "$TEMP_SOURCE_PATH_SIZE")"
-
-	TEMP_RUN_STATUS="ongoing"
-	cp "$TEMP_FULL_SOURCE_PATH" "$TEMP_FULL_DESTINATION_PATH" > /dev/null 2>&1 &
-	TEMP_CP_PID="$!"
-
-	while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
-	do
-	    sleep "$TEMP_PROGRESS_INTERVAL_TIME" > /dev/null 2>&1
-	    ps -p "$TEMP_CP_PID" > /dev/null 2>&1
-
-	    if [ "$?" -eq 0 ]
-	    then
-		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
-		TEMP_TOTAL_PRINT_COPIED_SIZE="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
-		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_TOTAL_PRINT_COPIED_SIZE / TEMP_SOURCE_FILES_SIZE_TOTAL))"
-		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
-	    else
-		wait "$TEMP_CP_PID"
-		TEMP_CP_RETVAL="$?"
-
-		if [ "$TEMP_CP_RETVAL" -ne 0 ]
-		then
-		    # Fail case.
-		    echo ""
-		    echo "ERROR: Failed copying $TEMP_FULL_SOURCE_PATH to $TEMP_FULL_DESTINATION_PATH"
-
-		    return "$TEMP_CP_RETVAL"
-		fi
-		# This copy was fine
-		TEMP_RUN_STATUS="file_finished"
-		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
-		TEMP_DESTINATION_FILES_SIZE_TOTAL="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
-		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_DESTINATION_FILES_SIZE_TOTAL / TEMP_SOURCE_FILES_SIZE_TOTAL))"
-		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
-	    fi
-
-	    TEMP_STEP="$((TEMP_STEP + 1))"
-	done
-    done
-
-    echo "\r${TEMP_PRINT_PREFIX}done"
-}
 
 
 emp_copy_simple_asset_files()
