@@ -5,105 +5,50 @@ EMP_INC_COMMON="$(dirname "$(realpath "${0}")")/emp_inc_common.sh"
 if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC_COMMON"; exit 1; fi
 . "$EMP_INC_COMMON"
 
-#EMP_ALL_COMMAND_LINE_PARAMS="$@"
-#emp_scan_for_single_parameter "--iso-file" "-i"
-
-emp_force_unmount_generic_mountpoint
-emp_mount_iso
-
-echo "Windows template debug exit"
 
 
-exit 1
-
-
-emp_custom_analyze_assets_type()
+emp_custom_analyze_assets()
 {
-    echo -n "Analyzing assets type..."
+    echo -n "Analyzing assets..."
 
-    if [ -f "$EMP_MOUNT_POINT/casper/vmlinuz" -a -f "$EMP_MOUNT_POINT/casper/initrd" ]
+    EMP_WIN_TEMPLATE_WIM_ARCH="$(wiminfo "$EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH" 1 | grep "Architecture" | sed 's/Architecture:\s*//')"
+
+    if [ "$EMP_WIN_TEMPLATE_WIM_ARCH" = "x86_64" ]
     then
-	EMP_BOOT_OS_ASSETS_TYPE="casper"
-	EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="casper/vmlinuz casper/initrd"
-	
-    elif [ -f "$EMP_MOUNT_POINT/linux" -a -f "$EMP_MOUNT_POINT/initrd.gz" ]
+	EMP_WIN_TEMPLATE_WIM_ARCH="x64"
+    fi
+
+    if [ "$EMP_WIN_TEMPLATE_MAIN_ARCH" != "$EMP_WIN_TEMPLATE_WIM_ARCH" ]
     then
-	EMP_BOOT_OS_ASSETS_TYPE="plain"
-	EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="linux initrd.gz"
-	
-    else
 	echo ""
-        echo "ERROR: Unable to analyze assets type for  boot methodology of the iso file"
+	echo "ERROR: Wim architecture $EMP_WIN_TEMPLATE_MAIN_ARCH differs from what was given as path ( $EMP_WIN_TEMPLATE_WIM_ARCH )"
 	emp_force_unmount_generic_mountpoint
-	
-        exit 1
+
+	exit 1
     fi
 
-    echo "$EMP_BOOT_OS_ASSETS_TYPE"
+    TEMP_TOTAL_BYTES="$(wiminfo "$EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH" 1 | grep "Total Bytes" | sed 's/[[:alnum:] ]*:\s*//')"
+    TEMP_HARD_LINK_BYTES="$(wiminfo "$EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH" 1 | grep "Hard Link Bytes" | sed 's/[[:alnum:] ]*:\s*//')"
+    EMP_WIN_TEMPLATE_SIZE_BYTES_FIRST="$((TEMP_TOTAL_BYTES - TEMP_HARD_LINK_BYTES))"
+
+    TEMP_TOTAL_BYTES="$(wiminfo "$EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH" 2 | grep "Total Bytes" | sed 's/[[:alnum:] ]*:\s*//')"
+    TEMP_HARD_LINK_BYTES="$(wiminfo "$EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH" 2 | grep "Hard Link Bytes" | sed 's/[[:alnum:] ]*:\s*//')"
+    
+    EMP_WIN_TEMPLATE_SIZE_BYTES_SECOND="$((TEMP_TOTAL_BYTES - TEMP_HARD_LINK_BYTES))"
+    echo "$EMP_WIN_TEMPLATE_WIM1_SIZE_BYTES $EMP_WIN_TEMPLATE_WIM2_SIZE_BYTES"
 }
 
 
-
-emp_custom_create_single_ipxe_fragment()
-{
-    TEMP_PARAM_IPXE_FRAGMENT="$1"
-
-    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
-    then
-        cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
-set http_iso \${http_base}/$EMP_BOOT_OS_ISO_FILE
-kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 root=/dev/ram0 initrd=initrd ip=dhcp url=\${http_iso} cloud-config-url=/dev/null
-initrd \${http_base}/initrd
-boot
-sleep 5
-goto end
-EOF
-        if [ "$?" -ne 0 ]
-        then
-            echo ""
-            echo "ERROR: Unable to create ipxe fragment $TEMP_PARAM_IPXE_FRAGMENT"
-
-            exit 1
-        fi
-    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "plain" ]
-    then
-	# Plain variant of the Ubuntu
-        cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
-kernel \${http_base}/linux nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp
-initrd \${http_base}/initrd.gz
-boot
-sleep 5
-goto end
-EOF
-        if [ "$?" -ne 0 ]
-        then
-            echo ""
-            echo "ERROR: Unable to create ipxe fragment $TEMP_PARAM_IPXE_FRAGMENT"
-
-            exit 1
-        fi
-    else
-	echo ""
-        echo "ERROR: Unable to determine boot methodology of the iso file"
-
-        exit 1
-    fi
-}
 
 
 
 # Actual start
+emp_remove_old_wim_remnants
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
-emp_custom_analyze_assets_type
-emp_copy_simple_asset_files
-emp_copy_iso_if_needed
-# Include driver copying later and especially in debian
-emp_unmount_and_sync
-emp_create_ipxe_fragments
-
+emp_custom_analyze_assets
+emp_extract_wims
+#emp_unmount_and_sync
 
 echo "ALL DONE"
 

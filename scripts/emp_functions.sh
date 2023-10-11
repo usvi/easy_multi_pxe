@@ -353,6 +353,7 @@ emp_collect_provisioning_variables()
 emp_collect_windows_template_creation_variables()
 {
     EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS="u+rwX"
+    EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH="$EMP_MOUNT_POINT/sources/boot.wim"
 }
 
 
@@ -692,7 +693,6 @@ emp_collect_windows_template_creation_parameters()
     
     # Rudimentary checks for some values here after dereferencing
     # Separate function checks that params are fine in all ways
-
     EMP_WIN_TEMPLATE_ISO_PATH="$(realpath "${TEMP_WIN_TEMPLATE_ISO_PATH}" 2>/dev/null)"
     # If path is garbage, variable is empty. In this
     # case assign the original, even if it was erroneous.
@@ -707,6 +707,7 @@ emp_collect_windows_template_creation_parameters()
     then
 	EMP_WIN_TEMPLATE_DIR_PATH="${TEMP_WIN_TEMPLATE_DIR_PATH}"
     fi
+    echo "collecting from $EMP_WIN_TEMPLATE_DIR_PATH"
 }
 
 
@@ -887,6 +888,9 @@ emp_ensure_provisioning_directories()
 
 emp_ensure_windows_template_creation_directories()
 {
+
+    echo "$EMP_WIN_TEMPLATE_DIR_PATH"
+    
     if [ ! -d "$EMP_WIN_TEMPLATE_DIR_PATH" ]
     then
 	mkdir -p "$EMP_WIN_TEMPLATE_DIR_PATH"
@@ -1074,33 +1078,35 @@ emp_create_ipxe_fragments()
 }
 
 
-check_iso_file()
+emp_remove_old_wim_remnants()
 {
-    if [ ! -f "$1" ]
+    touch "$EMP_WIM_DIR_FIRST/foobar" > /dev/null 2>&1
+    touch "$EMP_WIM_DIR_SECOND/foobar" > /dev/null 2>&1
+
+    rm -r "$EMP_WIM_DIR_FIRST/"* > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
     then
-	echo "ERROR: Given iso file $1 does not exist"
+	echo "ERROR: Unable to remove old wim remnants from $EMP_WIM_DIR_FIRST"
+
+	exit 1
+    fi
+    
+    rm -r "$EMP_WIM_DIR_SECOND/"* > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to remove old wim remnants from $EMP_WIM_DIR_SECOND"
 
 	exit 1
     fi
 }
 
 
-check_assets_prefix_dir()
+
+emp_extract_wims()
 {
-    if [ ! -d "$1" ]
-    then
-	echo "ERROR: Given boot OS assets prefix directory $1 does not exist"
-
-	exit 1
-    fi
-}
-
-
-check_copy_iso()
-{
-    if [ "$1" = "nocopyiso" ]
-    then
-	COPY_ISO="no"
-    fi
+    echo "extract"
+    #wimapply
 }
 
