@@ -77,7 +77,7 @@ emp_count_path_data_size()
 {
     TEMP_DU_DIR="$1"
 
-    TEMP_DU_OUT="$(du --apparent-size -s "${TEMP_DU_DIR}" 2>/dev/null)"
+    TEMP_DU_OUT="$(du --apparent-size -b -s "${TEMP_DU_DIR}" 2>/dev/null)"
     TEMP_SIZE="${TEMP_DU_OUT%%	*}" # Literal tab!!
     echo "$TEMP_SIZE"
 }
@@ -85,8 +85,8 @@ emp_count_path_data_size()
 
 emp_calculate_progress_interval_time()
 {
-    TEMP_BLOCKS="$1"
-    TEMP_CALCULATED_INTERVAL_TIME_SECS="$((TEMP_BLOCKS / EMP_PROGRESS_UNIT_BLOCKS))"
+    TEMP_BYTES="$1"
+    TEMP_CALCULATED_INTERVAL_TIME_SECS="$((TEMP_BYTES / EMP_PROGRESS_UNIT_BYTES))"
 
     if [ "$TEMP_CALCULATED_INTERVAL_TIME_SECS" -gt "$EMP_PROGRESS_MAX_SECS" ]
     then
@@ -105,7 +105,6 @@ emp_copy_file_list_to_dir()
     TEMP_DESTINATION_DIR="$2"
     TEMP_DESTINATION_CHMOD_PERMS="$3"
     TEMP_PRINT_PREFIX="$4"
-    #TEMP_SOURCE_REL_FILE_PATH_LIST="${TEMP_PARAMS_TAIL#* }"
     TEMP_SOURCE_REL_FILE_PATH_LIST="${TEMP_PARAMS_TAIL#*$TEMP_PRINT_PREFIX* }"
 
     TEMP_SOURCE_FILES_SIZE_TOTAL=0
@@ -239,7 +238,7 @@ emp_copy_directory()
 
     while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
     do
-	sleep "$EMP_PROGRESS_INTERVAL_SECS" > /dev/null 2>&1
+	sleep "$TEMP_PROGRESS_INTERVAL_TIME" > /dev/null 2>&1
 	ps -p "$TEMP_CP_PID" > /dev/null 2>&1
 
 	if [ "$?" -eq 0 ]
@@ -287,13 +286,9 @@ emp_copy_directory()
 
 emp_collect_general_pre_parameters_variables()
 {
-    EMP_COPY_WITH_PROGRESS_SIZE=10000000
-    EMP_PROGRESS_INTERVAL_SECS=5
     EMP_PROGRESS_MAX_STEPS=720 # 720 times 5 s step is 1 hour.
-
-    EMP_PROGRESS_UNIT_BLOCKS=10000
-    EMP_PROGRESS_UNIT_SECS=1
     EMP_PROGRESS_MAX_SECS=5
+    EMP_PROGRESS_UNIT_BYTES=10485760
     
     EMP_MOUNT_POINT="$EMP_TOPDIR/work/mount"
     EMP_WIM_DIRS_PARENT="$EMP_TOPDIR/work/wims"
@@ -707,13 +702,7 @@ emp_collect_windows_template_creation_parameters()
     then
 	EMP_WIN_TEMPLATE_DIR_PATH="${TEMP_WIN_TEMPLATE_DIR_PATH}"
     fi
-    echo "collecting from $EMP_WIN_TEMPLATE_DIR_PATH"
 }
-
-
-
-
-
 
 
 emp_assert_windows_template_creation_parameters()
@@ -1103,10 +1092,138 @@ emp_remove_old_wim_remnants()
 }
 
 
-
-emp_extract_wims()
+emp_count_wim_index_bytes_size()
 {
-    echo "extract"
-    #wimapply
+    TEMP_WIM_FILE="$1"
+    TEMP_WIM_INDEX="$2"
+    TEMP_TOTAL_BYTES="$(wiminfo "$TEMP_WIM_FILE" "$TEMP_WIM_INDEX" | grep "Total Bytes" | sed 's/[[:alnum:] ]*:\s*//')"
+    TEMP_HARD_LINK_BYTES="$(wiminfo "$TEMP_WIM_FILE" "$TEMP_WIM_INDEX" | grep "Hard Link Bytes" | sed 's/[[:alnum:] ]*:\s\
+*//')"
+    TEMP_WIM_FINAL_SIZE="$((TEMP_TOTAL_BYTES - TEMP_HARD_LINK_BYTES))"
+
+    echo "$TEMP_WIM_FINAL_SIZE"
+
+    return 0
+}
+
+
+emp_extract_wim_list()
+{
+    TEMP_PARAMS_TAIL="$@"
+
+    TEMP_WIM_FILE="$1"
+    TEMP_DESTINATION_CHMOD_PERMS="$2"
+    TEMP_PRINT_PREFIX="$3"
+    TEMP_WIM_INDEX_LIST="${TEMP_PARAMS_TAIL#*$TEMP_PRINT_PREFIX* }"
+    
+    TEMP_SOURCE_FILES_SIZE_TOTAL=0
+    TEMP_DESTINATION_FILES_SIZE_TOTAL=0
+    
+    # First need to calculate size
+    # Also while at it, remove old destinations
+    for TEMP_WIM_INDEX in $TEMP_WIM_INDEX_LIST
+    do
+	# TEMP_WIM_FILE already given as parameter
+	TEMP_FULL_DESTINATION_PATH="$EMP_WIM_DIRS_PARENT/$TEMP_WIM_INDEX"
+	TEMP_SOURCE_WIM_SIZE="$(emp_count_wim_index_bytes_size "$TEMP_WIM_FILE" "$TEMP_WIM_INDEX")"
+	TEMP_SOURCE_FILES_SIZE_TOTAL="$((TEMP_SOURCE_FILES_SIZE_TOTAL + TEMP_SOURCE_WIM_SIZE))"
+
+	if [ ! -d "$TEMP_FULL_DESTINATION_PATH" ]
+	then
+	    echo ""
+	    echo "ERROR: Needed wim file path $TEMP_FULL_DESTINATION_PATH does not exist."
+
+	    return 1
+	else
+	    # Need to remove everything in it
+	    touch "$TEMP_FULL_DESTINATION_PATH/foobar" > /dev/null 2>&1
+
+	    rm -r "$TEMP_FULL_DESTINATION_PATH"/* > /dev/null 2>&1
+
+	    if [ "$?" -ne 0 ]
+	    then
+		echo ""
+		echo "ERROR: Unable to remove old files from wim path $TEMP_FULL_DESTINATION_PATH"
+
+		return 1
+	    fi
+	fi
+    done
+
+    # Actual copy loop
+    # Steps is shared
+    TEMP_STEP=0
+    
+    for TEMP_WIM_INDEX in $TEMP_WIM_INDEX_LIST
+    do
+	# TEMP_WIM_FILE already given as parameter
+	TEMP_FULL_DESTINATION_PATH="$EMP_WIM_DIRS_PARENT/$TEMP_WIM_INDEX"
+	TEMP_SOURCE_WIM_SIZE="$(emp_count_wim_index_bytes_size "$TEMP_WIM_FILE" "$TEMP_WIM_INDEX")"
+	#TEMP_SOURCE_FILES_SIZE_TOTAL="$((TEMP_SOURCE_FILES_SIZE_TOTAL + TEMP_SOURCE_WIM_SIZE))"
+	TEMP_PROGRESS_INTERVAL_TIME="$(emp_calculate_progress_interval_time "$TEMP_SOURCE_WIM_SIZE")"
+
+	TEMP_RUN_STATUS="ongoing"
+	wimapply "$TEMP_WIM_FILE" "$TEMP_WIM_INDEX" "$TEMP_FULL_DESTINATION_PATH" > /dev/null 2>&1 &
+	TEMP_CP_PID="$!"
+
+	while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
+	do
+	    sleep "$TEMP_PROGRESS_INTERVAL_TIME" > /dev/null 2>&1
+	    ps -p "$TEMP_CP_PID" > /dev/null 2>&1
+
+	    if [ "$?" -eq 0 ]
+	    then
+		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
+		TEMP_TOTAL_PRINT_COPIED_SIZE="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
+		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_TOTAL_PRINT_COPIED_SIZE / TEMP_SOURCE_FILES_SIZE_TOTAL))"
+
+		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+		
+	    else
+		wait "$TEMP_CP_PID"
+		TEMP_CP_RETVAL="$?"
+
+		if [ "$TEMP_CP_RETVAL" -ne 0 ]
+		then
+		    # Fail case.
+		    echo ""
+		    echo "ERROR: Failed extracting $TEMP_WIM_FILE index $TEMP_WIM_INDEX to $TEMP_FULL_DESTINATION_PATH"
+
+		    return "$TEMP_CP_RETVAL"
+		fi
+
+		if [ "$TEMP_DESTINATION_CHMOD_PERMS" != "" ]
+		then
+		    chmod -R "$TEMP_DESTINATION_CHMOD_PERMS" "$TEMP_FULL_DESTINATION_PATH" > /dev/null 2>&1
+		    TEMP_CHMOD_RETVAL="$?"
+		    
+		    if [ "$TEMP_CHMOD_RETVAL" -ne 0 ]
+		    then
+			echo ""
+			echo "ERROR: Unable to set permissions for directory $TEMP_FULL_DESTINATION_PATH"
+
+			return "$TEMP_CHMOD_RETVAL"
+		    fi
+		fi
+
+		# This copy was fine
+		TEMP_RUN_STATUS="file_finished"
+		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
+		TEMP_DESTINATION_FILES_SIZE_TOTAL="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
+		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_DESTINATION_FILES_SIZE_TOTAL / TEMP_SOURCE_FILES_SIZE_TOTAL))"
+		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+	    fi
+
+	    TEMP_STEP="$((TEMP_STEP + 1))"
+	done
+    done
+
+    echo "\r${TEMP_PRINT_PREFIX}done"
+}
+
+
+emp_extract_original_wims()
+{
+    emp_extract_wim_list "$EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH" "$EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS" "Extracting base wims..." 1 2
 }
 
