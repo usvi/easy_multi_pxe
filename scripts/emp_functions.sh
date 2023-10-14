@@ -204,6 +204,8 @@ emp_copy_file_list_to_dir()
     done
 
     echo "\r${TEMP_PRINT_PREFIX}done"
+
+    return 0
 }
 
 
@@ -294,6 +296,8 @@ emp_collect_general_pre_parameters_variables()
     EMP_WIM_DIRS_PARENT="$EMP_TOPDIR/work/wims"
     EMP_WIM_DIR_FIRST="$EMP_WIM_DIRS_PARENT/1"
     EMP_WIM_DIR_SECOND="$EMP_WIM_DIRS_PARENT/2"
+    EMP_WIM_FILE_NAME="boot.wim"
+    EMP_WIM_FILE_ISO_SUBDIR="sources"
 }
 
 
@@ -348,7 +352,8 @@ emp_collect_provisioning_variables()
 emp_collect_windows_template_creation_variables()
 {
     EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS="u+rwX"
-    EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH="$EMP_MOUNT_POINT/sources/boot.wim"
+    EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH="$EMP_MOUNT_POINT/$EMP_WIM_FILE_ISO_SUBDIR/$EMP_WIM_FILE_NAME"
+    EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH="$EMP_WIM_DIRS_PARENT/$EMP_WIM_FILE_NAME"
 }
 
 
@@ -1219,11 +1224,50 @@ emp_extract_wim_list()
     done
 
     echo "\r${TEMP_PRINT_PREFIX}done"
+
+    return 0
 }
+
+
+
+
+emp_copy_work_wim()
+{
+    emp_copy_file_list_to_dir "$EMP_MOUNT_POINT/$EMP_WIM_FILE_ISO_SUBDIR" "$EMP_WIM_DIRS_PARENT" "$EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS" "Copying wim as work item..." "$EMP_WIM_FILE_NAME"
+
+    if [ "$?" -ne 0 ]
+    then
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+}
+
+
+emp_remove_setup_from_wim()
+{
+    echo -n "Removing setup files from wim..."
+    wimupdate "$EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH" 2 > /dev/null 2>&1 <<EOF
+delete --force /setup.exe
+delete --force --recursive /Sources
+delete --force --recursive /sources 
+EOF
+    echo "done"
+}
+
 
 
 emp_extract_original_wims()
 {
-    emp_extract_wim_list "$EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH" "$EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS" "Extracting base wims..." 1 2
+    
+    emp_extract_wim_list "$EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH" "$EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS" "Extracting base wims..." 1 2
+    
+    if [ "$?" -ne 0 ]
+    then
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
 }
+
 

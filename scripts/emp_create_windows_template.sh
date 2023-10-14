@@ -35,12 +35,14 @@ emp_custom_analyze_assets()
 
 
 # Actual start
-#emp_remove_old_wim_remnants
+emp_remove_old_wim_remnants
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_custom_analyze_assets
+emp_copy_work_wim
+emp_remove_setup_from_wim
 emp_extract_original_wims
-#emp_unmount_and_sync
+
 
 echo "ALL DONE"
 
