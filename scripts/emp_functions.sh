@@ -1281,6 +1281,7 @@ emp_remove_setup_from_wim()
 delete --force /setup.exe
 delete --force --recursive /Sources
 delete --force --recursive /sources 
+delete --force /Windows/System32/startnet.cmd
 EOF
 
     if [ "$?" -ne 0 ]
@@ -1377,7 +1378,7 @@ emp_trim_base_wim()
 	echo -n "\rTrimming base wim...$TEMP_TOTAL_PERCENTAGE%"
     done
     IFS=$OIFS
-
+    
     echo "\rTrimming base wim...done"
 }
 

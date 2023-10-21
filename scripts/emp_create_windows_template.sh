@@ -49,6 +49,7 @@ emp_extract_base_wims
 emp_collect_trim_list_of_base_wim_files
 emp_trim_base_wim
 emp_export_final_wim
+emp_force_unmount_generic_mountpoint
 
 echo "ALL DONE"
 
