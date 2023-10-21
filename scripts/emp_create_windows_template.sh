@@ -16,6 +16,10 @@ emp_custom_analyze_assets()
     if [ "$EMP_WIN_TEMPLATE_WIM_ARCH" = "x86_64" ]
     then
 	EMP_WIN_TEMPLATE_WIM_ARCH="x64"
+	
+    elif [ "$EMP_WIN_TEMPLATE_WIM_ARCH" = "x86" ]
+    then
+	EMP_WIN_TEMPLATE_WIM_ARCH="x32"
     fi
 
     if [ "$EMP_WIN_TEMPLATE_MAIN_ARCH" != "$EMP_WIN_TEMPLATE_WIM_ARCH" ]
@@ -41,8 +45,10 @@ emp_mount_iso
 emp_custom_analyze_assets
 emp_copy_work_wim
 emp_remove_setup_from_wim
-emp_extract_original_wims
-
+emp_extract_base_wims
+emp_collect_trim_list_of_base_wim_files
+emp_trim_base_wim
+emp_export_final_wim
 
 echo "ALL DONE"
 

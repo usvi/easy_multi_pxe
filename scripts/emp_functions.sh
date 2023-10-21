@@ -163,6 +163,12 @@ emp_copy_file_list_to_dir()
 		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
 		TEMP_TOTAL_PRINT_COPIED_SIZE="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
 		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_TOTAL_PRINT_COPIED_SIZE / TEMP_SOURCE_FILES_SIZE_TOTAL))"
+		
+		if [ "$TEMP_TOTAL_PERCENTAGE" -gt 100 ]
+		then
+		    TEMP_TOTAL_PERCENTAGE=100
+		fi
+		
 		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
 	    else
 		wait "$TEMP_CP_PID"
@@ -196,6 +202,12 @@ emp_copy_file_list_to_dir()
 		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
 		TEMP_DESTINATION_FILES_SIZE_TOTAL="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
 		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_DESTINATION_FILES_SIZE_TOTAL / TEMP_SOURCE_FILES_SIZE_TOTAL))"
+
+		if [ "$TEMP_TOTAL_PERCENTAGE" -gt 100 ]
+		then
+		    TEMP_TOTAL_PERCENTAGE=100
+		fi
+		
 		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
 	    fi
 
@@ -247,6 +259,12 @@ emp_copy_directory()
 	then
 	    TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION")"
 	    TEMP_TOTAL_PERCENTAGE="$(( 100 * TEMP_PATH_SIZE_DESTINATION / TEMP_SOURCE_PATH_SIZE))"
+
+	    if [ "$TEMP_TOTAL_PERCENTAGE" -gt 100 ]
+	    then
+		TEMP_TOTAL_PERCENTAGE=100
+	    fi
+	    
 	    echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
 	else
 	    wait "$TEMP_CP_PID"
@@ -291,6 +309,7 @@ emp_collect_general_pre_parameters_variables()
     EMP_PROGRESS_MAX_STEPS=720 # 720 times 5 s step is 1 hour.
     EMP_PROGRESS_MAX_SECS=5
     EMP_PROGRESS_UNIT_BYTES=10485760
+    EMP_WIM_COMPRESSION_PERCENTAGE=41
     
     EMP_MOUNT_POINT="$EMP_TOPDIR/work/mount"
     EMP_WIM_DIRS_PARENT="$EMP_TOPDIR/work/wims"
@@ -354,6 +373,7 @@ emp_collect_windows_template_creation_variables()
     EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS="u+rwX"
     EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH="$EMP_MOUNT_POINT/$EMP_WIM_FILE_ISO_SUBDIR/$EMP_WIM_FILE_NAME"
     EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH="$EMP_WIM_DIRS_PARENT/$EMP_WIM_FILE_NAME"
+    EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH="$EMP_WIN_TEMPLATE_DIR_PATH/$EMP_WIM_FILE_NAME"
 }
 
 
@@ -882,9 +902,6 @@ emp_ensure_provisioning_directories()
 
 emp_ensure_windows_template_creation_directories()
 {
-
-    echo "$EMP_WIN_TEMPLATE_DIR_PATH"
-    
     if [ ! -d "$EMP_WIN_TEMPLATE_DIR_PATH" ]
     then
 	mkdir -p "$EMP_WIN_TEMPLATE_DIR_PATH"
@@ -1124,6 +1141,8 @@ emp_extract_wim_list()
     TEMP_SOURCE_FILES_SIZE_TOTAL=0
     TEMP_DESTINATION_FILES_SIZE_TOTAL=0
     
+    echo -n "${TEMP_PRINT_PREFIX}"
+    
     # First need to calculate size
     # Also while at it, remove old destinations
     for TEMP_WIM_INDEX in $TEMP_WIM_INDEX_LIST
@@ -1182,6 +1201,11 @@ emp_extract_wim_list()
 		TEMP_TOTAL_PRINT_COPIED_SIZE="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
 		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_TOTAL_PRINT_COPIED_SIZE / TEMP_SOURCE_FILES_SIZE_TOTAL))"
 
+		if [ "$TEMP_TOTAL_PERCENTAGE" -gt 100 ]
+		then
+		    TEMP_TOTAL_PERCENTAGE=100
+		fi
+
 		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
 		
 	    else
@@ -1216,6 +1240,12 @@ emp_extract_wim_list()
 		TEMP_PATH_SIZE_DESTINATION="$(emp_count_path_data_size "$TEMP_FULL_DESTINATION_PATH")"
 		TEMP_DESTINATION_FILES_SIZE_TOTAL="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_PATH_SIZE_DESTINATION))"
 		TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_DESTINATION_FILES_SIZE_TOTAL / TEMP_SOURCE_FILES_SIZE_TOTAL))"
+
+		if [ "$TEMP_TOTAL_PERCENTAGE" -gt 100 ]
+		then
+		    TEMP_TOTAL_PERCENTAGE=100
+		fi
+		
 		echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
 	    fi
 
@@ -1252,14 +1282,20 @@ delete --force /setup.exe
 delete --force --recursive /Sources
 delete --force --recursive /sources 
 EOF
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to remove setup files from $EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH image 2"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
     echo "done"
 }
 
 
-
-emp_extract_original_wims()
+emp_extract_base_wims()
 {
-    
     emp_extract_wim_list "$EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH" "$EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS" "Extracting base wims..." 1 2
     
     if [ "$?" -ne 0 ]
@@ -1271,3 +1307,182 @@ emp_extract_original_wims()
 }
 
 
+emp_collect_trim_list_of_base_wim_files()
+{
+    echo -n "Collecting trim list of base wim files..."
+    
+    TEMP_CMD_ARCH=""
+    
+    if [ "$EMP_WIN_TEMPLATE_MAIN_ARCH" = "x64" ]
+    then
+	TEMP_CMD_ARCH="amd64"
+
+    elif [ "$EMP_WIN_TEMPLATE_MAIN_ARCH" = "x32" ]
+    then
+	TEMP_CMD_ARCH="x86"
+
+    else
+	echo ""
+	echo "ERROR: Collecting trim list failed due to unknown template main arch $EMP_WIN_TEMPLATE_MAIN_ARCH"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+
+    EMP_WIN_TEMPLATE_WIM_TRIM_LIST="$(diff -u -r "$EMP_WIM_DIR_FIRST" "$EMP_WIM_DIR_SECOND" | grep "SxS:" | sed "s,SxS: $TEMP_CMD_ARCH,SxS/$TEMP_CMD_ARCH,g" | sed "s,^Only in $EMP_WIM_DIR_SECOND,,g")"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to collect trim list"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+
+    echo "done"
+}
+
+
+emp_trim_base_wim()
+{
+    echo -n "Trimming base wim..."
+    TEMP_CMD_ARCH=""
+    
+    if [ "$EMP_WIN_TEMPLATE_MAIN_ARCH" = "x64" ]
+    then
+	TEMP_CMD_ARCH="amd64"
+
+    elif [ "$EMP_WIN_TEMPLATE_MAIN_ARCH" = "x32" ]
+    then
+	TEMP_CMD_ARCH="x86"
+
+    else
+	exit 1
+    fi
+    
+    OIFS=$IFS
+    # Easiest way to get posix IFS
+    IFS="
+"
+    TEMP_LINES_TOTAL="$(echo "$EMP_WIN_TEMPLATE_WIM_TRIM_LIST" | wc -l)"
+    TEMP_LINES_PROCESSED=0
+    
+    for TEMP_LINE in $EMP_WIN_TEMPLATE_WIM_TRIM_LIST
+    do
+	echo "delete --force --recursive $TEMP_LINE" | wimupdate "$EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH" 2 > /dev/null 2>&1
+	# Check error here
+	TEMP_LINES_PROCESSED="$((TEMP_LINES_PROCESSED+1))"
+	TEMP_TOTAL_PERCENTAGE="$(((100 * TEMP_LINES_PROCESSED) / TEMP_LINES_TOTAL))"
+	echo -n "\rTrimming base wim...$TEMP_TOTAL_PERCENTAGE%"
+    done
+    IFS=$OIFS
+
+    echo "\rTrimming base wim...done"
+}
+
+
+emp_re_export_wim_as_bootable()
+{
+    TEMP_SOURCE_WIM_FILE="$1"
+    TEMP_SOURCE_WIM_INDEX="$2"
+    TEMP_DESTINATION_WIM_FILE="$3"
+    TEMP_DESTINATION_CHMOD_PERMS="$4"
+    TEMP_PRINT_PREFIX="$5"
+
+    TEMP_PROCESSED_WIM_FILES_SIZE="$(emp_count_wim_index_bytes_size "$EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH" 2)"
+    TEMP_EXPECTED_EXPORTED_WIM_SIZE="$(((EMP_WIM_COMPRESSION_PERCENTAGE * TEMP_PROCESSED_WIM_FILES_SIZE) / 100))"
+
+    echo -n "${TEMP_PRINT_PREFIX}"
+
+    if [ -f "$TEMP_DESTINATION_WIM_FILE" ]
+    then
+	rm "$TEMP_DESTINATION_WIM_FILE" > /dev/null 2>&1
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to remove destination wim file $TEMP_DESTINATION_WIM_FILE"
+	    emp_force_unmount_generic_mountpoint
+
+	    exit 1
+	fi
+    fi
+    
+    TEMP_RUN_STATUS="ongoing"
+    wimexport "$TEMP_SOURCE_WIM_FILE" "$TEMP_SOURCE_WIM_INDEX" "$TEMP_DESTINATION_WIM_FILE" --boot --rebuild  > /dev/null 2>&1 &
+
+    TEMP_WIM_EXPORT_PID="$!"
+
+    while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
+    do
+	sleep "$TEMP_PROGRESS_INTERVAL_TIME" > /dev/null 2>&1
+	ps -p "$TEMP_WIM_EXPORT_PID" > /dev/null 2>&1
+
+	if [ "$?" -eq 0 ]
+	then
+	    TEMP_TOTAL_PRINT_COPIED_SIZE="$(emp_count_path_data_size "$TEMP_DESTINATION_WIM_FILE")"
+	    TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_TOTAL_PRINT_COPIED_SIZE / TEMP_EXPECTED_EXPORTED_WIM_SIZE))"
+
+	    if [ "$TEMP_TOTAL_PERCENTAGE" -gt 100 ]
+	    then
+		TEMP_TOTAL_PERCENTAGE=100
+	    fi
+
+	    echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+	    
+	else
+	    wait "$TEMP_WIM_EXPORT_PID"
+	    TEMP_WIM_EXPORT_RETVAL="$?"
+
+	    if [ "$TEMP_WIM_EXPORT_RETVAL" -ne 0 ]
+	    then
+		# Fail case.
+		echo ""
+		echo "ERROR: Failed exporting final wim to $TEMP_DESTINATION_WIM_FILE"
+		emp_force_unmount_generic_mountpoint
+
+		exit "$TEMP_WIM_EXPORT_RETVAL"
+	    fi
+
+	    if [ "$TEMP_DESTINATION_CHMOD_PERMS" != "" ]
+	    then
+		chmod -R "$TEMP_DESTINATION_CHMOD_PERMS" "$TEMP_DESTINATION_WIM_FILE" > /dev/null 2>&1
+		TEMP_CHMOD_RETVAL="$?"
+		
+		if [ "$TEMP_CHMOD_RETVAL" -ne 0 ]
+		then
+		    echo ""
+		    echo "ERROR: Unable to set permissions for final wim $TEMP_DESTINATION_WIM_FILE"
+		    emp_force_unmount_generic_mountpoint
+
+		    return "$TEMP_CHMOD_RETVAL"
+		fi
+	    fi
+
+	    # Copying of the only wim was fine
+	    TEMP_RUN_STATUS="file_finished"
+	    TEMP_TOTAL_PERCENTAGE=100
+	    
+	    echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+	fi
+
+	TEMP_STEP="$((TEMP_STEP + 1))"
+    done
+    
+    echo "\r${TEMP_PRINT_PREFIX}done"
+
+    return 0
+}
+
+
+emp_export_final_wim()
+{
+    emp_re_export_wim_as_bootable "$EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH" 2 "$EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH" "$EMP_WIN_TEMPLATE_DIRS_CHMOD_PERMS" "Exporting final template wim..."
+
+    if [ "$?" -ne 0 ]
+    then
+	exit 1
+    fi
+
+    echo "Exported to $EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH"
+}
