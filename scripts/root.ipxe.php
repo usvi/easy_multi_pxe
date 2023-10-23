@@ -3,6 +3,18 @@ header('Content-Type: text/plain');
 ?>
 #!ipxe
 
+cpuid --ext 29 && set arch x64 || set arch x32
+set method unknown
+iseq ${platform} pcbios && set method bios ||
+iseq ${platform} efi && set method efi ||
+
+# arch = x32 or x64
+# method = bios or efi
+
+set nloc ${netX/busloc}
+set pciid ${pci/${nloc}.0.2}:${pci/${nloc}.2.2}
+
+
 <?php
 $main_conf_path = dirname(__FILE__, 2) . "/conf/easy_multi_pxe.conf";
 $assets_prefix_dir = dirname(__FILE__, 2) . "/netbootassets";
@@ -37,12 +49,25 @@ $emp_platform_to_names = array(
     "x64-efi" => "iPXE 64bit EFI");
 
 $default_entries = array(
+    "sysinfo" => array("System information",
+                       "menu System Information (Generic)\n" .
+                       "item \${arch}-\${method} iPXE....................\${version}\n" .
+                       "item \${arch}-\${method} Boot type ..............\${arch}-\${method}\n" .
+                       "item \${arch}-\${method} Network device..........\${net0/chip} / \${pciid} / \${net0/mac}\n" .
+                       "item \${arch}-\${method} IP address..............\${ip} / \${netmask}\n" .
+                       "item \${arch}-\${method} Gateway.................\${gateway}\n" .
+                       "item \${arch}-\${method} DNS.....................\${dns}\n" .
+                       "item \${arch}-\${method} Back\n" .
+                       "choose --default \${arch}-\${method} selected\n" .
+                       "set menu-timeout 0\n" .
+                       "goto \${selected}\n"),
+
     "reboot" => array("Reboot computer",
                       "reboot\n" .
                       "sleep 5\n" .
-                      "goto end\n")
+                      "goto end\n"),
 );
-                      
+
 
 $ipxe_fragment_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($assets_prefix_dir));
 $ipxe_fragment_iterator->setMaxDepth(3);
@@ -87,15 +112,7 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
 }
 ?>
 
-cpuid --ext 29 && set arch x64 || set arch x32
-set method unknown
-iseq ${platform} pcbios && set method bios ||
-iseq ${platform} efi && set method efi ||
-
-# arch = x32 or x64
-# platform = pcbios or efi
-# method = bios or efi
-
+    
 goto ${arch}-${method}
 
 
