@@ -31,7 +31,22 @@ emp_custom_analyze_assets()
 	exit 1
     fi
 
+    TEMP_WIM_FILE_GENERATION_SIGNATURE="$(emp_get_wim_file_generation_signature "$EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH" 1)"
+    
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to determine wim generation signature"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+    
+    EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH="$EMP_WIN_TEMPLATE_DIR_PATH/boot-$TEMP_WIM_FILE_GENERATION_SIGNATURE.wim"
+
     echo "done"
+
+    return 0
 }
 
 
@@ -43,6 +58,7 @@ emp_remove_old_wim_remnants
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_custom_analyze_assets
+emp_remove_old_template_wim
 emp_copy_work_wim
 emp_remove_setup_from_wim
 emp_extract_base_wims

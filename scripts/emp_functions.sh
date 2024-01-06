@@ -374,6 +374,8 @@ emp_collect_windows_template_creation_variables()
     EMP_WIN_TEMPLATE_SOURCE_BOOT_WIM_PATH="$EMP_MOUNT_POINT/$EMP_WIM_FILE_ISO_SUBDIR/$EMP_WIM_FILE_NAME"
     EMP_WIN_TEMPLATE_WORK_BOOT_WIM_PATH="$EMP_WIM_DIRS_PARENT/$EMP_WIM_FILE_NAME"
     EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH="$EMP_WIN_TEMPLATE_DIR_PATH/$EMP_WIM_FILE_NAME"
+    # Note: EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH needs to be manipulated in custom
+    # script when creating templates.
 }
 
 
@@ -1114,6 +1116,12 @@ emp_remove_old_wim_remnants()
 }
 
 
+emp_remove_old_template_wim()
+{
+    rm "$EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH"
+}
+
+
 emp_count_wim_index_bytes_size()
 {
     TEMP_WIM_FILE="$1"
@@ -1126,6 +1134,34 @@ emp_count_wim_index_bytes_size()
     echo "$TEMP_WIM_FINAL_SIZE"
 
     return 0
+}
+
+
+emp_get_wim_file_generation_signature()
+{
+    TEMP_WIM_PATH="$1"
+    TEMP_WIM_INDEX="$2"
+    TEMP_WIM_VERSION_MAJOR="$(wiminfo "$TEMP_WIM_PATH" "$TEMP_WIM_INDEX" | grep "Major Version" | sed 's/Major Version:\s*//')"
+    TEMP_WIM_VERSION_MINOR="$(wiminfo "$TEMP_WIM_PATH" "$TEMP_WIM_INDEX" | grep "Minor Version" | sed 's/Minor Version:\s*//')"
+    TEMP_WIM_GENERATION_SIGNATURE="error"
+
+    if [ "$TEMP_WIM_VERSION_MAJOR" -eq 10 ]
+    then
+	TEMP_WIM_GENERATION_SIGNATURE="gen2"
+
+    elif  [ "$TEMP_WIM_VERSION_MAJOR" -eq 6 ]
+    then
+	TEMP_WIM_GENERATION_SIGNATURE="gen1"
+    fi
+
+    echo "$TEMP_WIM_GENERATION_SIGNATURE"
+    
+    if [ "$TEMP_WIM_GENERATION_SIGNATURE" != "error" ]
+    then
+	return 0
+    fi
+    
+    return 1
 }
 
 
