@@ -1118,7 +1118,26 @@ emp_remove_old_wim_remnants()
 
 emp_remove_old_template_wim()
 {
-    rm "$EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH"
+    echo -n "Removing old template file..."
+    
+    if [ -f "$EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH" ]
+    then
+	rm "$EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH" > /dev/null 2>&1
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo ""
+	    echo "ERROR: Unable to remove old template wim $EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH"
+	    emp_force_unmount_generic_mountpoint
+
+	    exit 1
+	fi
+	    
+    fi
+
+    echo "done"
+
+    return 0
 }
 
 
