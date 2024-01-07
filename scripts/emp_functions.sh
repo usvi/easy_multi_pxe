@@ -26,12 +26,12 @@ emp_print_windows_template_creation_help()
 {
     echo ""
     echo "Example run:"
-    echo "./emp_create_windows_template.sh "
+    echo "./emp_make_windows_template.sh "
     echo "--iso-file=/opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
     echo "--template-dir=/opt/easy_multi_pxe/netbootassets/windows/template/x64 "
     echo ""
     echo "Or with short forms:"
-    echo "./emp_create_windows_template.sh "
+    echo "./emp_make_windows_template.sh "
     echo "-i /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
     echo "-t /opt/easy_multi_pxe/netbootassets/windows/template/x64 "
     echo ""
@@ -701,12 +701,12 @@ emp_collect_windows_template_creation_parameters()
     
     TEMP_OPEN=""
     # Example run (wrapped):
-    # ./emp_create_windows_template.sh
+    # ./emp_make_windows_template.sh
     # --iso-file=/opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso
     # --template-dir=/opt/easy_multi_pxe/netbootassets/windows/template/x64
 
     # Or the same:
-    # ./emp_create_windows_template.sh
+    # ./emp_make_windows_template.sh
     # -i /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso
     # -t /opt/easy_multi_pxe/netbootassets/windows/template/x64
 
@@ -975,7 +975,7 @@ emp_mount_iso()
     then
 	TEMP_MOUNT_ISO_PATH="$EMP_BOOT_OS_ISO_PATH"
 	
-    elif [ "$EMP_OP" = "create_windows_template" ]
+    elif [ "$EMP_OP" = "make_windows_template" ]
     then
 	TEMP_MOUNT_ISO_PATH="$EMP_WIN_TEMPLATE_ISO_PATH"
     else

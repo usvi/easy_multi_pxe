@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ "$EMP_OP" != "create_configs" -a "$EMP_OP" != "do_provisioning" -a "$EMP_OP" != "create_windows_template" ]
+if [ "$EMP_OP" != "create_configs" -a "$EMP_OP" != "do_provisioning" -a "$EMP_OP" != "make_windows_template" ]
 then
     echo "Error: Unknown operation: $EMP_OP"
 
@@ -56,7 +56,7 @@ then
     echo "Using iso $EMP_BOOT_OS_ISO_PATH"
     echo "Target dir $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
 
-elif [ "$EMP_OP" = "create_windows_template" ]
+elif [ "$EMP_OP" = "make_windows_template" ]
 then
     emp_collect_general_pre_parameters_variables
     emp_assert_general_directories
