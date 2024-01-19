@@ -5,36 +5,76 @@ emp_print_provisioning_help()
 {
     echo ""
     echo "Example run:"
-    echo "./emp_provision_ubuntu_iso_to_assets_dir.sh "
-    echo "--iso-file=/opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
-    echo "--assets-parent=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
-    echo "[--copy-iso=no] "
-    echo "[--unpack-iso=no] "
-    echo ""
-    echo "Or with short forms:"
-    echo "./emp_provision_ubuntu_iso_to_assets_dir.sh "
-    echo "-i /opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
-    echo "-a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
-    echo "[-c no] "
-    echo "[-u no] "
+    echo "$0"
+    case "$0" in
+	*emp_provision_windows_iso_to_assets_dir.sh)
+	    echo "--iso-file=/opt/isos_ro/windows/10/Win10_22H2_English_x64-2023-04-08.iso "
+	    echo "--template-file=/opt/easy_multi_pxe/netbootassets/windows/template/x64/boot-gen2.wim "
+	    echo "--assets-parent=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
+	    echo "[--unpack-iso=no] "
+	    echo ""
+	    echo "Or with short forms:"
+	    echo "$0"
+	    echo "-i /opt/isos_ro/windows/10/Win10_22H2_English_x64-2023-04-08.iso "
+	    echo "-t /opt/easy_multi_pxe/netbootassets/windows/template/x64/boot-gen2.wim "
+	    echo "-a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
+	    echo "[-u no] "
+	    ;;
+	*emp_provision_ubuntu_iso_to_assets_dir.sh)
+	    echo "--iso-file=/opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
+	    echo "--assets-parent=/opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
+	    echo "[--copy-iso=no] "
+	    echo ""
+	    echo "Or with short forms:"
+	    echo "$0"
+	    echo "-i /opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso "
+	    echo "-a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
+	    echo "[-c no] "
+	    ;;
+	*emp_provision_systemrescuecd_iso_to_assets_dir.sh)
+	    echo "--iso-file=/opt/isos_ro/systemrescuecd/systemrescue-8.05-amd64.iso "
+	    echo "--assets-parent=/opt/easy_multi_pxe/netbootassets/systemrescuecd/8/x64 "
+	    echo "[--unpack-iso=no] "
+	    echo ""
+	    echo "Or with short forms:"
+	    echo "$0"
+	    echo "-i /opt/isos_ro/systemrescuecd/systemrescue-8.05-amd64.iso "
+	    echo "-a /opt/easy_multi_pxe/netbootassets/systemrescuecd/8/x64 "
+	    echo "[-u no] "
+	    ;;
+    esac
     echo ""
 }
 
 
-
-emp_print_windows_template_creation_help()
+emp_print_windows_template_make_help()
 {
     echo ""
     echo "Example run:"
-    echo "./emp_make_windows_template.sh "
+    echo "$0"
     echo "--iso-file=/opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
     echo "--template-dir=/opt/easy_multi_pxe/netbootassets/windows/template/x64 "
     echo ""
     echo "Or with short forms:"
-    echo "./emp_make_windows_template.sh "
+    echo "$0"
     echo "-i /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
     echo "-t /opt/easy_multi_pxe/netbootassets/windows/template/x64 "
     echo ""
+}
+
+
+emp_print_help()
+{
+    if [ "$EMP_OP" = "do_provisioning" ]
+    then
+	emp_print_provisioning_help
+
+    elif [ "$EMP_OP" = "make_windows_template" ]
+    then
+	emp_print_windows_template_make_help
+    else
+	echo "ERROR: Unknown script called, unable to print help"
+    fi
 }
 
 
@@ -607,7 +647,7 @@ emp_assert_provisioning_parameters()
     # Bailing out already on errors because would create too many messages
     if [ "$TEMP_RETVAL" -ne 0 ]
     then
-	emp_print_provisioning_help
+	emp_print_help
 	
 	exit "$TEMP_RETVAL"
     fi
@@ -685,7 +725,7 @@ emp_assert_provisioning_parameters()
 
     if [ "$TEMP_RETVAL" -ne 0 ]
     then
-	emp_print_provisioning_help
+	emp_print_help
 	
 	exit 1
     fi
@@ -751,7 +791,7 @@ emp_assert_windows_template_creation_parameters()
     # Bailing out already on errors because would create too many messages
     if [ "$TEMP_RETVAL" -ne 0 ]
     then
-	emp_print_windows_template_creation_help
+	emp_print_help
 	
 	exit "$TEMP_RETVAL"
     fi
@@ -817,7 +857,7 @@ emp_assert_windows_template_creation_parameters()
 
     if [ "$TEMP_RETVAL" -ne 0 ]
     then
-	emp_print_windows_template_creation_help
+	emp_print_help
 	
 	exit 1
     fi
@@ -1034,7 +1074,7 @@ emp_copy_iso_if_needed()
 }
 
 
-emp_unpack_iso()
+emp_unpack_iso_if_needed()
 {
     if [ "$EMP_UNPACK_ISO" = "Y" ]
     then
