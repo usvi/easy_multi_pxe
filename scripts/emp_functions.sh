@@ -1,12 +1,22 @@
 #!/bin/sh
 
 
-emp_print_provisioning_help()
+emp_print_help()
 {
     echo ""
     echo "Example run:"
     echo "$0"
+    
     case "$0" in
+	*emp_make_windows_template.sh)
+	    echo "--iso-file=/opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
+	    echo "--template-dir=/opt/easy_multi_pxe/netbootassets/windows/template/x64 "
+	    echo ""
+	    echo "Or with short forms:"
+	    echo "$0"
+	    echo "-i /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
+	    echo "-t /opt/easy_multi_pxe/netbootassets/windows/template/x64 "
+	    ;;
 	*emp_provision_windows_iso_to_assets_dir.sh)
 	    echo "--iso-file=/opt/isos_ro/windows/10/Win10_22H2_English_x64-2023-04-08.iso "
 	    echo "--template-file=/opt/easy_multi_pxe/netbootassets/windows/template/x64/boot-gen2.wim "
@@ -42,39 +52,11 @@ emp_print_provisioning_help()
 	    echo "-a /opt/easy_multi_pxe/netbootassets/systemrescuecd/8/x64 "
 	    echo "[-u no] "
 	    ;;
+	*)
+	    echo "ERROR: Unknown script called, unable to print help"
+	    ;;
     esac
     echo ""
-}
-
-
-emp_print_windows_template_make_help()
-{
-    echo ""
-    echo "Example run:"
-    echo "$0"
-    echo "--iso-file=/opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
-    echo "--template-dir=/opt/easy_multi_pxe/netbootassets/windows/template/x64 "
-    echo ""
-    echo "Or with short forms:"
-    echo "$0"
-    echo "-i /opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso "
-    echo "-t /opt/easy_multi_pxe/netbootassets/windows/template/x64 "
-    echo ""
-}
-
-
-emp_print_help()
-{
-    if [ "$EMP_OP" = "do_provisioning" ]
-    then
-	emp_print_provisioning_help
-
-    elif [ "$EMP_OP" = "make_windows_template" ]
-    then
-	emp_print_windows_template_make_help
-    else
-	echo "ERROR: Unknown script called, unable to print help"
-    fi
 }
 
 
