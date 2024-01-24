@@ -19,8 +19,8 @@ emp_print_help()
 	    ;;
 	*emp_provision_windows_iso_to_assets_dir.sh)
 	    echo "--iso-file=/opt/isos_ro/windows/10/Win10_22H2_English_x64-2023-04-08.iso "
-	    echo "--template-file=/opt/easy_multi_pxe/netbootassets/windows/template/x64/boot-gen2.wim "
 	    echo "--assets-parent=/opt/easy_multi_pxe/netbootassets/windows/10/x64 "
+	    echo "--template-file=/opt/easy_multi_pxe/netbootassets/windows/template/x64/boot-gen2.wim "
 	    echo "[--unpack-iso=no] "
 	    echo ""
 	    echo "Or with short forms:"
