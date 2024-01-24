@@ -26,8 +26,8 @@ emp_print_help()
 	    echo "Or with short forms:"
 	    echo "$0"
 	    echo "-i /opt/isos_ro/windows/10/Win10_22H2_English_x64-2023-04-08.iso "
-	    echo "-t /opt/easy_multi_pxe/netbootassets/windows/template/x64/boot-gen2.wim "
 	    echo "-a /opt/easy_multi_pxe/netbootassets/windows/10/x64 "
+	    echo "-t /opt/easy_multi_pxe/netbootassets/windows/template/x64/boot-gen2.wim "
 	    echo "[-u no] "
 	    ;;
 	*emp_provision_ubuntu_iso_to_assets_dir.sh)
