@@ -572,6 +572,7 @@ emp_collect_provisioning_parameters()
 
     TEMP_ISO_PATH="$(emp_scan_for_single_parameter --iso-file -i)"
     TEMP_ASSETS_PARENT="$(emp_scan_for_single_parameter --assets-parent -a)"
+    TEMP_TEMPLATE_PATH="$(emp_scan_for_single_parameter --template-file -t)"
     TEMP_COPY_ISO="$(emp_scan_for_single_parameter --copy-iso -c)"
     TEMP_UNPACK_ISO="$(emp_scan_for_single_parameter --unpack-iso -u)"
 
@@ -592,7 +593,9 @@ emp_collect_provisioning_parameters()
     then
 	EMP_BOOT_OS_ASSETS_PARENT="${TEMP_ASSETS_PARENT}"
     fi
-    
+
+    EMP_TEMPLATE_PATH="$(realpath "${TEMP_TEMPLATE_PATH}" 2>/dev/null)"
+
     # Default is Y, so scan only for no in some forms
     if [ "$TEMP_COPY_ISO" = "no" -o "$TEMP_COPY_ISO" = "NO" -o "$TEMP_COPY_ISO" = "n" -o "$TEMP_COPY_ISO" = "N" ]
     then
@@ -658,6 +661,26 @@ emp_assert_provisioning_parameters()
 	*)
 	    echo "ERROR: Wrong family given in assets directory $EMP_BOOT_OS_ASSETS_PARENT , expected $TEMP_SCRIPT_OS_FAMILY"
 	    TEMP_RETVAL="1"
+	    ;;
+    esac
+
+
+    case "$0" in
+	*emp_provision_windows_iso_to_assets_dir.sh)
+
+	    if [ -z "$EMP_TEMPLATE_PATH" ]
+	    then
+		echo "ERROR: No template file path given"
+		TEMP_RETVAL="1"
+
+	    elif [ ! -f "$EMP_TEMPLATE_PATH" ]
+	    then
+		echo "ERROR: Bad template file path given $EMP_TEMPLATE_PATH"
+		TEMP_RETVAL="1"
+	    fi
+
+	    ;;
+	*)
 	    ;;
     esac
 

@@ -56,6 +56,15 @@ then
     echo "Using iso $EMP_BOOT_OS_ISO_PATH"
     echo "Target dir $EMP_BOOT_OS_ASSETS_FS_BASE_PATH"
 
+    case "$0" in
+        *emp_provision_windows_iso_to_assets_dir.sh)
+
+	    echo "Using template $EMP_TEMPLATE_PATH"
+            ;;
+        *)
+            ;;
+    esac
+    
 elif [ "$EMP_OP" = "make_windows_template" ]
 then
     emp_collect_general_pre_parameters_variables
