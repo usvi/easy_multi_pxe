@@ -6,6 +6,30 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 . "$EMP_INC_COMMON"
 
 
+emp_custom_analyze_assets_type()
+{
+    echo -n "Analyzing assets type..."
+
+    TEMP_WIM_INDEX=1
+    TEMP_SOURCE_BOOT_WIM_PATH="$EMP_MOUNT_POINT/$EMP_WIM_FILE_ISO_SUBDIR/$EMP_WIM_INSTALL_FILE_NAME"
+    TEMP_SOURCE_BOOT_WIM_ARCH="$(wiminfo "$TEMP_SOURCE_BOOT_WIM_PATH" "$TEMP_WIM_INDEX" | grep "Architecture" | sed 's/[[:alnum:] ]*:\s*//')"
+
+    if [ "$TEMP_SOURCE_BOOT_WIM_ARCH" = "x86_64" ]
+    then
+	echo "$EMP_BOOT_OS_MAIN_ARCH"
+	
+    elif [ "$TEMP_SOURCE_BOOT_WIM_ARCH" = "x86" ]
+    then
+	echo ""
+
+    else
+	echo ""
+    fi
+    
+    echo "unknown"
+    echo "$TEMP_SOURCE_BOOT_WIM_ARCH"
+    
+}
 
 
 
@@ -13,3 +37,4 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 emp_remove_old_ipxe_fragment_remnants
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
+emp_custom_analyze_assets_type
