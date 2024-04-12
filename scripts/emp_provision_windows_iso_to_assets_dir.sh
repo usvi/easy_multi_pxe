@@ -14,20 +14,21 @@ emp_custom_analyze_assets_type()
     TEMP_SOURCE_BOOT_WIM_PATH="$EMP_MOUNT_POINT/$EMP_WIM_FILE_ISO_SUBDIR/$EMP_WIM_INSTALL_FILE_NAME"
     TEMP_SOURCE_BOOT_WIM_ARCH="$(wiminfo "$TEMP_SOURCE_BOOT_WIM_PATH" "$TEMP_WIM_INDEX" | grep "Architecture" | sed 's/[[:alnum:] ]*:\s*//')"
 
-    if [ "$TEMP_SOURCE_BOOT_WIM_ARCH" = "x86_64" ]
+    if [ "$TEMP_SOURCE_BOOT_WIM_ARCH" = "x86_64" -a "$EMP_BOOT_OS_MAIN_ARCH" = "x64" ]
     then
-	echo "$EMP_BOOT_OS_MAIN_ARCH"
+	echo "done"
 	
-    elif [ "$TEMP_SOURCE_BOOT_WIM_ARCH" = "x86" ]
+    elif [ "$TEMP_SOURCE_BOOT_WIM_ARCH" = "x86" -a "$EMP_BOOT_OS_MAIN_ARCH" = "x32" ]]
     then
 	echo ""
 
     else
 	echo ""
+	echo "ERROR: Source arch not consistent with parameters"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
     fi
-    
-    echo "unknown"
-    echo "$TEMP_SOURCE_BOOT_WIM_ARCH"
     
 }
 
