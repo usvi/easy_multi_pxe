@@ -39,3 +39,5 @@ emp_remove_old_ipxe_fragment_remnants
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_custom_analyze_assets_type
+emp_copy_iso_if_needed
+emp_unmount_and_sync
