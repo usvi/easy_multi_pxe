@@ -41,6 +41,17 @@ emp_print_help()
 	    echo "-a /opt/easy_multi_pxe/netbootassets/ubuntu/20.04/x64 "
 	    echo "[-c no] "
 	    ;;
+	*emp_provision_debian_netboot_to_assets_dir.sh)
+	    echo "--iso-file=/opt/isos_ro/debian/debian-12.5.0-amd64-netinst.iso "
+	    echo "--assets-parent=/opt/easy_multi_pxe/netbootassets/debian/12/x64 "
+	    echo "[--copy-iso=no] "
+	    echo ""
+	    echo "Or with short forms:"
+	    echo "$0"
+	    echo "-i /opt/isos_ro/debian/debian-12.5.0-amd64-netinst.iso "
+	    echo "-a /opt/easy_multi_pxe/netbootassets/debian/12/x64 "
+	    echo "[-c no] "
+	    ;;
 	*emp_provision_systemrescuecd_iso_to_assets_dir.sh)
 	    echo "--iso-file=/opt/isos_ro/systemrescuecd/systemrescue-8.05-amd64.iso "
 	    echo "--assets-parent=/opt/easy_multi_pxe/netbootassets/systemrescuecd/8/x64 "
