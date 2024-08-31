@@ -18,7 +18,8 @@ emp_custom_analyze_assets_type()
 	
     else
 	echo ""
-        echo "ERROR: Unable to analyze assets type for  boot methodology of the iso file"
+        echo "ERROR: Unable to analyze assets type for  boot methodology of the iso file."
+	echo "Normal Debian isos are not yet implemented."
 	emp_force_unmount_generic_mountpoint
 	
         exit 1
