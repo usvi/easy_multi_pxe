@@ -10,6 +10,11 @@ emp_custom_analyze_assets_type()
 {
     echo -n "Analyzing assets type..."
     
+    EMP_BOOT_OS_ASSETS_TYPE="netinst"
+    # Note: install.amd breaks for 32bit
+    EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz install.amd/initrd.gz"
+    return
+    
     if grep -m 1 "NETINST" "$EMP_MOUNT_POINT/README.txt" > /dev/null 2>&1
     then
 	EMP_BOOT_OS_ASSETS_TYPE="netinst"
@@ -34,7 +39,20 @@ emp_custom_create_single_ipxe_fragment()
 {
     TEMP_PARAM_IPXE_FRAGMENT="$1"
 
-    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "netinst" ]
+    if [ "foo" = "bar" ]
+    then
+        cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
+set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
+set http_iso \${http_base}/$EMP_BOOT_OS_ISO_FILE
+kernel http://deb.debian.org/debian/dists/Debian12.7/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux initrd=initrd.gz
+initrd http://deb.debian.org/debian/dists/Debian12.7/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz
+boot
+sleep 5
+goto end
+EOF
+
+	
+    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "netinst" ]
     then
         cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
 set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH

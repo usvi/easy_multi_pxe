@@ -282,7 +282,7 @@ emp_copy_directory()
 
     # Changed the copy engine to rsync. Needs regression testing.
     #cp -r "$TEMP_SOURCE" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1 &
-    rsync -r "$TEMP_SOURCE" "$TEMP_FULL_DESTINATION" > /dev/null 2>&1 &
+    rsync -r "$TEMP_SOURCE"/* "$TEMP_FULL_DESTINATION" > /dev/null 2>&1 &
     
     TEMP_CP_PID="$!"
 

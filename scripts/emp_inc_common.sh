@@ -1,6 +1,7 @@
 #!/bin/sh
 
-if [ "$EMP_OP" != "create_configs" -a "$EMP_OP" != "do_provisioning" -a "$EMP_OP" != "make_windows_template" ]
+if [ "$EMP_OP" != "create_configs" -a "$EMP_OP" != "do_provisioning" -a "$EMP_OP" != "make_windows_template" -a \
+   "$EMP_OP" != "download_debian_support_files" ]
 then
     echo "Error: Unknown operation: $EMP_OP"
 
@@ -81,5 +82,15 @@ then
     echo "Starting creating windows template for $EMP_WIN_TEMPLATE_MAIN_ARCH"
     echo "Using iso $EMP_WIN_TEMPLATE_ISO_PATH"
     echo "Target dir $EMP_WIN_TEMPLATE_DIR_PATH"
+
+elif [ "$EMP_OP" = "download_debian_support_files" ]
+then
+    emp_collect_general_pre_parameters_variables
+    emp_assert_general_directories
+
+    emp_collect_download_debian_support_files_variables
+    
+    echo "Starting downloading debian support files for $EMP_WIN_TEMPLATE_MAIN_ARCH"
+
 fi
 
