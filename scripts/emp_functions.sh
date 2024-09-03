@@ -63,6 +63,15 @@ emp_print_help()
 	    echo "-a /opt/easy_multi_pxe/netbootassets/systemrescuecd/8/x64 "
 	    echo "[-u no] "
 	    ;;
+	*emp_download_debian_support_files.sh)
+	    echo "--debian-name=bookworm "
+	    echo "--support-dir=/opt/easy_multi_pxe/netbootassets/debian/10/x64/support "
+	    echo ""
+	    echo "Or with short forms:"
+	    echo "$0"
+	    echo "-d bookworm"
+	    echo "-s /opt/easy_multi_pxe/netbootassets/debian/10/x64/support "
+	    ;;
 	*)
 	    echo "ERROR: Unknown script called, unable to print help"
 	    ;;
@@ -413,6 +422,12 @@ emp_collect_windows_template_creation_variables()
     EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH="$EMP_WIN_TEMPLATE_DIR_PATH/$EMP_WIM_BOOT_FILE_NAME"
     # Note: EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH needs to be manipulated in custom
     # script when creating templates.
+}
+
+
+emp_collect_download_debian_support_files_variables()
+{
+    EMP_DEBIAN_SUPPORT_FILES_DIRS_CHMOD_PERMS="u+rwX"
 }
 
 
@@ -920,8 +935,9 @@ emp_debian_version_name_to_number()
 
 
 
-emp_collect_download_debian_support_files_variables()
+emp_collect_download_debian_support_files_parameters()
 {
+
     EMP_DEBIAN_VERSION_NAME=""
     EMP_DEBIAN_VERSION_NUMBER=""
     EMP_DEBIAN_SUPPORT_DIR_PATH=""
@@ -938,29 +954,96 @@ emp_collect_download_debian_support_files_variables()
 
     EMP_DEBIAN_VERSION_NAME="$(emp_scan_for_single_parameter --debian-name -d)"
     EMP_DEBIAN_VERSION_NUMBER="$(emp_debian_version_name_to_number "$EMP_DEBIAN_VERSION_NAME")"
-    TEMP_DEBIAN_SUPPORT_DIR_PATH="$(emp_scan_for_single_parameter --support-dir -s)"
-
-    # Rudimentary checks for some values here after dereferencing
-    # Separate function checks that params are fine in all ways
-    EMP_DEBIAN_SUPPORT_DIR_PATH="$(realpath "${TEMP_DEBIAN_SUPPORT_DIR_PATH}" 2>/dev/null)"
-
-    if [ -z "$EMP_DEBIAN_SUPPORT_DIR_PATH" ]
-    then
-	EMP_DEBIAN_SUPPORT_DIR_PATH="${TEMP_DEBIAN_SUPPORT_DIR_PATH}"
-    fi
+    EMP_DEBIAN_SUPPORT_DIR_PATH="$(emp_scan_for_single_parameter --support-dir -s)"
 }
 
 
 
 
-emp_assert_download_debian_support_files_variables()
+emp_assert_download_debian_support_files_parameters()
 {
     TEMP_RETVAL=0
     
-    if [ -z "$EMP_DEBIAN_VERSION_NUMBER" ]
+    if [ "$TEMP_RETVAL" -eq 0 -a -z "$EMP_DEBIAN_VERSION_NUMBER" ]
     then
 	echo "ERROR: Unable to convert Debian name $EMP_DEBIAN_VERSION_NAME to version number"
 	TEMP_RETVAL=1
+    fi
+
+    # Can be:
+    #
+    # $EMP_DEBIAN_SUPPORT_DIR_PATH=/opt/easy_multi_pxe/netbootassets/debian/10/x64/support
+    # $EMP_ASSETS_ROOT_DIR=/opt/easy_multi_pxe/netbootassets
+    #
+    # => $EMP_DEBIAN_SUPPORT_DIR_PATH must contain $EMP_ASSETS_ROOT_DIR in the beginning
+    TEMP_REMAINDER_DIR_PATH=""
+
+    if [ "$TEMP_RETVAL" -eq 0 ]
+    then
+	case "$EMP_DEBIAN_SUPPORT_DIR_PATH" in
+	    "$EMP_ASSETS_ROOT_DIR/"*)
+		# Strip away beginning already
+		TEMP_REMAINDER_DIR_PATH="${EMP_DEBIAN_SUPPORT_DIR_PATH#${EMP_ASSETS_ROOT_DIR}/}"
+		;;
+	    *)
+		echo "ERROR: Given template directory path $EMP_WIN_TEMPLATE_DIR_PATH not under $EMP_ASSETS_ROOT_DIR"
+		TEMP_RETVAL=1
+		;;
+	esac
+    fi
+    
+    # Have something like debian/10/x64/support
+    # Basically the beginning needs to be debian, next a valid version number,
+    # next a valid arch, then support
+
+    if [ "$TEMP_RETVAL" -eq 0 ]
+    then
+	TEMP_SUPPORT="$(basename "$TEMP_REMAINDER_DIR_PATH")"
+
+	if [ "$TEMP_SUPPORT" = "support" ]
+	then
+	    TEMP_REMAINDER_DIR_PATH="$(dirname "$TEMP_REMAINDER_DIR_PATH")"
+	fi
+    fi
+
+    # Have something like debian/10/x64
+
+    if [ "$TEMP_RETVAL" -eq 0 ]
+    then
+	TEMP_BOOT_OS_MAIN_ARCH="$(basename "$TEMP_REMAINDER_DIR_PATH")"
+
+	if [ "$TEMP_BOOT_OS_MAIN_ARCH" = "x32" -o "$TEMP_BOOT_OS_MAIN_ARCH" = "x64" ]
+	then
+	    TEMP_REMAINDER_DIR_PATH="$(dirname "$TEMP_REMAINDER_DIR_PATH")"
+	    EMP_BOOT_OS_MAIN_ARCH="$TEMP_BOOT_OS_MAIN_ARCH"
+	else
+	    echo "ERROR: Implied architecture $TEMP_BOOT_OS_MAIN_ARCH not valid"
+	    TEMP_RETVAL=1
+	fi
+    fi
+
+    # Have something like debian/10
+    if [ "$TEMP_RETVAL" -eq 0 ]
+    then
+	TEMP_BOOT_OS_MAIN_VERSION="$(basename "$TEMP_REMAINDER_DIR_PATH")"
+	
+	if [ "$TEMP_BOOT_OS_MAIN_VERSION" = "$EMP_DEBIAN_VERSION_NUMBER" ]
+	then
+	    TEMP_REMAINDER_DIR_PATH="$(dirname "$TEMP_REMAINDER_DIR_PATH")"
+	    EMP_BOOT_OS_MAIN_VERSION="$TEMP_BOOT_OS_MAIN_VERSION"
+	else
+	    echo "ERROR: Implied version $TEMP_BOOT_OS_MAIN_VERSION does not correspond to version name number $EMP_DEBIAN_VERSION_NUMBER"
+	    TEMP_RETVAL=1
+	fi
+    fi
+    
+    if [ "$TEMP_RETVAL" -eq 0 ]
+    then
+	if [ "$TEMP_REMAINDER_DIR_PATH" != "debian" ]
+	then
+	    echo "ERROR: Wrong base directory, expected \"debian\", given \"$TEMP_REMAINDER_DIR_PATH\""
+	    TEMP_RETVAL=1
+	fi
     fi
     
     if [ "$TEMP_RETVAL" -ne 0 ]
@@ -971,6 +1054,32 @@ emp_assert_download_debian_support_files_variables()
     fi
 }
 
+
+emp_ensure_download_debian_support_files_directories()
+{
+    echo "Would create $EMP_DEBIAN_SUPPORT_DIR_PATH"
+
+    if [ ! -d "$EMP_DEBIAN_SUPPORT_DIR_PATH" ]
+    then
+	mkdir -p "$EMP_DEBIAN_SUPPORT_DIR_PATH"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to create support files directory path $EMP_DEBIAN_SUPPORT_DIR_PATH"
+
+	    exit 1
+	fi
+	
+	chmod "$EMP_DEBIAN_SUPPORT_FILES_DIRS_CHMOD_PERMS" "$EMP_DEBIAN_SUPPORT_DIR_PATH"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to ensure chmod permissions for support files directory path $EMP_DEBIAN_SUPPORT_DIR_PATH"
+
+	    exit 1
+	fi
+    fi
+}
 
 
 
