@@ -1918,5 +1918,45 @@ emp_unpack_initrd()
 
 debian_remove_initrd_packages()
 {
-    echo ""
+    echo "USING PATH $EMP_INITRD_DIR_PATH"
+    echo -n "Removing conflicting packages from initrd.gz..."
+
+    
+    dpkg --root="$EMP_INITRD_DIR_PATH" --force-architecture -P ${EMP_INITRD_REMOVE_PACKAGES_LIST} > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to remove packages from $EMP_INITRD_DIR_PATH"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi
+
+    
+    echo "done"
+}
+
+
+debian_install_udeb_packages_from_tree()
+{
+    TEMP_PARAMS_TAIL="$@"
+
+    TEMP_PACKAGES_SOURCE_TREE="$1"
+    TEMP_PACKAGE_NAME_PREFIX="$2"
+    TEMP_PRINT_PREFIX="$3"
+    TEMP_SOURCE_REL_FILE_PATH_LIST="${TEMP_PARAMS_TAIL#*$TEMP_PRINT_PREFIX* }"
+
+    # First calculate 
+
+    for TEMP_PACKAGE in $TEMP_SOURCE_REL_FILE_PATH_LIST
+    do
+	echo "MOO $TEMP_PACKAGE"
+    done
+}
+
+
+debian_install_support_packages()
+{
+    debian_install_udeb_packages_from_tree "$EMP_BOOT_OS_ASSETS_PARENT/support" "_" "Installing support packages to initrd.gz..." "$EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST"
 }
