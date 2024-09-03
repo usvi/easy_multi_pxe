@@ -570,7 +570,6 @@ emp_collect_provisioning_parameters()
     EMP_COPY_ISO="Y" # Default value
     EMP_UNPACK_ISO="Y" # Default value
     
-    TEMP_OPEN=""
     # Example run (wrapped):
     # ./emp_provision_ubuntu_iso_to_assets_dir.sh
     # --iso-file=/opt/isos_ro/ubuntu/20.04/ubuntu-20.04-mini-amd64.iso
@@ -759,7 +758,6 @@ emp_collect_windows_template_creation_parameters()
     EMP_WIN_TEMPLATE_ISO_PATH=""
     EMP_WIN_TEMPLATE_DIR_PATH=""
     
-    TEMP_OPEN=""
     # Example run (wrapped):
     # ./emp_make_windows_template.sh
     # --iso-file=/opt/isos_ro/win10/Win10_22H2_English_x64-2023-04-08.iso
@@ -885,6 +883,93 @@ emp_assert_windows_template_creation_parameters()
 
 
 
+emp_debian_version_name_to_number()
+{
+    TEMP_NAME="$1"
+    TEMP_NUMBER=""
+
+    case "$TEMP_NAME" in
+	"wheezy")
+	    TEMP_NUMBER="7"
+	    ;;
+	"jessie")
+	    TEMP_NUMBER="8"
+	    ;;
+	"stretch")
+	    TEMP_NUMBER="9"
+	    ;;
+	"buster")
+	    TEMP_NUMBER="10"
+	    ;;
+	"bullseye")
+	    TEMP_NUMBER="11"
+	    ;;
+	"bookworm")
+	    TEMP_NUMBER="12"
+	    ;;
+	"trixie")
+	    TEMP_NUMBER="13"
+	    ;;
+	"forky")
+	    TEMP_NUMBER="14"
+	    ;;
+    esac
+
+    echo "$TEMP_NUMBER"
+}
+
+
+
+emp_collect_download_debian_support_files_variables()
+{
+    EMP_DEBIAN_VERSION_NAME=""
+    EMP_DEBIAN_VERSION_NUMBER=""
+    EMP_DEBIAN_SUPPORT_DIR_PATH=""
+
+    # Example run (wrapped):
+    # ./emp_download_debian_support_files.sh
+    # --debian-name=bookworm
+    # --support-dir=/opt/easy_multi_pxe/netbootassets/debian/10/x64/support
+
+    # Or the same:
+    # ./emp_download_debian_support_files.sh
+    # -d bookworm
+    # -s /opt/easy_multi_pxe/netbootassets/debian/10/x64/support
+
+    EMP_DEBIAN_VERSION_NAME="$(emp_scan_for_single_parameter --debian-name -d)"
+    EMP_DEBIAN_VERSION_NUMBER="$(emp_debian_version_name_to_number "$EMP_DEBIAN_VERSION_NAME")"
+    TEMP_DEBIAN_SUPPORT_DIR_PATH="$(emp_scan_for_single_parameter --support-dir -s)"
+
+    # Rudimentary checks for some values here after dereferencing
+    # Separate function checks that params are fine in all ways
+    EMP_DEBIAN_SUPPORT_DIR_PATH="$(realpath "${TEMP_DEBIAN_SUPPORT_DIR_PATH}" 2>/dev/null)"
+
+    if [ -z "$EMP_DEBIAN_SUPPORT_DIR_PATH" ]
+    then
+	EMP_DEBIAN_SUPPORT_DIR_PATH="${TEMP_DEBIAN_SUPPORT_DIR_PATH}"
+    fi
+}
+
+
+
+
+emp_assert_download_debian_support_files_variables()
+{
+    TEMP_RETVAL=0
+    
+    if [ -z "$EMP_DEBIAN_VERSION_NUMBER" ]
+    then
+	echo "ERROR: Unable to convert Debian name $EMP_DEBIAN_VERSION_NAME to version number"
+	TEMP_RETVAL=1
+    fi
+    
+    if [ "$TEMP_RETVAL" -ne 0 ]
+    then
+	emp_print_help
+	
+	exit 1
+    fi
+}
 
 
 

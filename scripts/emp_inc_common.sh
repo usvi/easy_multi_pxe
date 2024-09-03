@@ -89,6 +89,7 @@ then
     emp_assert_general_directories
 
     emp_collect_download_debian_support_files_variables
+    emp_assert_download_debian_support_files_variables
     
     echo "Starting downloading debian support files for $EMP_WIN_TEMPLATE_MAIN_ARCH"
 
