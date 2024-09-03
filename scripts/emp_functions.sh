@@ -1857,3 +1857,56 @@ debian_download_support_files()
     echo "Downloaded files:"
     echo "$TEMP_FILE_PATH"
 }
+
+
+
+
+emp_unpack_initrd()
+{
+    # Remove old EMP_INITRD_DIR_PATH
+    touch "$EMP_INITRD_DIR_PATH/foobar" > /dev/null 2>&1
+
+    rm -r "$EMP_INITRD_DIR_PATH/"* > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to remove old initrd remnants in $EMP_INITRD_DIR_PATH"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+
+    for TEMP_FILE_PATH in "$EMP_INITRD_DIR_PATH"/.*
+    do
+	TEMP_FILE="$(basename "$TEMP_FILE_PATH")"
+
+	if [ "$TEMP_FILE" != "." -a "$TEMP_FILE" != ".." -a "$TEMP_FILE" != ".gitignore" ]
+	then
+	    rm "$TEMP_FILE_PATH" > /dev/null 2>&1
+
+	    if [ "$?" -ne 0 ]
+	    then
+		echo "ERROR: Unable to remove old initrd remnant $TEMP_FILE_PATH"
+		emp_force_unmount_generic_mountpoint
+		
+		exit 1
+	    fi
+	fi
+    done
+    
+    # Strange, don't know 
+
+    TEMP_INITRD_SOURCE_PATH="$EMP_MOUNT_POINT/$EMP_BOOT_OS_INITRD_PATH"
+    zcat "$TEMP_INITRD_SOURCE_PATH" | cpio -i -d -D "$EMP_INITRD_DIR_PATH" > /dev/null 2>&1
+    #echo "Unpasking $TEMP_INITRD_SOURCE_PATH"
+    #ls -la "$TEMP_INITRD_SOURCE_PATH"
+    #ls -la "$EMP_INITRD_DIR_PATH"
+}
+
+
+
+debian_remove_initrd_packages()
+{
+    echo ""
+}

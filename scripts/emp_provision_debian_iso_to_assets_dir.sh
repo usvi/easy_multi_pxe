@@ -11,13 +11,13 @@ emp_custom_analyze_assets_type()
     echo -n "Analyzing assets type..."
     
     EMP_BOOT_OS_ASSETS_TYPE="netinst"
-    # Note: install.amd breaks for 32bit
+    # Note: install.amd breaks for 32bit; check 32bit iso and use $EMP_BOOT_OS_MAIN_ARCH
     
     if grep -m 1 "NETINST" "$EMP_MOUNT_POINT/README.txt" > /dev/null 2>&1
     then
 	EMP_BOOT_OS_ASSETS_TYPE="netinst"
 	# Note: install.amd breaks for 32bit
-	EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz install.amd/initrd.gz"
+	EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz"
 	EMP_BOOT_OS_INITRD_PATH="install.amd/initrd.gz"
     else
 	echo ""
@@ -29,6 +29,24 @@ emp_custom_analyze_assets_type()
     fi
 
     echo "$EMP_BOOT_OS_ASSETS_TYPE"
+}
+
+
+
+emp_custom_collect_initrd_files_lists()
+{
+    if [ "$EMP_BOOT_OS_MAIN_VERSION" -eq 12 ]
+    then
+	EMP_INITRD_REMOVE_PACKAGES="load-cdrom cdrom-retriever cdrom-detect cdrom-checker"
+	EMP_INITRD_ADD_SUPPORT_PACKAGES="download-installer"
+	EMP_INITRD_ADD_MODULE_PACKAGES="nic-modules crypto-modules"
+	EMP_INITRD_ADD_NORMAL_PACKAGES="net-retriever netcfg ethdetect libiw30-udeb wpasupplicant-udeb rdnssd-udeb ndisc6-udeb wide-dhcpv6-client-udeb choose-mirror choose-mirror-bin gpgv-udeb libgcrypt20-udeb libgpg-error0-udeb debian-archive-keyring-udeb libnl-3-200-udeb libnl-genl-3-200-udeb"
+    else
+        echo "ERROR: No file lists implemented for version $EMP_DEBIAN_VERSION_NUMBER"
+	emp_force_unmount_generic_mountpoint
+	
+        exit 1
+    fi
 }
 
 
@@ -76,15 +94,14 @@ EOF
     fi
 }
 
-echo "AAA $EMP_BOOT_OS_MAIN_ARCH"
-
 # Actual start
 emp_remove_old_ipxe_fragment_remnants
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_custom_analyze_assets_type
+emp_custom_collect_initrd_files_lists
 emp_copy_simple_asset_files
-#emp_unpack_initrd
+emp_unpack_initrd
 ###emp_unpack_iso_if_needed
 # Include driver copying later and especially in debian
 emp_unmount_and_sync
