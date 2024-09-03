@@ -1863,6 +1863,7 @@ debian_download_support_files()
 
 emp_unpack_initrd()
 {
+    echo -n "Unpacking initrd.gz..."
     # Remove old EMP_INITRD_DIR_PATH
     touch "$EMP_INITRD_DIR_PATH/foobar" > /dev/null 2>&1
 
@@ -1887,6 +1888,7 @@ emp_unpack_initrd()
 
 	    if [ "$?" -ne 0 ]
 	    then
+		echo ""
 		echo "ERROR: Unable to remove old initrd remnant $TEMP_FILE_PATH"
 		emp_force_unmount_generic_mountpoint
 		
@@ -1899,9 +1901,17 @@ emp_unpack_initrd()
 
     TEMP_INITRD_SOURCE_PATH="$EMP_MOUNT_POINT/$EMP_BOOT_OS_INITRD_PATH"
     zcat "$TEMP_INITRD_SOURCE_PATH" | cpio -i -d -D "$EMP_INITRD_DIR_PATH" > /dev/null 2>&1
-    #echo "Unpasking $TEMP_INITRD_SOURCE_PATH"
-    #ls -la "$TEMP_INITRD_SOURCE_PATH"
-    #ls -la "$EMP_INITRD_DIR_PATH"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to unpack $TEMP_INITRD_SOURCE_PATH to $EMP_INITRD_DIR_PATH"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi	
+
+    echo "done"
 }
 
 
