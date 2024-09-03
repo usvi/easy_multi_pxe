@@ -12,15 +12,13 @@ emp_custom_analyze_assets_type()
     
     EMP_BOOT_OS_ASSETS_TYPE="netinst"
     # Note: install.amd breaks for 32bit
-    EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz install.amd/initrd.gz"
-    return
     
     if grep -m 1 "NETINST" "$EMP_MOUNT_POINT/README.txt" > /dev/null 2>&1
     then
 	EMP_BOOT_OS_ASSETS_TYPE="netinst"
 	# Note: install.amd breaks for 32bit
 	EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz install.amd/initrd.gz"
-	
+	EMP_BOOT_OS_INITRD_PATH="install.amd/initrd.gz"
     else
 	echo ""
         echo "ERROR: Unable to analyze assets type for  boot methodology of the iso file."
@@ -78,7 +76,7 @@ EOF
     fi
 }
 
-
+echo "AAA $EMP_BOOT_OS_MAIN_ARCH"
 
 # Actual start
 emp_remove_old_ipxe_fragment_remnants
@@ -86,7 +84,8 @@ emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_custom_analyze_assets_type
 emp_copy_simple_asset_files
-emp_unpack_iso_if_needed
+#emp_unpack_initrd
+###emp_unpack_iso_if_needed
 # Include driver copying later and especially in debian
 emp_unmount_and_sync
 emp_create_ipxe_fragments

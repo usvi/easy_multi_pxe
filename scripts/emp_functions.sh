@@ -363,6 +363,8 @@ emp_collect_general_pre_parameters_variables()
     EMP_WIM_BOOT_FILE_NAME="boot.wim"
     EMP_WIM_INSTALL_FILE_NAME="install.wim"
     EMP_WIM_FILE_ISO_SUBDIR="sources"
+
+    EMP_INITRD_DIR_PATH="$EMP_TOPDIR/work/initrd"
 }
 
 
@@ -1089,7 +1091,8 @@ emp_assert_general_directories()
     for TEMP_GENERAL_DIRECTORY in "$EMP_MOUNT_POINT" \
 				  "$EMP_WIM_DIRS_PARENT" \
 				  "$EMP_WIM_DIR_FIRST" \
-				  "$EMP_WIM_DIR_SECOND"
+				  "$EMP_WIM_DIR_SECOND" \
+				  "$EMP_INITRD_DIR_PATH"
     do
 	if [ ! -d "$TEMP_GENERAL_DIRECTORY" -o ! -r "$TEMP_GENERAL_DIRECTORY" ]
 	then
