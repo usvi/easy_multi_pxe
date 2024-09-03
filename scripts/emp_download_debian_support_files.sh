@@ -7,7 +7,8 @@ if [ ! -f "$EMP_INC_COMMON" ]; then echo "Error: No common include file $EMP_INC
 
 
 
-
+debian_mirror_selection
+debian_download_support_files
 echo "ALL DONE"
 
 exit 0

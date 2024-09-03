@@ -96,7 +96,7 @@ then
 
     emp_ensure_download_debian_support_files_directories
     
-    echo "Starting downloading debian support files for $EMP_WIN_TEMPLATE_MAIN_ARCH"
+    echo "Starting downloading debian support files for $EMP_DEBIAN_VERSION_NAME"
 
 fi
 

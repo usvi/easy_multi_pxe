@@ -65,12 +65,12 @@ emp_print_help()
 	    ;;
 	*emp_download_debian_support_files.sh)
 	    echo "--debian-name=bookworm "
-	    echo "--support-dir=/opt/easy_multi_pxe/netbootassets/debian/10/x64/support "
+	    echo "--support-dir=/opt/easy_multi_pxe/netbootassets/debian/12/x64/support "
 	    echo ""
 	    echo "Or with short forms:"
 	    echo "$0"
 	    echo "-d bookworm"
-	    echo "-s /opt/easy_multi_pxe/netbootassets/debian/10/x64/support "
+	    echo "-s /opt/easy_multi_pxe/netbootassets/debian/12/x64/support "
 	    ;;
 	*)
 	    echo "ERROR: Unknown script called, unable to print help"
@@ -428,6 +428,7 @@ emp_collect_windows_template_creation_variables()
 emp_collect_download_debian_support_files_variables()
 {
     EMP_DEBIAN_SUPPORT_FILES_DIRS_CHMOD_PERMS="u+rwX"
+    EMP_DEBIAN_DOWNLOAD_INSTALLER_PAGE_URL="https://packages.debian.org/${EMP_DEBIAN_VERSION_NAME}/all/download-installer/download"
 }
 
 
@@ -1057,8 +1058,6 @@ emp_assert_download_debian_support_files_parameters()
 
 emp_ensure_download_debian_support_files_directories()
 {
-    echo "Would create $EMP_DEBIAN_SUPPORT_DIR_PATH"
-
     if [ ! -d "$EMP_DEBIAN_SUPPORT_DIR_PATH" ]
     then
 	mkdir -p "$EMP_DEBIAN_SUPPORT_DIR_PATH"
@@ -1795,4 +1794,63 @@ emp_export_final_wim()
     fi
 
     echo "Exported to $EMP_WIN_TEMPLATE_FINAL_BOOT_WIM_PATH"
+}
+
+
+debian_mirror_selection()
+{
+    echo -n ""
+    # This function does nothing
+}
+
+
+
+debian_download_support_files()
+{
+    echo -n "Downloading index file..."
+    TEMP_URL="`wget -O - https://packages.debian.org/bookworm/all/download-installer/download 2> /dev/null | grep href | grep download-installer_ | head -n 1 | grep -o -E 'https?://[^"]+'`"
+
+    if [ "$?" != 0 -o -z "$TEMP_URL" ]
+    then
+	echo ""
+	echo "ERROR: Unable to download index from $EMP_DEBIAN_DOWNLOAD_INSTALLER_PAGE_URL"
+	exit 1
+    fi
+    
+    echo "done"
+    TEMP_FILE_NAME="$(basename "$TEMP_URL")"
+    TEMP_FILE_PATH="$EMP_DEBIAN_SUPPORT_DIR_PATH/$TEMP_FILE_NAME"
+    TEMP_TEMP_FILE_PATH="$EMP_DEBIAN_SUPPORT_DIR_PATH/$TEMP_FILE_NAME.tmp"
+
+    if [ -f "$TEMP_TEMP_FILE_PATH" ]
+    then
+	rm "$TEMP_TEMP_FILE_PATH"
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo "ERROR: Unable to remove old temporary file $TEMP_TEMP_FILE_PATH"
+	    exit 1
+	fi
+    fi
+    echo -n "Downloading support files..."
+    wget -O "$TEMP_TEMP_FILE_PATH" "$TEMP_URL" > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to download $TEMP_URL as $TEMP_TEMP_FILE_PATH"
+	exit 1
+    fi
+    echo "done"
+
+    # Move temporary file as official
+    mv "$TEMP_TEMP_FILE_PATH" "$TEMP_FILE_PATH" > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to move temporary file $TEMP_TEMP_FILE_PATH as final"
+	exit 1
+    fi
+    echo "Downloaded files:"
+    echo "$TEMP_FILE_PATH"
 }
