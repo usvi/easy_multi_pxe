@@ -364,7 +364,7 @@ emp_collect_general_pre_parameters_variables()
     EMP_WIM_INSTALL_FILE_NAME="install.wim"
     EMP_WIM_FILE_ISO_SUBDIR="sources"
 
-    EMP_INITRD_DIR_PATH="$EMP_TOPDIR/work/initrd"
+    EMP_INITRD_DIR_PATH="$EMP_TOPDIR/work/initrd-tree"
     EMP_KERNEL_MODULES_SUBDIR="/lib/modules"
 }
 
