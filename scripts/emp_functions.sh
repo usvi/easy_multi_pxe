@@ -365,6 +365,7 @@ emp_collect_general_pre_parameters_variables()
     EMP_WIM_FILE_ISO_SUBDIR="sources"
 
     EMP_INITRD_DIR_PATH="$EMP_TOPDIR/work/initrd"
+    EMP_KERNEL_MODULES_SUBDIR="/lib/modules"
 }
 
 
@@ -1954,7 +1955,7 @@ debian_install_udeb_packages_from_tree()
     do
 
 	TEMP_SEARCH_PACKAGE="/$TEMP_PACKAGE$TEMP_PACKAGE_NAME_SUFFIX"
-	TEMP_PACKAGE_PATH="$(find "$TEMP_PACKAGES_SOURCE_TREE" | grep "$TEMP_SEARCH_PACKAGE" | head -n 1)"
+	TEMP_PACKAGE_PATH="$(find "$TEMP_PACKAGES_SOURCE_TREE" | grep "$TEMP_SEARCH_PACKAGE" | grep "\\.udeb$" | head -n 1)"
 
 	if [ -z "TEMP_PACKAGE_PATH" ]
 	then
@@ -1983,7 +1984,7 @@ debian_install_udeb_packages_from_tree()
     for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
     do
 	TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_SOURCE_REL_FILE_PATH")"
-	dpkg --root="$TEMP_INITRD_ROOT" --force-architecture --unpack "$TEMP_SOURCE_REL_FILE_PATH"  > /dev/null 2>&1
+	dpkg --root="$TEMP_INITRD_ROOT" --force-architecture --unpack "$TEMP_SOURCE_REL_FILE_PATH" > /dev/null 2>&1
 
 	if [ "$?" -ne 0 ]
 	then
@@ -2010,6 +2011,7 @@ debian_install_support_packages()
     if [ "$?" -ne 0 ]
     then
 	echo "ERROR: Error installing support packages"
+	emp_force_unmount_generic_mountpoint
 	
 	return 1
     fi
@@ -2023,10 +2025,46 @@ debian_install_extra_packages()
     if [ "$?" -ne 0 ]
     then
 	echo "ERROR: Error installing extra packages"
+	emp_force_unmount_generic_mountpoint
 	
 	return 1
     fi
 }
 
+
+debian_install_module_packages()
+{
+    debian_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "-" "$EMP_INITRD_DIR_PATH" "Installing module packages to initrd.gz..." "$EMP_INITRD_ADD_MODULE_PACKAGES_LIST"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Error installing extra packages"
+	emp_force_unmount_generic_mountpoint
+	
+	exit1 1
+    fi
+
+    # Need to depmod
+    TEMP_KERNEL_ID="`ls -1 $EMP_INITRD_DIR_PATH$EMP_KERNEL_MODULES_SUBDIR | head -n 1`"
+    TEMP_KERNEL_MODULES_DIR_PATH="$EMP_INITRD_DIR_PATH$EMP_KERNEL_MODULES_SUBDIR/$TEMP_KERNEL_ID"
+    
+    if [ ! -d "$TEMP_KERNEL_MODULES_DIR_PATH" ]
+    then
+	echo "ERROR: Unable to determine kernel modules path in $EMP_INITRD_DIR_PATH"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi
+	
+    depmod -b "$EMP_INITRD_DIR_PATH" "$TEMP_KERNEL_ID" > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to depmod new modules in $EMP_INITRD_DIR_PATH"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi
+}
 
 
