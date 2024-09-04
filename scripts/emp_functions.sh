@@ -2068,3 +2068,10 @@ debian_install_module_packages()
 }
 
 
+
+emp_repack_initrd()
+{
+    TEMP_PWD="`pwd`"
+
+    #cd "$EMP_INITRD_DIR_PATH" && find . | grep -v gitignore | | cpio -f .gitignore -f .initrd -o -H newc > .initrd
+}

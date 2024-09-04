@@ -106,6 +106,7 @@ debian_remove_initrd_packages
 debian_install_support_packages
 debian_install_extra_packages
 debian_install_module_packages
+emp_repack_initrd
 ###emp_unpack_iso_if_needed
 # Include driver copying later and especially in debian
 emp_unmount_and_sync
