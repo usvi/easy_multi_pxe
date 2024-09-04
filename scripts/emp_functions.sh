@@ -1918,9 +1918,7 @@ emp_unpack_initrd()
 
 debian_remove_initrd_packages()
 {
-    echo "USING PATH $EMP_INITRD_DIR_PATH"
     echo -n "Removing conflicting packages from initrd.gz..."
-
     
     dpkg --root="$EMP_INITRD_DIR_PATH" --force-architecture -P ${EMP_INITRD_REMOVE_PACKAGES_LIST} > /dev/null 2>&1
 
@@ -1932,7 +1930,6 @@ debian_remove_initrd_packages()
 	
 	exit 1
     fi
-
     
     echo "done"
 }
@@ -1943,20 +1940,93 @@ debian_install_udeb_packages_from_tree()
     TEMP_PARAMS_TAIL="$@"
 
     TEMP_PACKAGES_SOURCE_TREE="$1"
-    TEMP_PACKAGE_NAME_PREFIX="$2"
-    TEMP_PRINT_PREFIX="$3"
-    TEMP_SOURCE_REL_FILE_PATH_LIST="${TEMP_PARAMS_TAIL#*$TEMP_PRINT_PREFIX* }"
+    TEMP_PACKAGE_NAME_SUFFIX="$2"
+    TEMP_INITRD_ROOT="$3"
+    TEMP_PRINT_PREFIX="$4"
+    TEMP_SOURCE_REL_FILE_LIST="${TEMP_PARAMS_TAIL#*$TEMP_PRINT_PREFIX* }"
 
-    # First calculate 
-
-    for TEMP_PACKAGE in $TEMP_SOURCE_REL_FILE_PATH_LIST
+    echo -n "$TEMP_PRINT_PREFIX"
+    
+    # First make full list of packages
+    TEMP_SOURCE_REL_FILE_PATH_LIST=""
+    
+    for TEMP_PACKAGE in $TEMP_SOURCE_REL_FILE_LIST
     do
-	echo "MOO $TEMP_PACKAGE"
+
+	TEMP_SEARCH_PACKAGE="/$TEMP_PACKAGE$TEMP_PACKAGE_NAME_SUFFIX"
+	TEMP_PACKAGE_PATH="$(find "$TEMP_PACKAGES_SOURCE_TREE" | grep "$TEMP_SEARCH_PACKAGE" | head -n 1)"
+
+	if [ -z "TEMP_PACKAGE_PATH" ]
+	then
+	    echo ""
+	    echo "ERROR: Unable to find find package $TEMP_PACKAGE from $TEMP_PACKAGES_SOURCE_TREE"
+	    
+	    return 1
+	fi
+	TEMP_SOURCE_REL_FILE_PATH_LIST="$TEMP_SOURCE_REL_FILE_PATH_LIST $TEMP_PACKAGE_PATH"
     done
+
+    # Calculate sizes
+    TEMP_SOURCE_FILES_SIZE_TOTAL=0
+    TEMP_DESTINATION_FILES_SIZE_TOTAL=0
+
+    for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
+    do
+	TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_SOURCE_REL_FILE_PATH")"
+	TEMP_SOURCE_FILES_SIZE_TOTAL="$((TEMP_SOURCE_FILES_SIZE_TOTAL + TEMP_SOURCE_PATH_SIZE))"
+    done
+
+    # Actual installation
+    # Just a simple loop, no background things because we don't know what would happen there
+    TEMP_TOTAL_PERCENTAGE=0
+
+    for TEMP_SOURCE_REL_FILE_PATH in $TEMP_SOURCE_REL_FILE_PATH_LIST
+    do
+	TEMP_SOURCE_PATH_SIZE="$(emp_count_path_data_size "$TEMP_SOURCE_REL_FILE_PATH")"
+	dpkg --root="$TEMP_INITRD_ROOT" --force-architecture --unpack "$TEMP_SOURCE_REL_FILE_PATH"  > /dev/null 2>&1
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo ""
+	    echo "ERROR: Error installing $TEMP_SOURCE_REL_FILE_PATH to initrd $TEMP_INITRD_ROOT"
+	    
+	    return 1
+	fi
+	# It was ok. Make percentage
+	TEMP_DESTINATION_FILES_SIZE_TOTAL="$((TEMP_DESTINATION_FILES_SIZE_TOTAL + TEMP_SOURCE_PATH_SIZE))"
+	TEMP_TOTAL_PERCENTAGE="$((100 * TEMP_DESTINATION_FILES_SIZE_TOTAL / TEMP_SOURCE_FILES_SIZE_TOTAL))"
+	# Print it
+	echo -n "\r${TEMP_PRINT_PREFIX}${TEMP_TOTAL_PERCENTAGE}%"
+    done
+
+    echo "\r${TEMP_PRINT_PREFIX}done"
 }
 
 
 debian_install_support_packages()
 {
-    debian_install_udeb_packages_from_tree "$EMP_BOOT_OS_ASSETS_PARENT/support" "_" "Installing support packages to initrd.gz..." "$EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST"
+    debian_install_udeb_packages_from_tree "$EMP_BOOT_OS_ASSETS_PARENT/support" "_" "$EMP_INITRD_DIR_PATH" "Installing support packages to initrd.gz..." "$EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Error installing support packages"
+	
+	return 1
+    fi
 }
+
+
+debian_install_extra_packages()
+{
+    debian_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "_" "$EMP_INITRD_DIR_PATH" "Installing extra packages to initrd.gz..." "$EMP_INITRD_ADD_EXTRA_PACKAGES_LIST"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Error installing extra packages"
+	
+	return 1
+    fi
+}
+
+
+

@@ -40,7 +40,7 @@ emp_custom_collect_initrd_files_lists()
 	EMP_INITRD_REMOVE_PACKAGES_LIST="load-cdrom cdrom-retriever cdrom-detect cdrom-checker"
 	EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST="download-installer"
 	EMP_INITRD_ADD_MODULE_PACKAGES_LIST="nic-modules crypto-modules"
-	EMP_INITRD_ADD_NORMAL_PACKAGES_LIST="net-retriever netcfg ethdetect libiw30-udeb wpasupplicant-udeb rdnssd-udeb ndisc6-udeb wide-dhcpv6-client-udeb choose-mirror choose-mirror-bin gpgv-udeb libgcrypt20-udeb libgpg-error0-udeb debian-archive-keyring-udeb libnl-3-200-udeb libnl-genl-3-200-udeb"
+	EMP_INITRD_ADD_EXTRA_PACKAGES_LIST="net-retriever netcfg ethdetect libiw30-udeb wpasupplicant-udeb rdnssd-udeb ndisc6-udeb wide-dhcpv6-client-udeb choose-mirror choose-mirror-bin gpgv-udeb libgcrypt20-udeb libgpg-error0-udeb debian-archive-keyring-udeb libnl-3-200-udeb libnl-genl-3-200-udeb"
     else
         echo "ERROR: No file lists implemented for version $EMP_DEBIAN_VERSION_NUMBER"
 	emp_force_unmount_generic_mountpoint
@@ -104,6 +104,8 @@ emp_copy_simple_asset_files
 emp_unpack_initrd
 debian_remove_initrd_packages
 debian_install_support_packages
+debian_install_extra_packages
+#debian_install_module_packages
 ###emp_unpack_iso_if_needed
 # Include driver copying later and especially in debian
 emp_unmount_and_sync
