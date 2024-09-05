@@ -2077,7 +2077,6 @@ emp_repack_initrd()
     TEMP_PWD="`pwd`"
     #EMP_INITRD_COMPRESSION_PERCENTAGE=29
     #cd "$EMP_INITRD_DIR_PATH" && find . | grep -v gitignore | cpio -o -H newc > "../$EMP_INITRD_FILE_NAME"
-    cd "$EMP_INITRD_DIR_PATH"
 
     TEMP_SOURCE_INITRD_DIR_PATH="$EMP_INITRD_DIR_PATH"
     TEMP_DESTINATION_INITRD_FILE_PATH="$EMP_WORK_DIR_PATH/$EMP_INITRD_GZIPPED_FILE_NAME"
@@ -2085,6 +2084,7 @@ emp_repack_initrd()
     TEMP_PRINT_PREFIX="Repacking initrd..."
     TEMP_SOURCE_INITRD_FILES_SIZE="$(emp_count_path_data_size "$TEMP_SOURCE_INITRD_DIR_PATH")"
     TEMP_EXPECTED_REPACKED_INITRD_SIZE="$(((EMP_INITRD_COMPRESSION_PERCENTAGE * TEMP_SOURCE_INITRD_FILES_SIZE) / 100))"
+    TEMP_PROGRESS_INTERVAL_TIME="$(emp_calculate_progress_interval_time "$TEMP_EXPECTED_REPACKED_INITRD_SIZE")"
 
     echo -n "${TEMP_PRINT_PREFIX}"
 
@@ -2102,9 +2102,13 @@ emp_repack_initrd()
     fi
     
     TEMP_RUN_STATUS="ongoing"
-    cd "$EMP_INITRD_DIR_PATH" && find . | grep -v gitignore | cpio -o -H newc | gzip -9 > "$TEMP_DESTINATION_INITRD_FILE_PATH" > /dev/null 2>&1 &
+
+
+    #cd "$EMP_INITRD_DIR_PATH" && find . | grep -v gitignore | cpio -o -H newc | gzip -9 > "$TEMP_DESTINATION_INITRD_FILE_PATH" > /dev/null 2>&1 &
     #echo ""
-    #echo "cd $EMP_INITRD_DIR_PATH && find . | grep -v gitignore | cpio -o -H newc > ../$EMP_INITRD_FILE_NAME > /dev/null 2>&1 &"
+    #echo "cd $EMP_INITRD_DIR_PATH && find . | grep -v gitignore | cpio -o -H newc | gzip -9 > $TEMP_DESTINATION_INITRD_FILE_PATH > /dev/null 2>&1 &"
+
+    cd $EMP_INITRD_DIR_PATH && find . | grep -v gitignore | cpio -o -H newc --quiet | gzip -9 > $TEMP_DESTINATION_INITRD_FILE_PATH &
 
     #cd "$EMP_INITRD_DIR_PATH" && find . | grep -v gitignore | cpio -o -H newc > "../$EMP_INITRD_FILE_NAME"
 
@@ -2112,7 +2116,6 @@ emp_repack_initrd()
     
     TEMP_INITRD_REPACK_PID="$!"
 
-    
     while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
     do
 	sleep "$TEMP_PROGRESS_INTERVAL_TIME" > /dev/null 2>&1
@@ -2170,6 +2173,6 @@ emp_repack_initrd()
     done
     
     echo "\r${TEMP_PRINT_PREFIX}done"
-
+    
     return 0
 }
