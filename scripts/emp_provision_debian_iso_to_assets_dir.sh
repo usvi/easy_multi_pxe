@@ -107,6 +107,7 @@ debian_install_support_packages
 debian_install_extra_packages
 debian_install_module_packages
 emp_repack_initrd
+emp_copy_simple_initrd_file
 emp_copy_simple_asset_files
 ###emp_unpack_iso_if_needed
 # Include driver copying later and especially in debian

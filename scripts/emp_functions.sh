@@ -1272,7 +1272,7 @@ emp_copy_simple_asset_files()
     if [ "$?" -ne 0 ]
     then
 	echo ""
-	echo "ERROR: Unable to remove old asset file $EMP_BOOT_OS_ASSETS_FS_BASE_PATH/$TEMP_FILE_NAME"
+	echo "ERROR: Unable to copy asset files $EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST from $EMP_MOUNT_POINT" 
 	emp_force_unmount_generic_mountpoint
 
 	exit 1
@@ -2171,4 +2171,19 @@ emp_repack_initrd()
     echo "\r${TEMP_PRINT_PREFIX}done"
     
     return 0
+}
+
+
+emp_copy_simple_initrd_file()
+{
+    emp_copy_file_list_to_dir "$EMP_INITRD_DIR_PARENT_PATH" "$EMP_BOOT_OS_ASSETS_FS_BASE_PATH" "" "Copying initrd file..." "$EMP_INITRD_GZIPPED_FILE_NAME"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to copy initrd file $EMP_INITRD_GZIPPED_FILE_NAME from $EMP_INITRD_DIR_PARENT_PATH"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
 }
