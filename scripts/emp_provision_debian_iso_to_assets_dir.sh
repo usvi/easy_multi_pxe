@@ -100,13 +100,14 @@ emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_custom_analyze_assets_type
 emp_custom_collect_initrd_files_lists
-emp_copy_simple_asset_files
+#emp_copy_simple_asset_files
 emp_unpack_initrd
 debian_remove_initrd_packages
 debian_install_support_packages
 debian_install_extra_packages
 debian_install_module_packages
 emp_repack_initrd
+emp_copy_simple_asset_files
 ###emp_unpack_iso_if_needed
 # Include driver copying later and especially in debian
 emp_unmount_and_sync
