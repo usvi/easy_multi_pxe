@@ -366,7 +366,9 @@ emp_collect_general_pre_parameters_variables()
     EMP_WIM_FILE_ISO_SUBDIR="sources"
 
     EMP_INITRD_GZIPPED_FILE_NAME="initrd.gz"
-    EMP_INITRD_DIR_PATH="$EMP_WORK_DIR_PATH/initrd"
+    #EMP_INITRD_DIR_PATH="$EMP_WORK_DIR_PATH/initrd"
+    EMP_INITRD_DIR_PARENT_PATH="$EMP_WORK_DIR_PATH/initrd"
+    EMP_INITRD_DIR_TREE_PATH="$EMP_INITRD_DIR_PARENT_PATH/tree"
     EMP_KERNEL_MODULES_SUBDIR="/lib/modules"
     EMP_INITRD_COMPRESSION_PERCENTAGE=29
 }
@@ -1096,7 +1098,8 @@ emp_assert_general_directories()
 				  "$EMP_WIM_DIRS_PARENT" \
 				  "$EMP_WIM_DIR_FIRST" \
 				  "$EMP_WIM_DIR_SECOND" \
-				  "$EMP_INITRD_DIR_PATH"
+				  "$EMP_INITRD_DIR_PARENT_PATH" \
+				  "$EMP_INITRD_DIR_TREE_PATH"
     do
 	if [ ! -d "$TEMP_GENERAL_DIRECTORY" -o ! -r "$TEMP_GENERAL_DIRECTORY" ]
 	then
@@ -1869,20 +1872,20 @@ emp_unpack_initrd()
 {
     echo -n "Unpacking initrd.gz..."
     # Remove old EMP_INITRD_DIR_PATH
-    touch "$EMP_INITRD_DIR_PATH/foobar" > /dev/null 2>&1
+    touch "$EMP_INITRD_DIR_TREE_PATH/foobar" > /dev/null 2>&1
 
-    rm -r "$EMP_INITRD_DIR_PATH/"* > /dev/null 2>&1
+    rm -r "$EMP_INITRD_DIR_TREE_PATH/"* > /dev/null 2>&1
 
     if [ "$?" -ne 0 ]
     then
 	echo ""
-	echo "ERROR: Unable to remove old initrd remnants in $EMP_INITRD_DIR_PATH"
+	echo "ERROR: Unable to remove old initrd remnants in $EMP_INITRD_DIR_TREE_PATH"
 	emp_force_unmount_generic_mountpoint
 
 	exit 1
     fi
 
-    for TEMP_FILE_PATH in "$EMP_INITRD_DIR_PATH"/.*
+    for TEMP_FILE_PATH in "$EMP_INITRD_DIR_TREE_PATH"/.*
     do
 	TEMP_FILE="$(basename "$TEMP_FILE_PATH")"
 
@@ -1901,15 +1904,13 @@ emp_unpack_initrd()
 	fi
     done
     
-    # Strange, don't know 
-
     TEMP_INITRD_SOURCE_PATH="$EMP_MOUNT_POINT/$EMP_BOOT_OS_INITRD_PATH"
-    zcat "$TEMP_INITRD_SOURCE_PATH" | cpio -i -d -D "$EMP_INITRD_DIR_PATH" > /dev/null 2>&1
+    zcat "$TEMP_INITRD_SOURCE_PATH" | cpio -i -d -D "$EMP_INITRD_DIR_TREE_PATH" > /dev/null 2>&1
 
     if [ "$?" -ne 0 ]
     then
 	echo ""
-	echo "ERROR: Unable to unpack $TEMP_INITRD_SOURCE_PATH to $EMP_INITRD_DIR_PATH"
+	echo "ERROR: Unable to unpack $TEMP_INITRD_SOURCE_PATH to $EMP_INITRD_DIR_TREE_PATH"
 	emp_force_unmount_generic_mountpoint
 	
 	exit 1
@@ -1924,12 +1925,12 @@ debian_remove_initrd_packages()
 {
     echo -n "Removing conflicting packages from initrd.gz..."
     
-    dpkg --root="$EMP_INITRD_DIR_PATH" --force-architecture -P ${EMP_INITRD_REMOVE_PACKAGES_LIST} > /dev/null 2>&1
+    dpkg --root="$EMP_INITRD_DIR_TREE_PATH" --force-architecture -P ${EMP_INITRD_REMOVE_PACKAGES_LIST} > /dev/null 2>&1
 
     if [ "$?" -ne 0 ]
     then
 	echo ""
-	echo "ERROR: Unable to remove packages from $EMP_INITRD_DIR_PATH"
+	echo "ERROR: Unable to remove packages from $EMP_INITRD_DIR_TREE_PATH"
 	emp_force_unmount_generic_mountpoint
 	
 	exit 1
@@ -2009,7 +2010,7 @@ debian_install_udeb_packages_from_tree()
 
 debian_install_support_packages()
 {
-    debian_install_udeb_packages_from_tree "$EMP_BOOT_OS_ASSETS_PARENT/support" "_" "$EMP_INITRD_DIR_PATH" "Installing support packages to initrd.gz..." "$EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST"
+    debian_install_udeb_packages_from_tree "$EMP_BOOT_OS_ASSETS_PARENT/support" "_" "$EMP_INITRD_DIR_TREE_PATH" "Installing support packages to initrd.gz..." "$EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST"
 
     if [ "$?" -ne 0 ]
     then
@@ -2023,7 +2024,7 @@ debian_install_support_packages()
 
 debian_install_extra_packages()
 {
-    debian_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "_" "$EMP_INITRD_DIR_PATH" "Installing extra packages to initrd.gz..." "$EMP_INITRD_ADD_EXTRA_PACKAGES_LIST"
+    debian_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "_" "$EMP_INITRD_DIR_TREE_PATH" "Installing extra packages to initrd.gz..." "$EMP_INITRD_ADD_EXTRA_PACKAGES_LIST"
 
     if [ "$?" -ne 0 ]
     then
@@ -2037,7 +2038,7 @@ debian_install_extra_packages()
 
 debian_install_module_packages()
 {
-    debian_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "-" "$EMP_INITRD_DIR_PATH" "Installing module packages to initrd.gz..." "$EMP_INITRD_ADD_MODULE_PACKAGES_LIST"
+    debian_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "-" "$EMP_INITRD_DIR_TREE_PATH" "Installing module packages to initrd.gz..." "$EMP_INITRD_ADD_MODULE_PACKAGES_LIST"
 
     if [ "$?" -ne 0 ]
     then
@@ -2048,8 +2049,8 @@ debian_install_module_packages()
     fi
 
     # Need to depmod
-    TEMP_KERNEL_ID="`ls -1 $EMP_INITRD_DIR_PATH$EMP_KERNEL_MODULES_SUBDIR | head -n 1`"
-    TEMP_KERNEL_MODULES_DIR_PATH="$EMP_INITRD_DIR_PATH$EMP_KERNEL_MODULES_SUBDIR/$TEMP_KERNEL_ID"
+    TEMP_KERNEL_ID="`ls -1 $EMP_INITRD_DIR_TREE_PATH$EMP_KERNEL_MODULES_SUBDIR | head -n 1`"
+    TEMP_KERNEL_MODULES_DIR_PATH="$EMP_INITRD_DIR_TREE_PATH$EMP_KERNEL_MODULES_SUBDIR/$TEMP_KERNEL_ID"
     
     if [ ! -d "$TEMP_KERNEL_MODULES_DIR_PATH" ]
     then
@@ -2059,11 +2060,11 @@ debian_install_module_packages()
 	exit 1
     fi
 	
-    depmod -b "$EMP_INITRD_DIR_PATH" "$TEMP_KERNEL_ID" > /dev/null 2>&1
+    depmod -b "$EMP_INITRD_DIR_TREE_PATH" "$TEMP_KERNEL_ID" > /dev/null 2>&1
 
     if [ "$?" -ne 0 ]
     then
-	echo "ERROR: Unable to depmod new modules in $EMP_INITRD_DIR_PATH"
+	echo "ERROR: Unable to depmod new modules in $EMP_INITRD_DIR_TREE_PATH"
 	emp_force_unmount_generic_mountpoint
 	
 	exit 1
@@ -2078,8 +2079,8 @@ emp_repack_initrd()
     #EMP_INITRD_COMPRESSION_PERCENTAGE=29
     #cd "$EMP_INITRD_DIR_PATH" && find . | grep -v gitignore | cpio -o -H newc > "../$EMP_INITRD_FILE_NAME"
 
-    TEMP_SOURCE_INITRD_DIR_PATH="$EMP_INITRD_DIR_PATH"
-    TEMP_DESTINATION_INITRD_FILE_PATH="$EMP_WORK_DIR_PATH/$EMP_INITRD_GZIPPED_FILE_NAME"
+    TEMP_SOURCE_INITRD_DIR_PATH="$EMP_INITRD_DIR_TREE_PATH"
+    TEMP_DESTINATION_INITRD_FILE_PATH="$EMP_INITRD_DIR_PARENT_PATH/$EMP_INITRD_GZIPPED_FILE_NAME"
     TEMP_DESTINATION_CHMOD_PERMS="$EMP_ASSETS_DIRS_CHMOD_PERMS"
     TEMP_PRINT_PREFIX="Repacking initrd..."
     TEMP_SOURCE_INITRD_FILES_SIZE="$(emp_count_path_data_size "$TEMP_SOURCE_INITRD_DIR_PATH")"
@@ -2103,17 +2104,11 @@ emp_repack_initrd()
     
     TEMP_RUN_STATUS="ongoing"
 
-
-    #cd "$EMP_INITRD_DIR_PATH" && find . | grep -v gitignore | cpio -o -H newc | gzip -9 > "$TEMP_DESTINATION_INITRD_FILE_PATH" > /dev/null 2>&1 &
-    #echo ""
-    #echo "cd $EMP_INITRD_DIR_PATH && find . | grep -v gitignore | cpio -o -H newc | gzip -9 > $TEMP_DESTINATION_INITRD_FILE_PATH > /dev/null 2>&1 &"
-
-    cd $EMP_INITRD_DIR_PATH && find . | grep -v gitignore | cpio -o -H newc --quiet | gzip -9 > $TEMP_DESTINATION_INITRD_FILE_PATH &
-
-    #cd "$EMP_INITRD_DIR_PATH" && find . | grep -v gitignore | cpio -o -H newc > "../$EMP_INITRD_FILE_NAME"
-
-    #return
-    
+    cd "$EMP_INITRD_DIR_TREE_PATH" &&
+	find . |
+	grep -v gitignore |
+	cpio -o -H newc --quiet |
+	gzip -9 > "$TEMP_DESTINATION_INITRD_FILE_PATH" &
     TEMP_INITRD_REPACK_PID="$!"
 
     while [ "$TEMP_RUN_STATUS" = "ongoing" -a "$TEMP_STEP" -lt "$EMP_PROGRESS_MAX_STEPS" ]
@@ -2171,7 +2166,7 @@ emp_repack_initrd()
 
 	TEMP_STEP="$((TEMP_STEP + 1))"
     done
-    
+
     echo "\r${TEMP_PRINT_PREFIX}done"
     
     return 0
