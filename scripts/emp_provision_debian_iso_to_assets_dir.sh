@@ -19,6 +19,13 @@ emp_custom_analyze_assets_type()
 	# Note: install.amd breaks for 32bit
 	EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz"
 	EMP_BOOT_OS_INITRD_PATH="install.amd/initrd.gz"
+	
+    elif grep -m 1 "DVD" "$EMP_MOUNT_POINT/README.txt" > /dev/null 2>&1
+    then
+	EMP_BOOT_OS_ASSETS_TYPE="dvd"
+	# Note: install.amd breaks for 32bit
+	EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz"
+	EMP_BOOT_OS_INITRD_PATH="install.amd/initrd.gz"
     else
 	echo ""
         echo "ERROR: Unable to analyze assets type for  boot methodology of the iso file."
