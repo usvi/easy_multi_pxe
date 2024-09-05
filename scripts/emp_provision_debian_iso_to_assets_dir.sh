@@ -62,20 +62,26 @@ emp_custom_create_single_ipxe_fragment()
 {
     TEMP_PARAM_IPXE_FRAGMENT="$1"
 
-    if [ "foo" = "bar" ]
+    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "netinst" ]
     then
         cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
 set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
 set http_iso \${http_base}/$EMP_BOOT_OS_ISO_FILE
-kernel http://deb.debian.org/debian/dists/Debian12.7/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux initrd=initrd.gz
-initrd http://deb.debian.org/debian/dists/Debian12.7/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz
+kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp
+initrd \${http_base}/initrd.gz
 boot
 sleep 5
 goto end
 EOF
+        if [ "$?" -ne 0 ]
+        then
+            echo ""
+            echo "ERROR: Unable to create ipxe fragment $TEMP_PARAM_IPXE_FRAGMENT"
 
+            exit 1
+        fi
 	
-    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "netinst" ]
+    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
     then
         cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
 set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
