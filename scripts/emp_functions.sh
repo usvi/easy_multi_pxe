@@ -367,6 +367,7 @@ emp_collect_general_pre_parameters_variables()
 
     EMP_INITRD_GZIPPED_FILE_NAME="initrd.gz"
     EMP_PRESEED_FILE_NAME="preseed.cfg"
+    EMP_APT_SOURCES_LIST_FILE_NAME="sources.list"
     #EMP_INITRD_DIR_PATH="$EMP_WORK_DIR_PATH/initrd"
     EMP_INITRD_DIR_PARENT_PATH="$EMP_WORK_DIR_PATH/initrd"
     EMP_INITRD_DIR_TREE_PATH="$EMP_INITRD_DIR_PARENT_PATH/tree"
@@ -941,6 +942,43 @@ emp_debian_version_name_to_number()
     esac
 
     echo "$TEMP_NUMBER"
+}
+
+
+
+emp_debian_version_number_to_name()
+{
+    TEMP_NUMBER="$1"
+    TEMP_NAME=""
+
+    case "$TEMP_NUMBER" in
+	"7")
+	    TEMP_NAME="wheezy"
+	    ;;
+	"8")
+	    TEMP_NAME="jessie"
+	    ;;
+	"9")
+	    TEMP_NAME="stretch"
+	    ;;
+	"10")
+	    TEMP_NAME="buster"
+	    ;;
+	"11")
+	    TEMP_NAME="bullseye"
+	    ;;
+	"12")
+	    TEMP_NAME="bookworm"
+	    ;;
+	"13")
+	    TEMP_NAME="trixie"
+	    ;;
+	"14")
+	    TEMP_NAME="forky"
+	    ;;
+    esac
+
+    echo "$TEMP_NAME"
 }
 
 
@@ -2077,6 +2115,8 @@ emp_create_initrd_preseed()
 {
     echo -n "Creating initrd preseed file..."
 
+    TEMP_DIRECTORY="/$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
+
     if [ -f "$EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME" ]
     then
 	rm "$EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME" > /dev/null 2>&1
@@ -2088,21 +2128,85 @@ emp_create_initrd_preseed()
 	    emp_force_unmount_generic_mountpoint
 	    
 	    exit 1
-
 	fi
-	   
     fi
     
     cat <<EOF > "$EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
 #_preseed_V1
 d-i mirror/country string manual
 d-i mirror/http/hostname string $EMP_WEBSERVER_IP
-d-i mirror/http/directory string /$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR
+d-i mirror/http/directory string $TEMP_DIRECTORY
 d-i debian-installer/allow_unauthenticated boolean true
 EOF
 
     if [ "$?" -ne 0 ]
     then
+	echo "ERROR: Unable to create initrd preseed file $EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi
+
+    echo "done"
+}
+
+
+emp_append_initrd_preseed_apt_sources()
+{
+    echo -n "Appending initrd preseed apt sources..."
+    
+
+    TEMP_DEB_URL="$EMP_WEBSERVER_PROTOCOL://$EMP_WEBSERVER_IP/$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
+    TEMP_DEBIAN_VERSION_NAME="$(emp_debian_version_number_to_name "$EMP_BOOT_OS_MAIN_VERSION")"
+
+    if [ -z "$TEMP_DEBIAN_VERSION_NAME" ]
+    then
+	echo ""
+	echo "ERROR: Unable to get debian version name for number $EMP_BOOT_OS_MAIN_VERSION"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi
+
+    # Sources creation
+    # Delete old
+    if [ -f "$EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME" ]
+    then
+	rm "$EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME" > /dev/null 2>&1
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo ""
+	    echo "ERROR: Unable to remove old sources file $EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME"
+	    emp_force_unmount_generic_mountpoint
+	    
+	    exit 1
+	fi
+    fi
+    # Add new
+    cat <<EOF > "$EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME"
+deb [trusted=yes] $TEMP_DEB_URL $TEMP_DEBIAN_VERSION_NAME main
+EOF
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to create sources file $EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+    
+    # Preseed addition
+    cat <<EOF >> "$EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
+d-i preseed/boot_command string touch /tmp/boot.txt
+d-i preseed/early_command string touch /tmp/early.txt
+d-i preseed/late_command string touch /tmp/late.txt
+EOF
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
 	echo "ERROR: Unable to create initrd preseed file $EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
 	emp_force_unmount_generic_mountpoint
 	

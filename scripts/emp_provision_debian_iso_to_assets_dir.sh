@@ -120,6 +120,10 @@ dpkg_install_support_packages
 dpkg_install_extra_packages
 dpkg_install_module_packages
 emp_create_initrd_preseed
+if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
+then
+    emp_append_initrd_preseed_apt_sources
+fi
 emp_repack_initrd
 if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
 then
