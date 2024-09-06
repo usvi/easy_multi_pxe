@@ -120,9 +120,12 @@ dpkg_install_support_packages
 dpkg_install_extra_packages
 dpkg_install_module_packages
 emp_repack_initrd
+if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
+then
+    emp_unpack_iso_if_needed
+fi
 emp_copy_simple_initrd_file
 emp_copy_simple_asset_files
-###emp_unpack_iso_if_needed
 # Include driver copying later and especially in debian
 emp_unmount_and_sync
 emp_create_ipxe_fragments

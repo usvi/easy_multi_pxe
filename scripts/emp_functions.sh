@@ -2024,7 +2024,7 @@ dpkg_install_support_packages()
 
 dpkg_install_extra_packages()
 {
-    debian_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "_" "$EMP_INITRD_DIR_TREE_PATH" "Installing extra packages to initrd.gz..." "$EMP_INITRD_ADD_EXTRA_PACKAGES_LIST"
+    dpkg_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "_" "$EMP_INITRD_DIR_TREE_PATH" "Installing extra packages to initrd.gz..." "$EMP_INITRD_ADD_EXTRA_PACKAGES_LIST"
 
     if [ "$?" -ne 0 ]
     then
@@ -2038,14 +2038,14 @@ dpkg_install_extra_packages()
 
 dpkg_install_module_packages()
 {
-    debian_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "-" "$EMP_INITRD_DIR_TREE_PATH" "Installing module packages to initrd.gz..." "$EMP_INITRD_ADD_MODULE_PACKAGES_LIST"
+    dpkg_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "-" "$EMP_INITRD_DIR_TREE_PATH" "Installing module packages to initrd.gz..." "$EMP_INITRD_ADD_MODULE_PACKAGES_LIST"
 
     if [ "$?" -ne 0 ]
     then
 	echo "ERROR: Error installing extra packages"
 	emp_force_unmount_generic_mountpoint
 	
-	exit1 1
+	exit 1
     fi
 
     # Need to depmod
