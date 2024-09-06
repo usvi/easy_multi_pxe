@@ -366,6 +366,7 @@ emp_collect_general_pre_parameters_variables()
     EMP_WIM_FILE_ISO_SUBDIR="sources"
 
     EMP_INITRD_GZIPPED_FILE_NAME="initrd.gz"
+    EMP_PRESEED_FILE_NAME="preseed.cfg"
     #EMP_INITRD_DIR_PATH="$EMP_WORK_DIR_PATH/initrd"
     EMP_INITRD_DIR_PARENT_PATH="$EMP_WORK_DIR_PATH/initrd"
     EMP_INITRD_DIR_TREE_PATH="$EMP_INITRD_DIR_PARENT_PATH/tree"
@@ -2069,6 +2070,46 @@ dpkg_install_module_packages()
 	
 	exit 1
     fi
+}
+
+
+emp_create_initrd_preseed()
+{
+    echo -n "Creating initrd preseed file..."
+
+    if [ -f "$EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME" ]
+    then
+	rm "$EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME" > /dev/null 2>&1
+
+	if [ "$?" -ne 0 ]
+	then
+	    echo ""
+	    echo "ERROR: Unable to remove old preseed file $EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
+	    emp_force_unmount_generic_mountpoint
+	    
+	    exit 1
+
+	fi
+	   
+    fi
+    
+    cat <<EOF > "$EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
+#_preseed_V1
+d-i mirror/country string manual
+d-i mirror/http/hostname string $EMP_WEBSERVER_IP
+d-i mirror/http/directory string /$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR
+d-i debian-installer/allow_unauthenticated boolean true
+EOF
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Unable to create initrd preseed file $EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi
+
+    echo "done"
 }
 
 

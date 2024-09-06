@@ -119,6 +119,7 @@ dpkg_remove_initrd_packages
 dpkg_install_support_packages
 dpkg_install_extra_packages
 dpkg_install_module_packages
+emp_create_initrd_preseed
 emp_repack_initrd
 if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
 then
