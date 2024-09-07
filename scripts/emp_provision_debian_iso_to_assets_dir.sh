@@ -10,17 +10,10 @@ emp_custom_analyze_assets_type()
 {
     echo -n "Analyzing assets type..."
     
-    EMP_BOOT_OS_ASSETS_TYPE="netinst"
+    EMP_BOOT_OS_ASSETS_TYPE=""
     # Note: install.amd breaks for 32bit; check 32bit iso and use $EMP_BOOT_OS_MAIN_ARCH
     
-    if grep -m 1 "NETINST" "$EMP_MOUNT_POINT/README.txt" > /dev/null 2>&1
-    then
-	EMP_BOOT_OS_ASSETS_TYPE="netinst"
-	# Note: install.amd breaks for 32bit
-	EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz"
-	EMP_BOOT_OS_INITRD_PATH="install.amd/initrd.gz"
-	
-    elif grep -m 1 "DVD" "$EMP_MOUNT_POINT/README.txt" > /dev/null 2>&1
+    if grep -m 1 "DVD" "$EMP_MOUNT_POINT/README.txt" > /dev/null 2>&1
     then
 	EMP_BOOT_OS_ASSETS_TYPE="dvd"
 	# Note: install.amd breaks for 32bit
@@ -29,7 +22,7 @@ emp_custom_analyze_assets_type()
     else
 	echo ""
         echo "ERROR: Unable to analyze assets type for  boot methodology of the iso file."
-	echo "Normal Debian isos are not yet implemented."
+	echo "Note: Netinst isos are not supported."
 	emp_force_unmount_generic_mountpoint
 	
         exit 1
@@ -62,26 +55,7 @@ emp_custom_create_single_ipxe_fragment()
 {
     TEMP_PARAM_IPXE_FRAGMENT="$1"
 
-    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "netinst" ]
-    then
-        cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
-set http_iso \${http_base}/$EMP_BOOT_OS_ISO_FILE
-kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp
-initrd \${http_base}/initrd.gz
-boot
-sleep 5
-goto end
-EOF
-        if [ "$?" -ne 0 ]
-        then
-            echo ""
-            echo "ERROR: Unable to create ipxe fragment $TEMP_PARAM_IPXE_FRAGMENT"
-
-            exit 1
-        fi
-	
-    elif [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
+    if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
     then
         cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
 set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
@@ -120,15 +94,9 @@ emp_dpkg_install_support_packages
 emp_dpkg_install_extra_packages
 emp_dpkg_install_module_packages
 emp_create_initrd_preseed
-if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
-then
-    emp_append_initrd_preseed_apt_sources
-fi
+emp_append_initrd_preseed_apt_sources
 emp_repack_initrd
-if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
-then
-    emp_unpack_iso_if_needed
-fi
+emp_unpack_iso_if_needed
 emp_copy_simple_initrd_file
 emp_copy_simple_asset_files
 # Include driver copying later and especially in debian
