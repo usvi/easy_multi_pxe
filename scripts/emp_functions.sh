@@ -367,11 +367,15 @@ emp_collect_general_pre_parameters_variables()
 
     EMP_INITRD_GZIPPED_FILE_NAME="initrd.gz"
     EMP_PRESEED_FILE_NAME="preseed.cfg"
+    EMP_INSTALLER_TARGET_DIR_PATH="/target"
+    EMP_INITRD_BASE_INSTALLER_DIR_PATH="/usr/lib/base-installer.d"
+    EMP_INITRD_BASE_INSTALLER_FILE="10set_allow_apt_unsecure"
+    EMP_APT_CONF_DIR_PATH="/etc/apt/apt.conf.d"
+    EMP_APT_TRUST_LOCAL_REPO_FILE_NAME="99trustlocalrepo"
     EMP_APT_SOURCES_LIST_FILE_NAME="sources.list"
-    #EMP_INITRD_DIR_PATH="$EMP_WORK_DIR_PATH/initrd"
     EMP_INITRD_DIR_PARENT_PATH="$EMP_WORK_DIR_PATH/initrd"
     EMP_INITRD_DIR_TREE_PATH="$EMP_INITRD_DIR_PARENT_PATH/tree"
-    EMP_KERNEL_MODULES_SUBDIR="/lib/modules"
+    EMP_KERNEL_MODULES_DIR_PATH="/lib/modules"
     EMP_INITRD_COMPRESSION_PERCENTAGE=29
 }
 
@@ -2088,8 +2092,8 @@ emp_dpkg_install_module_packages()
     fi
 
     # Need to depmod
-    TEMP_KERNEL_ID="`ls -1 $EMP_INITRD_DIR_TREE_PATH$EMP_KERNEL_MODULES_SUBDIR | head -n 1`"
-    TEMP_KERNEL_MODULES_DIR_PATH="$EMP_INITRD_DIR_TREE_PATH$EMP_KERNEL_MODULES_SUBDIR/$TEMP_KERNEL_ID"
+    TEMP_KERNEL_ID="`ls -1 $EMP_INITRD_DIR_TREE_PATH$EMP_KERNEL_MODULES_DIR_PATH | head -n 1`"
+    TEMP_KERNEL_MODULES_DIR_PATH="$EMP_INITRD_DIR_TREE_PATH$EMP_KERNEL_MODULES_DIR_PATH/$TEMP_KERNEL_ID"
     
     if [ ! -d "$TEMP_KERNEL_MODULES_DIR_PATH" ]
     then
@@ -2151,69 +2155,40 @@ EOF
 }
 
 
-emp_append_initrd_preseed_apt_sources()
+emp_create_initrd_insecure_apt_sources_handling_scripts()
 {
-    echo -n "Appending initrd preseed apt sources..."
+    echo -n "Creating initrd insecure apt sources handling scripts..."
+    echo ""
     
+    TEMP_INSTALLER_BASE_FILE_PATH="$EMP_INITRD_DIR_TREE_PATH/$EMP_INITRD_BASE_INSTALLER_DIR_PATH/$EMP_INITRD_BASE_INSTALLER_FILE"
+    TEMP_INTARGET_APT_CONF_DIR_PATH="$EMP_INSTALLER_TARGET_DIR_PATH$EMP_APT_CONF_DIR_PATH"
+    TEMP_INTARGET_APT_CONF_FILE_PATH="$TEMP_INTARGET_APT_CONF_DIR_PATH/$EMP_APT_TRUST_LOCAL_REPO_FILE_NAME"
 
-    TEMP_DEB_URL="$EMP_WEBSERVER_PROTOCOL://$EMP_WEBSERVER_IP/$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
-    TEMP_DEBIAN_VERSION_NAME="$(emp_debian_version_number_to_name "$EMP_BOOT_OS_MAIN_VERSION")"
+    cat <<EOF > "$TEMP_INSTALLER_BASE_FILE_PATH"
+#!/bin/sh
 
-    if [ -z "$TEMP_DEBIAN_VERSION_NAME" ]
-    then
-	echo ""
-	echo "ERROR: Unable to get debian version name for number $EMP_BOOT_OS_MAIN_VERSION"
-	emp_force_unmount_generic_mountpoint
-	
-	exit 1
-    fi
+if [ ! -d $TEMP_INTARGET_APT_CONF_DIR_PATH ]
+then
+    mkdir -p $TEMP_INTARGET_APT_CONF_DIR_PATH
+fi
+echo 'APT::Get::AllowUnauthenticated "true";' > $TEMP_INTARGET_APT_CONF_FILE_PATH
+echo 'Aptitude::CmdLine::Ignore-Trust-Violations "true";' >> $TEMP_INTARGET_APT_CONF_FILE_PATH
 
-    # Sources creation
-    # Delete old
-    if [ -f "$EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME" ]
-    then
-	rm "$EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME" > /dev/null 2>&1
-
-	if [ "$?" -ne 0 ]
-	then
-	    echo ""
-	    echo "ERROR: Unable to remove old sources file $EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME"
-	    emp_force_unmount_generic_mountpoint
-	    
-	    exit 1
-	fi
-    fi
-    # Add new
-    cat <<EOF > "$EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME"
-deb [trusted=yes] $TEMP_DEB_URL $TEMP_DEBIAN_VERSION_NAME main
 EOF
 
-    if [ "$?" -ne 0 ]
-    then
-	echo ""
-	echo "ERROR: Unable to create sources file $EMP_INITRD_DIR_TREE_PATH/$EMP_APT_SOURCES_LIST_FILE_NAME"
-	emp_force_unmount_generic_mountpoint
-
-	exit 1
-    fi
+    chmod a+rx "$TEMP_INSTALLER_BASE_FILE_PATH"
     
-    # Preseed addition
-    cat <<EOF >> "$EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
-d-i preseed/boot_command string touch /tmp/boot.txt
-d-i preseed/early_command string touch /tmp/early.txt
-d-i preseed/late_command string touch /tmp/late.txt
-EOF
+    #TEMP_DEB_URL="$EMP_WEBSERVER_PROTOCOL://$EMP_WEBSERVER_IP/$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
+    #TEMP_DEBIAN_VERSION_NAME="$(emp_debian_version_number_to_name "$EMP_BOOT_OS_MAIN_VERSION")"
 
-    if [ "$?" -ne 0 ]
-    then
-	echo ""
-	echo "ERROR: Unable to create initrd preseed file $EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
-	emp_force_unmount_generic_mountpoint
-	
-	exit 1
-    fi
-
-    echo "done"
+    #if [ -z "$TEMP_DEBIAN_VERSION_NAME" ]
+    #then
+#	echo ""
+#	echo "ERROR: Unable to get debian version name for number $EMP_BOOT_OS_MAIN_VERSION"
+#	emp_force_unmount_generic_mountpoint
+#	
+#	exit 1
+ #   fi
 }
 
 
