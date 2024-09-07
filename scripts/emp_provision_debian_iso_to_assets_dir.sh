@@ -115,10 +115,10 @@ emp_custom_analyze_assets_type
 emp_custom_collect_initrd_files_lists
 #emp_copy_simple_asset_files
 emp_unpack_initrd
-dpkg_remove_initrd_packages
-dpkg_install_support_packages
-dpkg_install_extra_packages
-dpkg_install_module_packages
+emp_dpkg_remove_initrd_packages
+emp_dpkg_install_support_packages
+emp_dpkg_install_extra_packages
+emp_dpkg_install_module_packages
 emp_create_initrd_preseed
 if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
 then
