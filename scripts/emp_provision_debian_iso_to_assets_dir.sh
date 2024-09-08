@@ -39,7 +39,7 @@ emp_custom_collect_initrd_files_lists()
     then
 	EMP_INITRD_REMOVE_PACKAGES_LIST="load-cdrom cdrom-retriever cdrom-detect cdrom-checker"
 	EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST="download-installer"
-	EMP_INITRD_ADD_EXTRA_PACKAGES_LIST="net-retriever netcfg ethdetect libiw30-udeb wpasupplicant-udeb rdnssd-udeb ndisc6-udeb wide-dhcpv6-client-udeb choose-mirror choose-mirror-bin gpgv-udeb libgcrypt20-udeb libgpg-error0-udeb debian-archive-keyring-udeb libnl-3-200-udeb libnl-genl-3-200-udeb"
+	EMP_INITRD_ADD_EXTRA_PACKAGES_LIST="net-retriever netcfg ethdetect libiw30-udeb wpasupplicant-udeb rdnssd-udeb ndisc6-udeb wide-dhcpv6-client-udeb choose-mirror choose-mirror-bin gpgv-udeb libgcrypt20-udeb libgpg-error0-udeb debian-archive-keyring-udeb libnl-3-200-udeb libnl-genl-3-200-udeb apt-setup-udeb apt-mirror-setup"
 	EMP_INITRD_ADD_MODULE_PACKAGES_LIST="nic-modules crypto-modules"
     else
         echo "ERROR: No file lists implemented for version $EMP_DEBIAN_VERSION_NUMBER"
