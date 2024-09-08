@@ -65,12 +65,12 @@ emp_print_help()
 	    ;;
 	*emp_download_debian_support_files.sh)
 	    echo "--debian-name=bookworm "
-	    echo "--support-dir=/opt/easy_multi_pxe/netbootassets/debian/12/x64/support "
+	    echo "--support-dir=/opt/easy_multi_pxe/netbootassets/debian/12/x64/debian-support "
 	    echo ""
 	    echo "Or with short forms:"
 	    echo "$0"
 	    echo "-d bookworm"
-	    echo "-s /opt/easy_multi_pxe/netbootassets/debian/12/x64/support "
+	    echo "-s /opt/easy_multi_pxe/netbootassets/debian/12/x64/debian-support "
 	    ;;
 	*)
 	    echo "ERROR: Unknown script called, unable to print help"
@@ -369,6 +369,7 @@ emp_collect_general_pre_parameters_variables()
     EMP_PRESEED_FILE_NAME="preseed.cfg"
     EMP_INSTALLER_TARGET_DIR_PATH="/target"
     EMP_INITRD_BASE_INSTALLER_DIR_PATH="/usr/lib/base-installer.d"
+    EMP_DEBIAN_SUPPORT_FILES_DIR_NAME="debian-support"
     EMP_INITRD_BASE_INSTALLER_FILE="10set_allow_apt_unsecure"
     EMP_APT_CONF_DIR_PATH="/etc/apt/apt.conf.d"
     EMP_APT_TRUST_LOCAL_REPO_FILE_NAME="99trustlocalrepo"
@@ -1044,15 +1045,15 @@ emp_assert_download_debian_support_files_parameters()
 	esac
     fi
     
-    # Have something like debian/10/x64/support
+    # Have something like debian/10/x64/debian-support
     # Basically the beginning needs to be debian, next a valid version number,
-    # next a valid arch, then support
+    # next a valid arch, then debian-support
 
     if [ "$TEMP_RETVAL" -eq 0 ]
     then
 	TEMP_SUPPORT="$(basename "$TEMP_REMAINDER_DIR_PATH")"
 
-	if [ "$TEMP_SUPPORT" = "support" ]
+	if [ "$TEMP_SUPPORT" = "$EMP_DEBIAN_SUPPORT_FILES_DIR_NAME" ]
 	then
 	    TEMP_REMAINDER_DIR_PATH="$(dirname "$TEMP_REMAINDER_DIR_PATH")"
 	fi
@@ -2053,7 +2054,7 @@ emp_dpkg_install_udeb_packages_from_tree()
 
 emp_dpkg_install_support_packages()
 {
-    emp_dpkg_install_udeb_packages_from_tree "$EMP_BOOT_OS_ASSETS_PARENT/support" "_" "$EMP_INITRD_DIR_TREE_PATH" "Installing support packages to initrd.gz..." "$EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST"
+    emp_dpkg_install_udeb_packages_from_tree "$EMP_BOOT_OS_ASSETS_PARENT/$EMP_DEBIAN_SUPPORT_FILES_DIR_NAME" "_" "$EMP_INITRD_DIR_TREE_PATH" "Installing support packages to initrd.gz..." "$EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST"
 
     if [ "$?" -ne 0 ]
     then
