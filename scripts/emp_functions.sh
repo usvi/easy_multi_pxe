@@ -368,12 +368,8 @@ emp_collect_general_pre_parameters_variables()
     EMP_INITRD_GZIPPED_FILE_NAME="initrd.gz"
     EMP_PRESEED_FILE_NAME="preseed.cfg"
     EMP_INSTALLER_TARGET_DIR_PATH="/target"
-    EMP_INITRD_BASE_INSTALLER_DIR_PATH="/usr/lib/base-installer.d"
     EMP_DEBIAN_SUPPORT_FILES_DIR_NAME="debian-support"
-    EMP_INITRD_BASE_INSTALLER_FILE="10set_allow_apt_unsecure"
-    EMP_APT_CONF_DIR_PATH="/etc/apt/apt.conf.d"
-    EMP_APT_TRUST_LOCAL_REPO_FILE_NAME="99trustlocalrepo"
-    EMP_APT_SOURCES_LIST_FILE_NAME="sources.list"
+    EMP_APT_MIRROR_GENERATOR_FILE_PATH="/usr/lib/apt-setup/generators/50mirror"
     EMP_INITRD_DIR_PARENT_PATH="$EMP_WORK_DIR_PATH/initrd"
     EMP_INITRD_DIR_TREE_PATH="$EMP_INITRD_DIR_PARENT_PATH/tree"
     EMP_KERNEL_MODULES_DIR_PATH="/lib/modules"
@@ -2146,6 +2142,7 @@ EOF
 
     if [ "$?" -ne 0 ]
     then
+	echo ""
 	echo "ERROR: Unable to create initrd preseed file $EMP_INITRD_DIR_TREE_PATH/$EMP_PRESEED_FILE_NAME"
 	emp_force_unmount_generic_mountpoint
 	
@@ -2156,40 +2153,34 @@ EOF
 }
 
 
-emp_create_initrd_insecure_apt_sources_handling_scripts()
+
+emp_patch_apt_mirror_generator_deb_trusted()
 {
-    echo -n "Creating initrd insecure apt sources handling scripts..."
-    echo ""
-    
-    TEMP_INSTALLER_BASE_FILE_PATH="$EMP_INITRD_DIR_TREE_PATH/$EMP_INITRD_BASE_INSTALLER_DIR_PATH/$EMP_INITRD_BASE_INSTALLER_FILE"
-    TEMP_INTARGET_APT_CONF_DIR_PATH="$EMP_INSTALLER_TARGET_DIR_PATH$EMP_APT_CONF_DIR_PATH"
-    TEMP_INTARGET_APT_CONF_FILE_PATH="$TEMP_INTARGET_APT_CONF_DIR_PATH/$EMP_APT_TRUST_LOCAL_REPO_FILE_NAME"
+    echo -n "Patching apt mirror generator file..."
 
-    cat <<EOF > "$TEMP_INSTALLER_BASE_FILE_PATH"
-#!/bin/sh
+    TEMP_GENERATOR_FILE_PATH="$EMP_INITRD_DIR_TREE_PATH/$EMP_APT_MIRROR_GENERATOR_FILE_PATH"
 
-if [ ! -d $TEMP_INTARGET_APT_CONF_DIR_PATH ]
-then
-    mkdir -p $TEMP_INTARGET_APT_CONF_DIR_PATH
-fi
-echo 'APT::Get::AllowUnauthenticated "true";' > $TEMP_INTARGET_APT_CONF_FILE_PATH
-echo 'Aptitude::CmdLine::Ignore-Trust-Violations "true";' >> $TEMP_INTARGET_APT_CONF_FILE_PATH
+    if [ ! -f "$TEMP_GENERATOR_FILE_PATH" ]
+    then
+	echo ""
+	echo "ERROR: Unable to to find generator file in $TEMP_GENERATOR_FILE_PATH"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi
 
-EOF
+    sed -i 's|deb $trusted$protocol://$hostname$directory $codename $components|deb [trusted=yes] $trusted$protocol://$hostname$directory $codename $components|' "$TEMP_GENERATOR_FILE_PATH"
 
-    chmod a+rx "$TEMP_INSTALLER_BASE_FILE_PATH"
-    
-    #TEMP_DEB_URL="$EMP_WEBSERVER_PROTOCOL://$EMP_WEBSERVER_IP/$EMP_WEBSERVER_PATH_PREFIX/$EMP_BOOT_OS_ASSETS_SUBDIR/$EMP_BOOT_OS_ASSETS_UNPACKED_ISO_SUBDIR"
-    #TEMP_DEBIAN_VERSION_NAME="$(emp_debian_version_number_to_name "$EMP_BOOT_OS_MAIN_VERSION")"
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to patch apt mirror generator file $TEMP_GENERATOR_FILE_PATH"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi
 
-    #if [ -z "$TEMP_DEBIAN_VERSION_NAME" ]
-    #then
-#	echo ""
-#	echo "ERROR: Unable to get debian version name for number $EMP_BOOT_OS_MAIN_VERSION"
-#	emp_force_unmount_generic_mountpoint
-#	
-#	exit 1
- #   fi
+    echo "done"
 }
 
 
