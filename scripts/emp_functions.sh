@@ -42,13 +42,13 @@ emp_print_help()
 	    echo "[-c no] "
 	    ;;
 	*emp_provision_debian_iso_to_assets_dir.sh)
-	    echo "--iso-file=/opt/isos_ro/debian/debian-12.5.0-amd64-netinst.iso "
+	    echo "--iso-file=/opt/isos_ro/debian/debian-12.5.0-amd64-DVD-1.iso "
 	    echo "--assets-parent=/opt/easy_multi_pxe/netbootassets/debian/12/x64 "
 	    echo "[--unpack-iso=no] "
 	    echo ""
 	    echo "Or with short forms:"
 	    echo "$0"
-	    echo "-i /opt/isos_ro/debian/debian-12.5.0-amd64-netinst.iso "
+	    echo "-i /opt/isos_ro/debian/debian-12.5.0-amd64-DVD-1.iso "
 	    echo "-a /opt/easy_multi_pxe/netbootassets/debian/12/x64 "
 	    echo "[-u no] "
 	    ;;
