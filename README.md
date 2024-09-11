@@ -3,6 +3,7 @@
 Easy Multi PXE is an iPXE-powered simple pxe server. Currently it is able to boot in 64bit BIOS mode, but in the future it will support all crisscrossses from 32/64bit and BIOS/EFI. Possibly even signed efi stuff.
 
 ## Status
+* 2024-09-11 DO NOT USE THIS DOCUMENTATION. IT IS OUTDATED. Instead look at the scripts. Recently Debian DVD iso provisioning was made to work.
 * 2023-09-12 Doing heavy refactoring. Everything will break.
 * 2023-10-06 Done refactoring. Ubuntu provisioning works. Systemrescuecd provisioning works. Windows not. Documentation outdated.
 
