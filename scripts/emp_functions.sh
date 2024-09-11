@@ -373,6 +373,8 @@ emp_collect_general_pre_parameters_variables()
     EMP_INITRD_DIR_PARENT_PATH="$EMP_WORK_DIR_PATH/initrd"
     EMP_INITRD_DIR_TREE_PATH="$EMP_INITRD_DIR_PARENT_PATH/tree"
     EMP_KERNEL_MODULES_DIR_PATH="/lib/modules"
+    EMP_DPKG_STATUS_FILE_PATH="/var/lib/dpkg/status"
+    EMP_DPKG_LOAD_CDROM_POSTINST_FILE_PATH="/var/lib/dpkg/info/load-cdrom.postinst"
     EMP_INITRD_COMPRESSION_PERCENTAGE=29
 }
 
@@ -1965,7 +1967,7 @@ emp_dpkg_remove_initrd_packages()
 {
     echo -n "Removing conflicting packages from initrd.gz..."
     
-    dpkg --root="$EMP_INITRD_DIR_TREE_PATH" --force-architecture -P ${EMP_INITRD_REMOVE_PACKAGES_LIST} > /dev/null 2>&1
+    dpkg --root="$EMP_INITRD_DIR_TREE_PATH" --force-architecture,depends -P ${EMP_INITRD_REMOVE_PACKAGES_LIST} > /dev/null 2>&1
 
     if [ "$?" -ne 0 ]
     then
@@ -2177,6 +2179,40 @@ emp_patch_apt_mirror_generator_deb_trusted()
 	echo "ERROR: Unable to patch apt mirror generator file $TEMP_GENERATOR_FILE_PATH"
 	emp_force_unmount_generic_mountpoint
 	
+	exit 1
+    fi
+
+    echo "done"
+}
+
+
+
+emp_patch_load_cdrom_as_download_installer()
+{
+    echo -n "Patching load cdrom as download installer..."
+    
+    TEMP_DPKG_STATUS_FILE="$EMP_INITRD_DIR_TREE_PATH$EMP_DPKG_STATUS_FILE_PATH"
+    TEMP_DPKG_POSTINST_FILE="$EMP_INITRD_DIR_TREE_PATH$EMP_DPKG_LOAD_CDROM_POSTINST_FILE_PATH"
+    
+    sed -i -z -r 's/(Package: load-cdrom)\n(Status[^\n]*)\n(Version[^\n]*)\n(Depends:[^\n]*) cdrom-retriever,([^\n]*)\n(Description[^\n]*)\n(Installer-Menu-Item: [^\n]*)/\1\n\2\n\3\n\4\5\n\6\nInstaller-Menu-Item: 2300/' "$TEMP_DPKG_STATUS_FILE" > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to patch DPKG status file $TEMP_DPKG_STATUS_FILE"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+
+    sed -i 's/cdrom-retriever/net-retriever/' "$TEMP_DPKG_POSTINST_FILE" > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to patch post installation file $TEMP_DPKG_POSTINST_FILE"
+	emp_force_unmount_generic_mountpoint
+
 	exit 1
     fi
 
