@@ -40,7 +40,8 @@ emp_custom_collect_initrd_files_lists()
 	EMP_INITRD_REMOVE_PACKAGES_LIST="cdrom-retriever cdrom-detect cdrom-checker media-retriever mountmedia"
 	EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST="download-installer"
 	EMP_INITRD_ADD_EXTRA_PACKAGES_LIST="net-retriever netcfg ethdetect libiw30-udeb wpasupplicant-udeb rdnssd-udeb ndisc6-udeb wide-dhcpv6-client-udeb choose-mirror choose-mirror-bin gpgv-udeb libgcrypt20-udeb libgpg-error0-udeb debian-archive-keyring-udeb libnl-3-200-udeb libnl-genl-3-200-udeb apt-setup-udeb apt-mirror-setup"
-	EMP_INITRD_ADD_MODULE_PACKAGES_LIST="nic-modules crypto-modules"
+	EMP_INITRD_ADD_MODULE_PACKAGES_LIST="nic-modules nic-wireless-modules nic-shared-modules crypto-modules"
+	EMP_INITRD_ADD_FIRMWARE_PACKAGES_LIST="firmware-iwlwifi"
     else
         echo "ERROR: No file lists implemented for version $EMP_DEBIAN_VERSION_NUMBER"
 	emp_force_unmount_generic_mountpoint
@@ -92,6 +93,7 @@ emp_dpkg_remove_initrd_packages
 #emp_dpkg_install_support_packages
 emp_dpkg_install_extra_packages
 emp_dpkg_install_module_packages
+emp_dpkg_install_firmware_packages
 emp_create_initrd_preseed
 emp_patch_apt_mirror_generator_deb_trusted
 emp_patch_load_cdrom_as_download_installer

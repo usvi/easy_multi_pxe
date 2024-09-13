@@ -1982,14 +1982,16 @@ emp_dpkg_remove_initrd_packages()
 }
 
 
-emp_dpkg_install_udeb_packages_from_tree()
+
+emp_dpkg_install_packages_from_tree()
 {
     TEMP_PARAMS_TAIL="$@"
 
     TEMP_PACKAGES_SOURCE_TREE="$1"
-    TEMP_PACKAGE_NAME_SUFFIX="$2"
-    TEMP_INITRD_ROOT="$3"
-    TEMP_PRINT_PREFIX="$4"
+    TEMP_PACKAGE_NAME_SEPARATOR="$2"
+    TEMP_PACKAGE_SUFFIX="$3"
+    TEMP_INITRD_ROOT="$4"
+    TEMP_PRINT_PREFIX="$5"
     TEMP_SOURCE_REL_FILE_LIST="${TEMP_PARAMS_TAIL#*$TEMP_PRINT_PREFIX* }"
 
     echo -n "$TEMP_PRINT_PREFIX"
@@ -2000,8 +2002,8 @@ emp_dpkg_install_udeb_packages_from_tree()
     for TEMP_PACKAGE in $TEMP_SOURCE_REL_FILE_LIST
     do
 
-	TEMP_SEARCH_PACKAGE="/$TEMP_PACKAGE$TEMP_PACKAGE_NAME_SUFFIX"
-	TEMP_PACKAGE_PATH="$(find "$TEMP_PACKAGES_SOURCE_TREE" | grep "$TEMP_SEARCH_PACKAGE" | grep "\\.udeb$" | head -n 1)"
+	TEMP_SEARCH_PACKAGE="/$TEMP_PACKAGE$TEMP_PACKAGE_NAME_SEPARATOR"
+	TEMP_PACKAGE_PATH="$(find "$TEMP_PACKAGES_SOURCE_TREE" | grep "$TEMP_SEARCH_PACKAGE" | grep "\\.${TEMP_PACKAGE_SUFFIX}$" | head -n 1)"
 
 	if [ -z "TEMP_PACKAGE_PATH" ]
 	then
@@ -2050,9 +2052,10 @@ emp_dpkg_install_udeb_packages_from_tree()
 }
 
 
+
 emp_dpkg_install_support_packages()
 {
-    emp_dpkg_install_udeb_packages_from_tree "$EMP_BOOT_OS_ASSETS_PARENT/$EMP_DEBIAN_SUPPORT_FILES_DIR_NAME" "_" "$EMP_INITRD_DIR_TREE_PATH" "Installing support packages to initrd.gz..." "$EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST"
+    emp_dpkg_install_packages_from_tree "$EMP_BOOT_OS_ASSETS_PARENT/$EMP_DEBIAN_SUPPORT_FILES_DIR_NAME" "_" "udeb" "$EMP_INITRD_DIR_TREE_PATH" "Installing support packages to initrd.gz..." "$EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST"
 
     if [ "$?" -ne 0 ]
     then
@@ -2064,9 +2067,10 @@ emp_dpkg_install_support_packages()
 }
 
 
+
 emp_dpkg_install_extra_packages()
 {
-    emp_dpkg_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "_" "$EMP_INITRD_DIR_TREE_PATH" "Installing extra packages to initrd.gz..." "$EMP_INITRD_ADD_EXTRA_PACKAGES_LIST"
+    emp_dpkg_install_packages_from_tree "$EMP_MOUNT_POINT" "_" "udeb" "$EMP_INITRD_DIR_TREE_PATH" "Installing extra packages to initrd.gz..." "$EMP_INITRD_ADD_EXTRA_PACKAGES_LIST"
 
     if [ "$?" -ne 0 ]
     then
@@ -2078,9 +2082,10 @@ emp_dpkg_install_extra_packages()
 }
 
 
+
 emp_dpkg_install_module_packages()
 {
-    emp_dpkg_install_udeb_packages_from_tree "$EMP_MOUNT_POINT" "-" "$EMP_INITRD_DIR_TREE_PATH" "Installing module packages to initrd.gz..." "$EMP_INITRD_ADD_MODULE_PACKAGES_LIST"
+    emp_dpkg_install_packages_from_tree "$EMP_MOUNT_POINT" "-" "udeb" "$EMP_INITRD_DIR_TREE_PATH" "Installing module packages to initrd.gz..." "$EMP_INITRD_ADD_MODULE_PACKAGES_LIST"
 
     if [ "$?" -ne 0 ]
     then
@@ -2112,6 +2117,22 @@ emp_dpkg_install_module_packages()
 	exit 1
     fi
 }
+
+
+
+emp_dpkg_install_firmware_packages()
+{
+    emp_dpkg_install_packages_from_tree "$EMP_MOUNT_POINT" "_" "deb" "$EMP_INITRD_DIR_TREE_PATH" "Installing firmware packages to initrd.gz..." "$EMP_INITRD_ADD_FIRMWARE_PACKAGES_LIST"
+
+    if [ "$?" -ne 0 ]
+    then
+	echo "ERROR: Error installing firmware packages"
+	emp_force_unmount_generic_mountpoint
+	
+	exit 1
+    fi
+}
+
 
 
 emp_create_initrd_preseed()
