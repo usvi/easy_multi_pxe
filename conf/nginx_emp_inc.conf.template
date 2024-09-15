@@ -9,6 +9,30 @@ location /{EMP_WEBSERVER_PATH_PREFIX}/root.ipxe {
   fastcgi_pass unix:{EMP_PHP_FPM_RUN_SOCK};
 }
 
+# Sideload fragment.php:
+location /{EMP_WEBSERVER_PATH_PREFIX}/fragment.php {
+  alias {EMP_SCRIPTS_DIR}/fragment.php;
+  include snippets/fastcgi-php.conf;
+  fastcgi_param SCRIPT_FILENAME $request_filename;
+  fastcgi_pass unix:{EMP_PHP_FPM_RUN_SOCK};
+}
+
+# Sideload preseed.php:
+location /{EMP_WEBSERVER_PATH_PREFIX}/preseed.php {
+  alias {EMP_SCRIPTS_DIR}/preseed.php;
+  include snippets/fastcgi-php.conf;
+  fastcgi_param SCRIPT_FILENAME $request_filename;
+  fastcgi_pass unix:{EMP_PHP_FPM_RUN_SOCK};
+}
+
+# Sideload startnet.php:
+location /{EMP_WEBSERVER_PATH_PREFIX}/startnet.php {
+  alias {EMP_SCRIPTS_DIR}/startnet.php;
+  include snippets/fastcgi-php.conf;
+  fastcgi_param SCRIPT_FILENAME $request_filename;
+  fastcgi_pass unix:{EMP_PHP_FPM_RUN_SOCK};
+}
+
 # Sideload also wimboot:
 location /{EMP_WEBSERVER_PATH_PREFIX}/wimboot {
   alias {EMP_TFTPROOT_DIR}/wimboot;
