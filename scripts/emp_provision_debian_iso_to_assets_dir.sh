@@ -109,6 +109,7 @@ emp_copy_simple_asset_files
 # Include driver copying later and especially in debian
 emp_unmount_and_sync
 emp_create_ipxe_fragments
+emp_compile_root_ipxe
 
 
 echo "ALL DONE"

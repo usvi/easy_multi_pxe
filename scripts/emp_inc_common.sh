@@ -23,11 +23,11 @@ emp_read_config "$EMP_MAIN_CONFIG"
 
 # Rest of common definitions
 EMP_ASSETS_ROOT_DIR="$EMP_TOPDIR/netbootassets"
+EMP_SCRIPTS_DIR="$EMP_TOPDIR/scripts"
 
 if [ "$EMP_OP" = "create_configs" ]
 then
     EMP_CONFIG_DIR="$EMP_TOPDIR/conf"
-    EMP_SCRIPTS_DIR="$EMP_TOPDIR/scripts"
     EMP_TFTPROOT_DIR="$EMP_TOPDIR/tftproot"
 
     EMP_CONFIG_CHMOD_PERMS="ug=r"

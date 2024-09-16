@@ -41,3 +41,4 @@ emp_mount_iso
 emp_custom_analyze_assets_type
 emp_copy_iso_if_needed
 emp_unmount_and_sync
+emp_compile_root_ipxe

@@ -356,6 +356,8 @@ emp_collect_general_pre_parameters_variables()
     EMP_PROGRESS_UNIT_BYTES=10485760
     EMP_WIM_COMPRESSION_PERCENTAGE=41
 
+    EMP_ROOT_IPXE_GENERATOR="root.ipxe.php"
+    EMP_ROOT_IPXE_FILE="root.ipxe"
     EMP_WORK_DIR_PATH="$EMP_TOPDIR/work"
     EMP_MOUNT_POINT="$EMP_WORK_DIR_PATH/mount"
     EMP_WIM_DIRS_PARENT="$EMP_WORK_DIR_PATH/wims"
@@ -1395,6 +1397,38 @@ emp_create_ipxe_fragments()
     echo "done"
 }
 
+
+emp_compile_root_ipxe()
+{
+    echo -n "Compiling root.ipxe..."
+
+    TEMP_FINAL_IPXE_FILE="$EMP_ASSETS_ROOT_DIR/$EMP_ROOT_IPXE_FILE"
+    TEMP_TEMP_IPXE_FILE="$EMP_ASSETS_ROOT_DIR/$EMP_ROOT_IPXE_FILE.tmp"
+    
+    php "$EMP_SCRIPTS_DIR/$EMP_ROOT_IPXE_GENERATOR" > "$TEMP_TEMP_IPXE_FILE" 2>/dev/null
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to compile temporary ipxe root file $TEMP_TEMP_IPXE_FILE from source fragments"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+
+    mv "$TEMP_TEMP_IPXE_FILE" "$TEMP_FINAL_IPXE_FILE" > /dev/null 2>&1
+
+    if [ "$?" -ne 0 ]
+    then
+	echo ""
+	echo "ERROR: Unable to copy temporary ipxe root file $TEMP_TEMP_IPXE_FILE as actual"
+	emp_force_unmount_generic_mountpoint
+
+	exit 1
+    fi
+    
+    echo "done"
+}
 
 emp_remove_old_wim_remnants()
 {
