@@ -1,12 +1,10 @@
 # Use this in /etc/ngingx/sites-available/default :
 # include {EMP_CONFIG_DIR}/nginx_emp_inc.conf;
 
-# Sideload root.ipxe:
+# Force ipxe mime type to be text/plain
 location /{EMP_WEBSERVER_PATH_PREFIX}/root.ipxe {
-  alias {EMP_SCRIPTS_DIR}/root.ipxe.php;
-  include snippets/fastcgi-php.conf;
-  fastcgi_param SCRIPT_FILENAME $request_filename;
-  fastcgi_pass unix:{EMP_PHP_FPM_RUN_SOCK};
+  alias {EMP_ASSETS_ROOT_DIR}/root.ipxe;
+  add_header Content-type "text/plain";
 }
 
 # Sideload fragment.php:

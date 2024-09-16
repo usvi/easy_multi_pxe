@@ -1,66 +1,66 @@
 # Use something like this in /etc/apache2/sites-available/000-default.conf :
 # Include {EMP_CONFIG_DIR}/apache2_emp_inc.conf
 
-
 # Sideload root.ipxe:
-Alias "/{EMP_WEBSERVER_PATH_PREFIX}/root.ipxe" "{EMP_SCRIPTS_DIR}/root.ipxe.php"
+Alias "/{EMP_WEBSERVER_PATH_PREFIX}/root.ipxe" "{EMP_ASSETS_ROOT_DIR}/root.ipxe"
 
-<Files "root.ipxe.php">
+<Location "/{EMP_WEBSERVER_PATH_PREFIX}/root.ipxe">
   AllowOverride All
   Order allow,deny
   Allow from all
   Require all granted
-</Files>
+  ForceType text/plain
+</Location>
 
 # Sideload fragment.php:
 Alias "/{EMP_WEBSERVER_PATH_PREFIX}/fragment.php" "{EMP_SCRIPTS_DIR}/fragment.php"
 
-<Files "fragment.php">
+<Location "/{EMP_WEBSERVER_PATH_PREFIX}/fragment.php">
   AllowOverride All
   Order allow,deny
   Allow from all
   Require all granted
-</Files>
+</Location>
 
 # Sideload preseed.php:
 Alias "/{EMP_WEBSERVER_PATH_PREFIX}/preseed.php" "{EMP_SCRIPTS_DIR}/preseed.php"
 
-<Files "preseed.php">
+<Location "/{EMP_WEBSERVER_PATH_PREFIX}/preseed.php">
   AllowOverride All
   Order allow,deny
   Allow from all
   Require all granted
-</Files>
+</Location>
 
 # Sideload startnet.php:
 Alias "/{EMP_WEBSERVER_PATH_PREFIX}/startnet.php" "{EMP_SCRIPTS_DIR}/startnet.php"
 
-<Files "startnet.php">
+<Location "/{EMP_WEBSERVER_PATH_PREFIX}/startnet.php">
   AllowOverride All
   Order allow,deny
   Allow from all
   Require all granted
-</Files>
+</Location>
 
 # Sideload also wimboot:
 Alias "/{EMP_WEBSERVER_PATH_PREFIX}/wimboot" "{EMP_TFTPROOT_DIR}/wimboot"
 
-<Files "wimboot">
+<Location "/{EMP_WEBSERVER_PATH_PREFIX}/wimboot">
   AllowOverride All
   Order allow,deny
   Allow from all
   Require all granted
-</Files>
+</Location>
 
 # And 386 variant:
 Alias "/{EMP_WEBSERVER_PATH_PREFIX}/wimboot.386" "{EMP_TFTPROOT_DIR}/wimboot.386"
 
-<Files "wimboot.386">
+<Location "/{EMP_WEBSERVER_PATH_PREFIX}/wimboot.386">
   AllowOverride All
   Order allow,deny
   Allow from all
   Require all granted
-</Files>
+</Location>
 
 # Make everything else available from our assets directory
 Alias "/{EMP_WEBSERVER_PATH_PREFIX}" "{EMP_ASSETS_ROOT_DIR}"
