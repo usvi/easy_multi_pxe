@@ -35,12 +35,19 @@ while(($main_conf_file !== false) && !feof($main_conf_file))
 }
 fclose($main_conf_file);
 
+
+# Helper variables
+$webserver_root_url = "";
+$webserver_root_url .= $main_conf_db['WEBSERVER_PROTOCOL'] . "://";
+$webserver_root_url .= $main_conf_db['WEBSERVER_IP'] . "/";
+$webserver_root_url .= $main_conf_db['WEBSERVER_PATH_PREFIX'];
+
+
 # Find all submenus. Lots of esoteric stuff here.
 
 $id_lookups = [];
 $submenus = [];
 $submenu_names = [];
-
 
 $emp_platform_to_names = array(
     "x32-bios" => "iPXE 32bit BIOS",
@@ -74,11 +81,12 @@ $ipxe_fragment_iterator->setMaxDepth(3);
 
 foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
 {
-    if ($ipxe_file_candidate->getExtension() === "ipxe")
+    if ($ipxe_file_candidate->getExtension() === "ipxe" && $ipxe_file_candidate->getFilename() != "root.ipxe")
     {
         $dot_parts = explode(".", $ipxe_file_candidate);
         $ipxe_suffix = array_pop($dot_parts);
         $emp_platform = array_pop($dot_parts);
+        list($os_arch, $os_method) = explode("-", $emp_platform);
         $path_with_os_label_id = str_replace("." . $emp_platform . "." . $ipxe_suffix, "", $ipxe_file_candidate);
         
         if (array_key_exists($emp_platform, $emp_platform_to_names))
@@ -106,7 +114,15 @@ foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
             {
                 $submenus[$emp_platform][$os_family_menu_label_id][$os_family_with_major_menu_label_id] = [];
             }
-            $submenus[$emp_platform][$os_family_menu_label_id][$os_family_with_major_menu_label_id][$os_target_full_label_id] = file_get_contents($ipxe_file_candidate);
+            $submenus[$emp_platform][$os_family_menu_label_id][$os_family_with_major_menu_label_id][$os_target_full_label_id] =
+              array
+              (
+                  'METHOD' => $os_method,
+                  'FAMILY' => $os_family,
+                  'VERSION' => $os_major_version,
+                  'ARCH' => $os_arch,
+                  'ID' => $os_target_base_label_id,
+              );
         }
     }
 }
@@ -179,10 +195,17 @@ foreach($submenus as $emp_platform => $os_family_menu_label_id)
             print("goto \${selected}\n");
             print("\n");
             
-            foreach ($os_target_full_label_ids_array as $os_target_full_label_id => $target_ipxe_script)
+            foreach ($os_target_full_label_ids_array as $os_target_full_label_id => $target_metadata)
             {
                 print(":" . $os_target_full_label_id . "\n");
-                print($target_ipxe_script . "\n");
+                print("chain --replace " . $webserver_root_url . "/fragment.php?" .
+                      "method=" . $target_metadata['METHOD'] . "&" .
+                      "family=" . $target_metadata['FAMILY'] . "&" .
+                      "version=" . $target_metadata['VERSION'] . "&" .
+                      "arch=" . $target_metadata['ARCH'] . "&" .
+                      "id=" . $target_metadata['ID'] .
+                      "\n");
+                print("\n");
             }
         }
     }
