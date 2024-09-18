@@ -21,8 +21,13 @@ fclose($main_conf_file);
 
 
 # Helper variables
+$webserver_protocol = $main_conf_db['WEBSERVER_PROTOCOL'];
+$webserver_ip = $main_conf_db['WEBSERVER_IP'];
+$webserver_path_prefix = $main_conf_db['WEBSERVER_PATH_PREFIX'];
+
 $webserver_root_url = "";
-$webserver_root_url .= $main_conf_db['WEBSERVER_PROTOCOL'] . "://";
-$webserver_root_url .= $main_conf_db['WEBSERVER_IP'] . "/";
-$webserver_root_url .= $main_conf_db['WEBSERVER_PATH_PREFIX'];
+$webserver_root_url .= $webserver_protocol . "://";
+$webserver_root_url .= $webserver_ip . "/";
+$webserver_root_url .= $webserver_path_prefix;
+
 ?>

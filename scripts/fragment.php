@@ -17,7 +17,7 @@ print("set http_base $fragment_base_url\n");
 
 if ($os_family == 'debian')
 {
-    $preseed_url = $webserver_root_url . '/preseed.php&method=' . $os_method . "&family=" .
+    $preseed_url = $webserver_root_url . '/preseed.php?method=' . $os_method . "&family=" .
                  $os_family . '&version=' . $os_version . '&arch=' . $os_arch . '&id=' . $os_id;
     print("set preseed_url $preseed_url\n");
 }
@@ -25,5 +25,5 @@ $fragment_core_data = file_get_contents($fragment_file_path);
 
 print($fragment_core_data);
 
-print("boot\nsleep 50\n");
+print("boot\nsleep 5\n");
 ?>
