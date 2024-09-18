@@ -28,14 +28,10 @@ emp_custom_create_single_ipxe_fragment()
     if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "regular" ]
     then
         cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH/unpacked
-kernel \${http_base}/sysresccd/boot/x86_64/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 nofirewall archisobasedir=sysresccd initrd=sysresccd.img ip=dhcp checksum archiso_http_srv=\${http_base}/
-initrd \${http_base}/sysresccd/boot/intel_ucode.img
-initrd \${http_base}/sysresccd/boot/amd_ucode.img
-initrd \${http_base}/sysresccd/boot/x86_64/sysresccd.img
-boot
-sleep 5
-goto end
+kernel \${http_base}/unpacked/sysresccd/boot/x86_64/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 nofirewall archisobasedir=sysresccd initrd=sysresccd.img ip=dhcp checksum archiso_http_srv=\${http_base}/unpacked/
+initrd \${http_base}/unpacked/sysresccd/boot/intel_ucode.img
+initrd \${http_base}/unpacked/sysresccd/boot/amd_ucode.img
+initrd \${http_base}/unpacked/sysresccd/boot/x86_64/sysresccd.img
 EOF
         if [ "$?" -ne 0 ]
         then
