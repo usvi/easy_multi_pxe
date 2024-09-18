@@ -1,6 +1,12 @@
 # Use this in /etc/ngingx/sites-available/default :
 # include {EMP_CONFIG_DIR}/nginx_emp_inc.conf;
 
+# Allow the assets directory hierarchy
+location /{EMP_WEBSERVER_PATH_PREFIX}/ {
+  alias {EMP_ASSETS_ROOT_DIR}/;
+  autoindex on;
+}
+
 # Force ipxe mime type to be text/plain
 location = /{EMP_WEBSERVER_PATH_PREFIX}/root.ipxe {
   alias {EMP_ASSETS_ROOT_DIR}/root.ipxe;
