@@ -40,13 +40,9 @@ emp_custom_create_single_ipxe_fragment()
     if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "casper" ]
     then
         cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
 set http_iso \${http_base}/$EMP_BOOT_OS_ISO_FILE
 kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 root=/dev/ram0 initrd=initrd ip=dhcp url=\${http_iso} cloud-config-url=/dev/null
 initrd \${http_base}/initrd
-boot
-sleep 5
-goto end
 EOF
         if [ "$?" -ne 0 ]
         then
@@ -59,12 +55,8 @@ EOF
     then
 	# Plain variant of the Ubuntu
         cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
 kernel \${http_base}/linux nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp
 initrd \${http_base}/initrd.gz
-boot
-sleep 5
-goto end
 EOF
         if [ "$?" -ne 0 ]
         then
