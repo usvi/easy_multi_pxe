@@ -42,9 +42,8 @@ emp_custom_collect_initrd_files_lists()
 {
     if [ "$EMP_BOOT_OS_MAIN_VERSION" -eq 12 ]
     then
-	EMP_INITRD_REMOVE_PACKAGES_LIST="cdrom-retriever cdrom-detect cdrom-checker media-retriever mountmedia"
-	EMP_INITRD_ADD_SUPPORT_PACKAGES_LIST="download-installer"
-	EMP_INITRD_ADD_EXTRA_PACKAGES_LIST="net-retriever netcfg ethdetect libiw30-udeb wpasupplicant-udeb rdnssd-udeb ndisc6-udeb wide-dhcpv6-client-udeb choose-mirror choose-mirror-bin gpgv-udeb libgcrypt20-udeb libgpg-error0-udeb debian-archive-keyring-udeb libnl-3-200-udeb libnl-genl-3-200-udeb apt-setup-udeb apt-mirror-setup"
+	EMP_INITRD_REMOVE_PACKAGES_LIST="cdrom-retriever cdrom-detect cdrom-checker media-retriever mountmedia file-preseed initrd-preseed"
+	EMP_INITRD_ADD_EXTRA_PACKAGES_LIST="network-preseed net-retriever netcfg ethdetect libiw30-udeb wpasupplicant-udeb rdnssd-udeb ndisc6-udeb wide-dhcpv6-client-udeb choose-mirror choose-mirror-bin gpgv-udeb libgcrypt20-udeb libgpg-error0-udeb debian-archive-keyring-udeb libnl-3-200-udeb libnl-genl-3-200-udeb apt-setup-udeb apt-mirror-setup"
 	EMP_INITRD_ADD_MODULE_PACKAGES_LIST="nic-modules nic-shared-modules crypto-modules"
 	#EMP_INITRD_ADD_MODULE_PACKAGES_LIST="$EMP_INITRD_ADD_MODULE_PACKAGES_LIST nic-wireless-modules"
 	#EMP_INITRD_ADD_FIRMWARE_PACKAGES_LIST="firmware-iwlwifi"
@@ -65,13 +64,8 @@ emp_custom_create_single_ipxe_fragment()
     if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
     then
         cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-set http_base $EMP_BOOT_OS_ASSETS_HTTP_BASE_PATH
-set http_iso \${http_base}/$EMP_BOOT_OS_ISO_FILE
-kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp
+kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp preseed/url=\${preseed_url}
 initrd \${http_base}/initrd.gz
-boot
-sleep 5
-goto end
 EOF
         if [ "$?" -ne 0 ]
         then
@@ -99,7 +93,7 @@ emp_dpkg_remove_initrd_packages
 emp_dpkg_install_extra_packages
 emp_dpkg_install_module_packages
 #emp_dpkg_install_firmware_packages
-emp_create_initrd_preseed
+#emp_create_initrd_preseed
 emp_patch_apt_mirror_generator_deb_trusted
 emp_patch_load_cdrom_as_download_installer
 emp_repack_initrd
