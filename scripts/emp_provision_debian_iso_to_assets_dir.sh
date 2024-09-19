@@ -22,8 +22,24 @@ emp_custom_analyze_assets_type()
     then
 	EMP_BOOT_OS_ASSETS_TYPE="dvd"
 	# Note: install.amd breaks for 32bit
-	EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz"
-	EMP_BOOT_OS_INITRD_PATH="install.amd/initrd.gz"
+	if [ "$EMP_BOOT_OS_MAIN_ARCH" = "x32" ]
+	then
+	    EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.386/vmlinuz"
+	    EMP_BOOT_OS_INITRD_PATH="install.386/initrd.gz"
+	    
+	elif [ "$EMP_BOOT_OS_MAIN_ARCH" = "x64" ]
+	then
+	    EMP_BOOT_OS_ASSETS_FILES_COPY_ISO_PATHS_LIST="install.amd/vmlinuz"
+	    EMP_BOOT_OS_INITRD_PATH="install.amd/initrd.gz"
+
+	else
+	    echo ""
+            echo "ERROR: Unsupported arch type $EMP_BOOT_OS_MAIN_ARCH ."
+	    emp_force_unmount_generic_mountpoint
+	
+            exit 1
+	fi
+	
     else
 	echo ""
         echo "ERROR: Unable to analyze assets type for  boot methodology of the iso file."
