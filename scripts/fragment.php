@@ -13,7 +13,7 @@ $fragment_file_path =
 $fragment_base_url =
                    $webserver_root_url . '/' . $os_family . '/' . $os_version . '/' . $os_arch . '/' . $os_id;
 
-print("set http_base $fragment_base_url\n");
+print("set os_assets_base $fragment_base_url\n");
 
 if ($os_family == 'debian')
 {

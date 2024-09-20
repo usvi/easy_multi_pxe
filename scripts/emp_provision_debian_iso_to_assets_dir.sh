@@ -80,8 +80,8 @@ emp_custom_create_single_ipxe_fragment()
     if [ "$EMP_BOOT_OS_ASSETS_TYPE" = "dvd" ]
     then
         cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-kernel \${http_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp preseed/url=\${preseed_url}
-initrd \${http_base}/initrd.gz
+kernel \${os_assets_base}/vmlinuz nvidia.modeset=0 i915.modeset=0 nouveau.modeset=0 initrd=initrd.gz ip=dhcp preseed/url=\${preseed_url}
+initrd \${os_assets_base}/initrd.gz
 EOF
         if [ "$?" -ne 0 ]
         then
