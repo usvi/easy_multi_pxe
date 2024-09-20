@@ -21,6 +21,12 @@ if ($os_family == 'debian')
                  $os_family . '&version=' . $os_version . '&arch=' . $os_arch . '&id=' . $os_id;
     print("set preseed_url $preseed_url\n");
 }
+if ($os_family == 'windows')
+{
+    $template_base = $webserver_root_url . '/' . $os_family . '/' . 'template' . '/' . $os_arch;
+
+    print("set template_base $template_base\n");
+}
 $fragment_core_data = file_get_contents($fragment_file_path);
 
 print($fragment_core_data);
