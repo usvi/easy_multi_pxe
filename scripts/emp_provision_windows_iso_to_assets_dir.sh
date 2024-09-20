@@ -18,19 +18,29 @@ emp_custom_analyze_assets_type()
     then
 	echo "done"
 	
-    elif [ "$TEMP_SOURCE_BOOT_WIM_ARCH" = "x86" -a "$EMP_BOOT_OS_MAIN_ARCH" = "x32" ]]
+    elif [ "$TEMP_SOURCE_BOOT_WIM_ARCH" = "x86" -a "$EMP_BOOT_OS_MAIN_ARCH" = "x32" ]
     then
-	echo ""
+	echo "done"
 
     else
 	echo ""
 	echo "ERROR: Source arch not consistent with parameters"
 	emp_force_unmount_generic_mountpoint
-
+	
 	exit 1
     fi
     
 }
+
+emp_custom_create_single_ipxe_fragment()
+{
+    TEMP_PARAM_IPXE_FRAGMENT="$1"
+
+    cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
+foo
+EOF
+}
+ 
 
 
 
@@ -39,6 +49,7 @@ emp_remove_old_ipxe_fragment_remnants
 emp_force_unmount_generic_mountpoint
 emp_mount_iso
 emp_custom_analyze_assets_type
-emp_copy_iso_if_needed
+emp_unpack_iso_if_needed
 emp_unmount_and_sync
+emp_create_ipxe_fragments
 emp_compile_root_ipxe
