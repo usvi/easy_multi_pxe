@@ -2,19 +2,19 @@
 # include {EMP_CONFIG_DIR}/nginx_emp_inc.conf;
 
 # Allow the assets directory hierarchy
-location /{EMP_WEBSERVER_PATH_PREFIX}/ {
+location /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/ {
   alias {EMP_ASSETS_ROOT_DIR}/;
   autoindex on;
 }
 
 # Force ipxe mime type to be text/plain
-location = /{EMP_WEBSERVER_PATH_PREFIX}/root.ipxe {
+location = /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/root.ipxe {
   alias {EMP_ASSETS_ROOT_DIR}/root.ipxe;
   add_header Content-type "text/plain";
 }
 
 # Sideload fragment.php:
-location = /{EMP_WEBSERVER_PATH_PREFIX}/fragment.php {
+location = /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/fragment.php {
   alias {EMP_SCRIPTS_DIR}/fragment.php;
   include snippets/fastcgi-php.conf;
   fastcgi_param SCRIPT_FILENAME $request_filename;
@@ -22,7 +22,7 @@ location = /{EMP_WEBSERVER_PATH_PREFIX}/fragment.php {
 }
 
 # Sideload preseed.php:
-location = /{EMP_WEBSERVER_PATH_PREFIX}/preseed.php {
+location = /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/preseed.php {
   alias {EMP_SCRIPTS_DIR}/preseed.php;
   include snippets/fastcgi-php.conf;
   fastcgi_param SCRIPT_FILENAME $request_filename;
@@ -30,7 +30,7 @@ location = /{EMP_WEBSERVER_PATH_PREFIX}/preseed.php {
 }
 
 # Sideload startnet.php:
-location = /{EMP_WEBSERVER_PATH_PREFIX}/startnet.php {
+location = /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/startnet.php {
   alias {EMP_SCRIPTS_DIR}/startnet.php;
   include snippets/fastcgi-php.conf;
   fastcgi_param SCRIPT_FILENAME $request_filename;
@@ -38,19 +38,19 @@ location = /{EMP_WEBSERVER_PATH_PREFIX}/startnet.php {
 }
 
 # Sideload also wimboot:
-location = /{EMP_WEBSERVER_PATH_PREFIX}/wimboot {
+location = /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/wimboot {
   alias {EMP_TFTPROOT_DIR}/wimboot;
   sendfile_max_chunk 2147483647;
 }
 
 # And 386 variant:
-location = /{EMP_WEBSERVER_PATH_PREFIX}/wimboot.386 {
+location = /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/wimboot.386 {
   alias {EMP_TFTPROOT_DIR}/wimboot.386;
   sendfile_max_chunk 2147483647;
 }
 
 # Make everything else available from our assets directory
-location = /{EMP_WEBSERVER_PATH_PREFIX} {
+location = /{EMP_WEBSERVER_ASSETS_PATH_PREFIX} {
   alias {EMP_ASSETS_ROOT_DIR};
   autoindex on;
   sendfile_max_chunk 2147483647;
