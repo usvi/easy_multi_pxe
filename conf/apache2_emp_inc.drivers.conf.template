@@ -1,0 +1,12 @@
+
+# Make everything else available from our assets directory
+Alias "/{EMP_WEBSERVER_ASSETS_PATH_PREFIX}" "{EMP_ASSETS_ROOT_DIR}"
+
+<Directory "{EMP_ASSETS_ROOT_DIR}">
+  EnableMMAP Off
+  Options Indexes FollowSymLinks MultiViews
+  AllowOverride All
+  Order allow,deny
+  Allow from all
+  Require all granted
+</Directory>

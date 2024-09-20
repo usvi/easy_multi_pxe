@@ -1,0 +1,6 @@
+
+# Allow the drivers directory hierarchy
+location /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/ {
+  alias {EMP_ASSETS_ROOT_DIR}/;
+  autoindex on;
+}

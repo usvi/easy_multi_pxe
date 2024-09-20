@@ -33,11 +33,14 @@ then
     EMP_CONFIG_CHMOD_PERMS="ug=r"
     EMP_WEBSERVER_USERNAME="www-data"
 
-    EMP_APACHE_CONF_TEMPLATE="$EMP_CONFIG_DIR/apache2_emp_inc.conf.template"
-    EMP_APACHE_CONF_FINAL="$EMP_CONFIG_DIR/apache2_emp_inc.conf"
     EMP_DNSMASQ_CONF_TEMPLATE="$EMP_CONFIG_DIR/dnsmasq_emp_inc.conf.template"
     EMP_DNSMASQ_CONF_FINAL="$EMP_CONFIG_DIR/dnsmasq_emp_inc.conf"
-    EMP_NGINX_CONF_TEMPLATE="$EMP_CONFIG_DIR/nginx_emp_inc.conf.template"
+
+    EMP_APACHE_BASE_CONF_TEMPLATE="$EMP_CONFIG_DIR/apache2_emp_inc.base.conf.template"
+    EMP_APACHE_DRIVERS_CONF_TEMPLATE="$EMP_CONFIG_DIR/apache2_emp_inc.drivers.conf.template"
+    EMP_APACHE_CONF_FINAL="$EMP_CONFIG_DIR/apache2_emp_inc.conf"
+    EMP_NGINX_BASE_CONF_TEMPLATE="$EMP_CONFIG_DIR/nginx_emp_inc.base.conf.template"
+    EMP_NGINX_DRIVERS_CONF_TEMPLATE="$EMP_CONFIG_DIR/nginx_emp_inc.drivers.conf.template"
     EMP_NGINX_CONF_FINAL="$EMP_CONFIG_DIR/nginx_emp_inc.conf"
 
 elif [ "$EMP_OP" = "do_provisioning" ]
