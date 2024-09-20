@@ -1,6 +1,6 @@
 
 # Allow the drivers directory hierarchy
 location /{EMP_WEBSERVER_DRIVERS_PATH_PREFIX}/ {
-  alias {DRIVERS_BASE_DIR}/;
+  alias {EMP_DRIVERS_BASE_DIR}/;
   autoindex on;
 }

@@ -1,8 +1,8 @@
 
 # Allow the drivers directory hierarchy
-Alias "/{EMP_WEBSERVER_DRIVERS_PATH_PREFIX}" "{DRIVERS_BASE_DIR}"
+Alias "/{EMP_WEBSERVER_DRIVERS_PATH_PREFIX}" "{EMP_DRIVERS_BASE_DIR}"
 
-<Directory "{DRIVERS_BASE_DIR}">
+<Directory "{EMP_DRIVERS_BASE_DIR}">
   EnableMMAP Off
   Options Indexes FollowSymLinks MultiViews
   AllowOverride All
