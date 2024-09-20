@@ -35,9 +35,11 @@ emp_custom_analyze_assets_type()
 emp_custom_create_single_ipxe_fragment()
 {
     TEMP_PARAM_IPXE_FRAGMENT="$1"
+    TEMP_TEMPLATE_FILE_NAME="$(basename "$EMP_TEMPLATE_PATH")"
 
     cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
-foo
+kernel wimboot
+initrd --name boot.wim \${template_base}/$TEMP_TEMPLATE_FILE_NAME boot.wim
 EOF
 }
  
