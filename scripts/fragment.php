@@ -11,23 +11,23 @@ $fragment_file_path =
                     $assets_prefix_dir . '/' . $os_family . '/' . $os_version . '/' . $os_arch . '/' .
                     $os_id . '.' . $os_arch . '-' . $os_method . '.ipxe';
 $fragment_base_url =
-                   $webserver_root_url . '/' . $os_family . '/' . $os_version . '/' . $os_arch . '/' . $os_id;
+                   $webserver_assets_root_url . '/' . $os_family . '/' . $os_version . '/' . $os_arch . '/' . $os_id;
 
 print("set os_assets_base $fragment_base_url\n");
 
 if ($os_family == 'debian')
 {
-    $preseed_url = $webserver_root_url . '/preseed.php?method=' . $os_method . "&family=" .
+    $preseed_url = $webserver_assets_root_url . '/preseed.php?method=' . $os_method . "&family=" .
                  $os_family . '&version=' . $os_version . '&arch=' . $os_arch . '&id=' . $os_id;
     print("set preseed_url $preseed_url\n");
 }
 if ($os_family == 'windows')
 {
-    $template_base = $webserver_root_url . '/' . $os_family . '/' . 'template' . '/' . $os_arch;
+    $template_base = $webserver_assets_root_url . '/' . $os_family . '/' . 'template' . '/' . $os_arch;
 
     print("set template_base $template_base\n");
 
-    $startnet_url = $webserver_root_url . '/startnet.php?method=' . $os_method . "&family=" .
+    $startnet_url = $webserver_assets_root_url . '/startnet.php?method=' . $os_method . "&family=" .
                   $os_family . '&version=' . $os_version . '&arch=' . $os_arch . '&id=' . $os_id;
     print("set startnet_url $startnet_url\n");
 }

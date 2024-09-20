@@ -173,7 +173,7 @@ foreach($submenus as $emp_platform => $os_family_menu_label_id)
             foreach ($os_target_full_label_ids_array as $os_target_full_label_id => $target_metadata)
             {
                 print(":" . $os_target_full_label_id . "\n");
-                print("chain --replace " . $webserver_root_url . "/fragment.php?" .
+                print("chain --replace " . $webserver_assets_root_url . "/fragment.php?" .
                       "method=" . $target_metadata['METHOD'] . "&" .
                       "family=" . $target_metadata['FAMILY'] . "&" .
                       "version=" . $target_metadata['VERSION'] . "&" .

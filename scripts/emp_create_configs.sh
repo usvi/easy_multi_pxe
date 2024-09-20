@@ -129,6 +129,23 @@ then
     else
 	EMP_DRIVERS_BASE_DIR="$TEMP_INPUT"
     fi
+
+    # Drivers need the webserver part also
+    echo -n "Give webserver drivers path prefix [$EMP_WEBSERVER_DRIVERS_PATH_PREFIX]: "
+    read TEMP_INPUT
+
+    if [ -z "$TEMP_INPUT" ]
+    then
+	if [ -z "$EMP_WEBSERVER_DRIVERS_PATH_PREFIX" ]
+	then
+	    echo "ERROR: No webserver drivers path prefix given, exiting."
+
+	    exit 1
+	fi
+    else
+	EMP_WEBSERVER_DRIVERS_PATH_PREFIX="$TEMP_INPUT"
+    fi
+    
 else
     EMP_DRIVERS_BASE_DIR=""
 fi
@@ -313,6 +330,7 @@ echo "WEBSERVER_ASSETS_PATH_PREFIX=$EMP_WEBSERVER_ASSETS_PATH_PREFIX" >> "$EMP_M
 if [ -n "$EMP_DRIVERS_BASE_DIR" ]
 then
     echo "DRIVERS_BASE_DIR=$EMP_DRIVERS_BASE_DIR" >> "$EMP_MAIN_CONFIG"
+    echo "WEBSERVER_DRIVERS_PATH_PREFIX=$EMP_WEBSERVER_DRIVERS_PATH_PREFIX" >> "$EMP_MAIN_CONFIG"
 fi
 
 echo "CIFS_SERVER_IP=$EMP_CIFS_SERVER_IP" >> "$EMP_MAIN_CONFIG"
