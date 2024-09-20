@@ -26,6 +26,10 @@ if ($os_family == 'windows')
     $template_base = $webserver_root_url . '/' . $os_family . '/' . 'template' . '/' . $os_arch;
 
     print("set template_base $template_base\n");
+
+    $startnet_url = $webserver_root_url . '/startnet.php?method=' . $os_method . "&family=" .
+                  $os_family . '&version=' . $os_version . '&arch=' . $os_arch . '&id=' . $os_id;
+    print("set startnet_url $startnet_url\n");
 }
 $fragment_core_data = file_get_contents($fragment_file_path);
 

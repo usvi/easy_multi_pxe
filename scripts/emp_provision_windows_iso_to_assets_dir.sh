@@ -40,9 +40,10 @@ emp_custom_create_single_ipxe_fragment()
     cat <<EOF > "$TEMP_PARAM_IPXE_FRAGMENT"
 kernel wimboot
 initrd --name boot.wim \${template_base}/$TEMP_TEMPLATE_FILE_NAME boot.wim
+initrd --name startnet.cmd \${startnet_url} startnet.cmd
 EOF
 }
- 
+
 
 
 
