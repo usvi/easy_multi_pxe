@@ -1,6 +1,7 @@
 
-# Allow the drivers directory hierarchy
+# Make drivers available
 location /{EMP_WEBSERVER_DRIVERS_PATH_PREFIX}/ {
   alias {EMP_DRIVERS_BASE_DIR}/;
   autoindex on;
+  sendfile_max_chunk 2147483647;
 }
