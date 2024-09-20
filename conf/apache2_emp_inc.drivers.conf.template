@@ -1,8 +1,8 @@
 
-# Make everything else available from our assets directory
-Alias "/{EMP_WEBSERVER_ASSETS_PATH_PREFIX}" "{EMP_ASSETS_ROOT_DIR}"
+# Allow the drivers directory hierarchy
+Alias "/{EMP_WEBSERVER_DRIVERS_PATH_PREFIX}" "{DRIVERS_BASE_DIR}"
 
-<Directory "{EMP_ASSETS_ROOT_DIR}">
+<Directory "{DRIVERS_BASE_DIR}">
   EnableMMAP Off
   Options Indexes FollowSymLinks MultiViews
   AllowOverride All
