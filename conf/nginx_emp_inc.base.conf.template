@@ -45,7 +45,7 @@ location = /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/wimboot.386 {
 }
 
 # Make everything else available from our assets directory
-location = /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/ {
+location /{EMP_WEBSERVER_ASSETS_PATH_PREFIX}/ {
   alias {EMP_ASSETS_ROOT_DIR}/;
   autoindex on;
   sendfile_max_chunk 2147483647;
