@@ -51,7 +51,7 @@ if (($conf_drivers_base_dir != "") && (is_dir($conf_drivers_base_dir)))
 print("wpeinit\n");
 print("net use j: $os_cifs_path$os_cifs_auth_string\n");
 print("j:\\setup.exe /noreboot\n");
-print("Press any key to reboot\n");
+print("echo Press any key to reboot\n");
 print("pause\n");
 print("exit\n");
 
