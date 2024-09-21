@@ -51,7 +51,7 @@ $default_entries = array(
 );
 
 
-$ipxe_fragment_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($assets_prefix_dir));
+$ipxe_fragment_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($conf_assets_base_dir));
 $ipxe_fragment_iterator->setMaxDepth(3);
 
 foreach ($ipxe_fragment_iterator as $ipxe_file_candidate)
