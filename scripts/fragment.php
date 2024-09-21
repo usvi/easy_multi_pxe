@@ -8,6 +8,8 @@ header("Content-Type: text/plain");
 print("#!ipxe\n\n");
 
 $webserver_assets_root_url = $conf_webserver_protocol . "://" . $conf_webserver_ip . "/" . $conf_webserver_assets_path_prefix;
+$webserver_drivers_root_url = $conf_webserver_protocol . "://" . $conf_webserver_ip . "/" . $conf_webserver_drivers_path_prefix;
+
 
 $fragment_file_path =
                     $conf_assets_base_dir . '/' . $arg_os_family . '/' .
@@ -18,6 +20,10 @@ $fragment_file_path =
 $fragment_base_url =
                    $webserver_assets_root_url . '/' . $arg_os_family . '/' .
                    $arg_os_version . '/' . $arg_os_arch . '/' . $arg_os_id;
+
+$webserver_os_drivers_root_url =
+                               $webserver_drivers_root_url . '/' . $arg_os_family . '/' .
+                               $arg_os_version . '/' . $arg_os_arch;
 
 
 print("set os_assets_base $fragment_base_url\n");
@@ -43,9 +49,9 @@ $fragment_core_data = file_get_contents($fragment_file_path);
 print($fragment_core_data);
 
 // Need to print drivers as initrds if drivers dir is in use for windows
-if (($arg_os_family == 'windows') && ($drivers_base_dir != "") && (is_dir($drivers_base_dir)))
+if (($arg_os_family == 'windows') && ($conf_drivers_base_dir != "") && (is_dir($conf_drivers_base_dir)))
 {
-    $os_drivers_dir = $drivers_base_dir . '/' . $arg_os_family . '/' . $arg_os_version . '/' . $arg_os_arch;
+    $os_drivers_dir = $conf_drivers_base_dir . '/' . $arg_os_family . '/' . $arg_os_version . '/' . $arg_os_arch;
 
     if (is_dir($os_drivers_dir))
     {
@@ -57,15 +63,17 @@ if (($arg_os_family == 'windows') && ($drivers_base_dir != "") && (is_dir($drive
             {
                 // Here we have something like /opt/drivers/windows/10/x64/Broadcom_Nextreme_64bit/b57nd60a.inf
                 // Need to convert it to this:
-                // initrd --name extradrivers/Broadcom_Nextreme_64bit/b57nd60a.inf http://172.16.8.254/drivers/windows/10/x64/Broadcom_Nextreme_64bit/b57nd60a.inf extradrivers/Broadcom_Nextreme_64bit/b57nd60a.inf
+                // initrd http://172.16.8.254/drivers/windows/10/x64/Broadcom_Nextreme_64bit/b57nd60a.inf b57nd60a.inf
                 
-                //$driver_sub_path = str_replace($arg_os_drivers_dir . '/', '', $driver_file);
-                //print("initrd --name $driver_base_file\n");
-                //print("$webserver_drivers_root_url\n");
+                $driver_sub_path = str_replace($os_drivers_dir . '/', '', $driver_file);
+                $driver_url = $webserver_os_drivers_root_url . '/' . $driver_sub_path;
+                $driver_file_name = basename($driver_sub_path);
+                print("initrd $driver_url $driver_file_name\n");
             }
         }
     }
 }
+
 
 print("boot\nsleep 5\n");
 ?>
