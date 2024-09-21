@@ -1,7 +1,7 @@
 <?php
 $main_conf_path = dirname(__FILE__, 2) . "/conf/easy_multi_pxe.conf";
 // /netbootassets is "hardcoded" because directory is enforced (exists in git)
-$assets_prefix_dir = dirname(__FILE__, 2) . "/netbootassets";
+$conf_assets_base_dir = dirname(__FILE__, 2) . "/netbootassets";
 
 $main_conf_db = [];
 
@@ -59,7 +59,7 @@ if (array_key_exists('CIFS_SHARE_NAME', $main_conf_db))
 }
 if (array_key_exists('CIFS_USER', $main_conf_db))
 {
-    $conf_cifs_passwd =  $main_conf_db['CIFS_USER'];
+    $conf_cifs_user =  $main_conf_db['CIFS_USER'];
 }
 if (array_key_exists('CIFS_PASSWD', $main_conf_db))
 {

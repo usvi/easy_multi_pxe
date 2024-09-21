@@ -110,6 +110,10 @@ goto ${arch}-${method}
 
 <?php
 
+$webserver_assets_root_url =
+                $conf_webserver_protocol . '://' . $conf_webserver_ip . '/' . $conf_webserver_assets_path_prefix;
+                
+
 foreach($submenus as $emp_platform => $os_family_menu_label_id)
 {
     print("# Main arch platform menu\n");

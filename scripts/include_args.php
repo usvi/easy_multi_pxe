@@ -15,11 +15,12 @@ if ((strlen($_GET['method']) == 0) ||
 {
     exit(0);
 }
-     
-$os_method = $_GET['method'];
-$os_family = $_GET['family'];
-$os_version = $_GET['version'];
-$os_arch = $_GET['arch'];
-$os_id = $_GET['id'];
+
+
+$arg_os_method = $_GET['method'];
+$arg_os_family = $_GET['family'];
+$arg_os_version = $_GET['version'];
+$arg_os_arch = $_GET['arch'];
+$arg_os_id = $_GET['id'];
 
 ?>
