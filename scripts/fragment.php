@@ -35,5 +35,30 @@ $fragment_core_data = file_get_contents($fragment_file_path);
 
 print($fragment_core_data);
 
+// Need to print drivers as initrds if drivers dir is in use for windows
+if (($os_family == 'windows') && ($drivers_base_dir != "") && (is_dir($drivers_base_dir)))
+{
+    $os_drivers_dir = $drivers_base_dir . '/' . $os_family . '/' . $os_version . '/' . $os_arch;
+
+    if (is_dir($os_drivers_dir))
+    {
+        $driver_file_iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($os_drivers_dir));
+
+        foreach ($driver_file_iterator as $driver_file)
+        {
+            if ((basename($driver_file) != '.') && (basename($driver_file) != '..'))
+            {
+                // Here we have something like /opt/drivers/windows/10/x64/Broadcom_Nextreme_64bit/b57nd60a.inf
+                // Need to convert it to this:
+                // initrd --name extradrivers/Broadcom_Nextreme_64bit/b57nd60a.inf http://172.16.8.254/drivers/windows/10/x64/Broadcom_Nextreme_64bit/b57nd60a.inf extradrivers/Broadcom_Nextreme_64bit/b57nd60a.inf
+                
+                //$driver_sub_path = str_replace($os_drivers_dir . '/', '', $driver_file);
+                //print("initrd --name $driver_base_file\n");
+                //print("$webserver_drivers_root_url\n");
+            }
+        }
+    }
+}
+
 print("boot\nsleep 5\n");
 ?>
