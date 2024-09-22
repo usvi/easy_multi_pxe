@@ -182,7 +182,8 @@ foreach($submenus as $emp_platform => $os_family_menu_label_id)
                       "family=" . $target_metadata['FAMILY'] . "&" .
                       "version=" . $target_metadata['VERSION'] . "&" .
                       "arch=" . $target_metadata['ARCH'] . "&" .
-                      "id=" . $target_metadata['ID'] .
+                      "id=" . $target_metadata['ID'] . "&" .
+                      "mac=\${net0/mac}" .
                       "\n");
                 print("\n");
             }
