@@ -32,7 +32,8 @@ print("set os_assets_base $fragment_base_url\n");
 if ($arg_os_family == 'debian')
 {
     $preseed_url = $webserver_assets_root_url . '/preseed.php?method=' . $arg_os_method . "&family=" .
-                 $arg_os_family . '&version=' . $arg_os_version . '&arch=' . $arg_os_arch . '&id=' . $arg_os_id;
+                 $arg_os_family . '&version=' . $arg_os_version . '&arch=' . $arg_os_arch . '&id=' . $arg_os_id .
+                 "&mac=" . $arg_os_mac;
     print("set preseed_url $preseed_url\n");
 }
 if ($arg_os_family == 'windows')
