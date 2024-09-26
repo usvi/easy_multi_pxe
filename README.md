@@ -1,4 +1,4 @@
-# Easy Multi PXE 1.00
+# Easy Multi PXE 1.1
 
 Easy Multi PXE is an iPXE-powered simple pxe server. Currently it is able to boot in 64bit BIOS mode, but in the future it will support all crisscrossses from 32/64bit and BIOS/EFI.
 

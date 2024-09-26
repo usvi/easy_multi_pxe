@@ -10,6 +10,7 @@ print("#!ipxe\n\n");
 $webserver_assets_root_url = $conf_webserver_protocol . "://" . $conf_webserver_ip . "/" . $conf_webserver_assets_path_prefix;
 $webserver_drivers_root_url = $conf_webserver_protocol . "://" . $conf_webserver_ip . "/" . $conf_webserver_drivers_path_prefix;
 
+$lookup_mac = str_replace(':', '-', strtoupper($arg_os_mac));
 
 $fragment_file_path =
                     $conf_assets_base_dir . '/' . $arg_os_family . '/' .
@@ -22,8 +23,8 @@ $fragment_base_url =
                    $arg_os_version . '/' . $arg_os_arch . '/' . $arg_os_id;
 
 $webserver_os_drivers_root_url =
-                               $webserver_drivers_root_url . '/' . $arg_os_family . '/' .
-                               $arg_os_version . '/' . $arg_os_arch;
+                               $webserver_drivers_root_url . '/lookup/mac/' . $lookup_mac . '/' .
+                               $arg_os_family . '/' . $arg_os_version . '/' . $arg_os_arch;
 
 
 print("set os_assets_base $fragment_base_url\n");
@@ -31,7 +32,8 @@ print("set os_assets_base $fragment_base_url\n");
 if ($arg_os_family == 'debian')
 {
     $preseed_url = $webserver_assets_root_url . '/preseed.php?method=' . $arg_os_method . "&family=" .
-                 $arg_os_family . '&version=' . $arg_os_version . '&arch=' . $arg_os_arch . '&id=' . $arg_os_id;
+                 $arg_os_family . '&version=' . $arg_os_version . '&arch=' . $arg_os_arch . '&id=' . $arg_os_id .
+                 "&mac=" . $arg_os_mac;
     print("set preseed_url $preseed_url\n");
 }
 if ($arg_os_family == 'windows')
@@ -41,7 +43,8 @@ if ($arg_os_family == 'windows')
     print("set template_base $template_base\n");
 
     $startnet_url = $webserver_assets_root_url . '/startnet.php?method=' . $arg_os_method . "&family=" .
-                  $arg_os_family . '&version=' . $arg_os_version . '&arch=' . $arg_os_arch . '&id=' . $arg_os_id;
+                  $arg_os_family . '&version=' . $arg_os_version . '&arch=' . $arg_os_arch . '&id=' . $arg_os_id .
+                  "&mac=" . $arg_os_mac;
     print("set startnet_url $startnet_url\n");
 }
 $fragment_core_data = file_get_contents($fragment_file_path);
@@ -51,7 +54,10 @@ print($fragment_core_data);
 // Need to print drivers as initrds if drivers dir is in use for windows
 if (($arg_os_family == 'windows') && ($conf_drivers_base_dir != "") && (is_dir($conf_drivers_base_dir)))
 {
-    $os_drivers_dir = $conf_drivers_base_dir . '/' . $arg_os_family . '/' . $arg_os_version . '/' . $arg_os_arch;
+    $os_drivers_dir =
+                    $conf_drivers_base_dir . '/lookup/mac/' .
+                    $lookup_mac . '/' . $arg_os_family . '/' .
+                    $arg_os_version . '/' . $arg_os_arch;
 
     if (is_dir($os_drivers_dir))
     {
